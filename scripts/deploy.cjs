@@ -10,7 +10,7 @@ async function main() {
   const contract = await NikBase.deploy(overrides);
   await contract.waitForDeployment();
   const address = await contract.getAddress();
-  console.log(`NikBase v2.1.0 deployed to: ${address} (${net.name})`);
+  console.log(`NikBase v3.0.0 deployed to: ${address} (${net.name})`);
 }
 
 main().catch(console.error);

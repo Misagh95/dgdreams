@@ -1,12 +1,23 @@
 require("@nomicfoundation/hardhat-ethers");
+require("@nomicfoundation/hardhat-verify");
 require("dotenv").config();
 const PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY || "";
 
 /** @type {import('hardhat/config').HardhatUserConfig} */
 const config = {
   solidity: {
-    version: "0.8.20",
-    settings: { optimizer: { enabled: true, runs: 200 }, viaIR: true },
+    version: "0.8.24",
+    settings: { optimizer: { enabled: true, runs: 200 }, viaIR: true, evmVersion: "cancun" },
+  },
+  etherscan: {
+    apiKey: { robinhood: "no-key-required" },
+    customChains: [
+      {
+        network: "robinhood",
+        chainId: 4663,
+        urls: { apiURL: "https://robinhoodchain.blockscout.com/api", browserURL: "https://robinhoodchain.blockscout.com" },
+      },
+    ],
   },
   networks: {
     base: {

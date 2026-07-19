@@ -7,7 +7,7 @@ export const baseChain = defineChain({
   nativeCurrency: { decimals: 18, name: 'Ethereum', symbol: 'ETH' },
   rpcUrls: {
     default: { http: ['https://mainnet.base.org'] },
-    public: { http: ['https://mainnet.base.org'] },
+    public: { http: ['https://mainnet.base.org', 'https://base.llamarpc.com', 'https://base-rpc.publicnode.com'] },
   },
   blockExplorers: {
     default: { name: 'Basescan', url: 'https://basescan.org' },
@@ -39,7 +39,7 @@ export const unichainChain = defineChain({
   nativeCurrency: { decimals: 18, name: 'Ethereum', symbol: 'ETH' },
   rpcUrls: {
     default: { http: ['https://mainnet.unichain.org'] },
-    public: { http: ['https://mainnet.unichain.org'] },
+    public: { http: ['https://mainnet.unichain.org', 'https://unichain-rpc.publicnode.com'] },
   },
   blockExplorers: {
     default: { name: 'Uniscan', url: 'https://uniscan.xyz' },
@@ -82,6 +82,7 @@ export interface NetworkConfig {
   border: string;
   logo: string;
   type?: 'mainnet' | 'testnet';
+  fallbackRpcUrls?: string[];
 }
 
 export const mainnetNetworks: NetworkConfig[] = [
@@ -94,6 +95,7 @@ export const mainnetNetworks: NetworkConfig[] = [
     glow: 'rgba(138, 138, 255, 0.3)',
     border: '#8A8AFF',
     logo: '<img src="/logos/ethereum.png" alt="Ethereum" style="width:100%;height:100%;border-radius:6px;object-fit:cover" />',
+    fallbackRpcUrls: ['https://eth.llamarpc.com', 'https://rpc.ankr.com/eth', 'https://ethereum-rpc.publicnode.com'],
   },
   {
     id: 8453,
@@ -104,6 +106,7 @@ export const mainnetNetworks: NetworkConfig[] = [
     glow: 'rgba(0, 85, 255, 0.3)',
     border: '#0055FF',
     logo: '<img src="/logos/base.svg" alt="Base" style="width:100%;height:100%;border-radius:6px;object-fit:cover" />',
+    fallbackRpcUrls: ['https://base.llamarpc.com', 'https://base-rpc.publicnode.com'],
   },
   {
     id: 999,
@@ -124,6 +127,7 @@ export const mainnetNetworks: NetworkConfig[] = [
     glow: 'rgba(255, 0, 119, 0.3)',
     border: '#FF0077',
     logo: '<img src="/logos/unichain.png" alt="Unichain" style="width:100%;height:100%;border-radius:6px;object-fit:cover" />',
+    fallbackRpcUrls: ['https://unichain-rpc.publicnode.com'],
   },
   {
     id: 4217,
@@ -202,7 +206,7 @@ export const testnetNetworks: NetworkConfig[] = [
     glow: 'rgba(255, 215, 0, 0.3)',
     border: '#FFD700',
     type: 'testnet',
-    logo: '<img src="/logos/litvm.svg" alt="LitVM" style="width:100%;height:100%;border-radius:6px;object-fit:cover" />',
+    logo: '<img src="/logos/litvm.png" alt="LitVM" style="width:100%;height:100%;border-radius:6px;object-fit:cover" />',
   },
   {
     id: 5042002,

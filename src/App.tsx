@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAccount, useSwitchChain, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useSwitchChain, useReadContract, useWriteContract, useConfig } from 'wagmi';
+import { waitForTransactionReceipt } from 'wagmi/actions';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { mainnetNetworks, testnetNetworks, type NetworkConfig } from './config/chains';
-
+import { isAddress as isAddr } from 'viem';
+import { mainnetNetworks, testnetNetworks, type NetworkConfig, getNetworkConfig } from './config/chains';
 import { cn } from './utils/cn';
-import { canExecute } from './utils/ratelimit';
+import { parseTxError, getExplorerUrl, getNativeSymbol, shortenHash } from './utils/transactions';
 
 const NIKBASE_ABI = [
   { inputs: [], name: 'dailyCheckIn', outputs: [{ name: 'newStreak', type: 'uint256' }], stateMutability: 'nonpayable', type: 'function' },
@@ -34,27 +35,22 @@ const NIKBASE_ABI = [
 ] as const;
 
 const CONTRACTS: Record<number, `0x${string}` | ''> = {
-  8453: '0xCB1b3a864D384D5Ad42b6F5b81825AB084444D9c',
-  999: '0xC288b68022e752d97E4395ECbA61C2079CE692Ad',
-  130: '0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff',
-  4217: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
-  4663: '0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff',
-  1: '0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0',
-  11155111: '0x68bb9775B11551310D7A37Aae52e6505A0E1e733',
-  84532: '0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff',
-  91342: '0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0',
-  4441: '0x68bb9775B11551310D7A37Aae52e6505A0E1e733',
-  5042002: '0x68bb9775B11551310D7A37Aae52e6505A0E1e733',
-  1913: '0x68bb9775B11551310D7A37Aae52e6505A0E1e733',
+  8453: '0xbB123f450822A42AeDa8e71aF3534d7dc84627F7',
+  999: '0xdbeE9eA39FedD197D224EA7520A20b4434635A6a',
+  130: '0xC288b68022e752d97E4395ECbA61C2079CE692Ad',
+  4217: '0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff',
+  4663: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
+  1: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
+  11155111: '0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff',
+  84532: '0xdbeE9eA39FedD197D224EA7520A20b4434635A6a',
+  91342: '0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff',
+  4441: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
+  5042002: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
+  1913: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
 };
 
 const SOULBOUND_ADDR: Record<number, `0x${string}` | ''> = {
-  8453: '',
-  999: '',
-  130: '',
-  4217: '',
-  4663: '',
-  1: '',
+  8453: '', 999: '', 130: '', 4217: '', 4663: '', 1: '',
   11155111: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
   84532: '0xC288b68022e752d97E4395ECbA61C2079CE692Ad',
   91342: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
@@ -89,190 +85,39 @@ const MOODS = [
 
 type ActionId = 'checkIn' | 'reception' | 'gm' | 'gn' | 'dose' | 'mood' | 'sanitize' | 'counter' | 'spin';
 
-interface ActionConfig {
+interface TaskStep {
   id: ActionId;
-  title: string;
-  desc: string;
-  icon: string;
-  limit: number;
-  getCurrent: (state: DailyState | null) => number;
-  requiresSubAction?: boolean;
+  label: string;
+  method: string;
+  args: unknown[];
+  isRepeatable?: boolean;
 }
 
-interface DailyState {
-  actionCount: number;
-  maxActions: number;
-  checkedIn: boolean;
-  receptionDone: boolean;
-  gmDone: boolean;
-  gnDone: boolean;
-  doseCount: number;
-  moodCount: number;
-  sanitizeCount: number;
-  counterCount: number;
-  spinCount: number;
-  maxSpins: number;
-}
+const DAILY_TASKS: TaskStep[] = [
+  { id: 'checkIn', label: 'Daily Check-In', method: 'dailyCheckIn', args: [] },
+  { id: 'reception', label: 'Reception', method: 'reception', args: [] },
+  { id: 'gm', label: 'GM', method: 'gm', args: [] },
+  { id: 'gn', label: 'GN', method: 'gn', args: [] },
+  { id: 'dose', label: 'Take Dose', method: 'takeDose', args: [] },
+  { id: 'mood', label: 'Mood Check', method: 'moodCheck', args: ['happy'] },
+  { id: 'sanitize', label: 'Sanitize Wallet', method: 'sanitizeWallet', args: [] },
+  { id: 'counter', label: 'Counter', method: 'incrementCounter', args: [] },
+  { id: 'spin', label: 'Lucky Spin', method: 'luckySpin', args: [] },
+];
 
-function NetworkSelector({
-  current,
-  onSelect,
-}: {
-  current: NetworkConfig;
-  onSelect: (n: NetworkConfig) => void;
-}) {
-  const [open, setOpen] = useState(false);
+type TaskStatus = 'pending' | 'signing' | 'confirmed' | 'failed' | 'skipped';
 
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-default)] hover:bg-[var(--bg-elevated-hover)] hover:border-[var(--border-hover)] transition-all"
-      >
-        <div dangerouslySetInnerHTML={{ __html: current.logo }} style={{ width: 24, height: 24 }} />
-        <span className="text-sm font-medium">{current.name}</span>
-        <svg className={`w-3.5 h-3.5 text-[var(--text-tertiary)] transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full right-0 mt-2 z-20 w-56 py-1.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)] shadow-2xl shadow-black/60 backdrop-blur-xl">
-            {mainnetNetworks.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => { onSelect(n); setOpen(false); }}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3.5 py-2.5 text-sm transition-colors',
-                  current.id === n.id ? 'bg-[var(--bg-strong)] text-[var(--text-bright)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-bright)] hover:bg-[var(--bg-subtle)]'
-                )}
-              >
-                <div dangerouslySetInnerHTML={{ __html: n.logo }} style={{ width: 22, height: 22 }} />
-                <span>{n.name}</span>
-                {current.id === n.id && <span className="ml-auto text-xs opacity-50">Active</span>}
-              </button>
-            ))}
-            <div className="mx-3 my-1.5 pt-1.5 border-t border-[var(--border-default)] flex items-center gap-2">
-              <svg className="w-3 h-3 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-yellow-500">Test Net</span>
-            </div>
-            {testnetNetworks.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => { onSelect(n); setOpen(false); }}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3.5 py-2.5 text-sm transition-colors',
-                  current.id === n.id ? 'bg-[var(--bg-strong)] text-[var(--text-bright)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-bright)] hover:bg-[var(--bg-subtle)]'
-                )}
-              >
-                <div dangerouslySetInnerHTML={{ __html: n.logo }} style={{ width: 22, height: 22 }} />
-                <span>{n.name}</span>
-                {current.id === n.id && <span className="ml-auto text-xs opacity-50">Active</span>}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function ActionCard({
-  action,
-  state,
-  onAction,
-  onMoodSelect,
-  pending,
-  disabled,
-}: {
-  action: ActionConfig;
-  state: DailyState | null;
-  onAction: (id: ActionId) => void;
-  onMoodSelect?: (mood: string) => void;
-  pending: boolean;
-  disabled: boolean;
-}) {
-  const current = state ? action.getCurrent(state) : 0;
-  const remaining = action.limit - current;
-  const isExhausted = remaining <= 0;
-  const [showMoods, setShowMoods] = useState(false);
-
-  if (action.id === 'mood' && showMoods) {
-    return (
-      <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
-        <p className="text-xs text-[var(--text-tertiary)] mb-3">Choose your mood:</p>
-        <div className="grid grid-cols-2 gap-2">
-          {MOODS.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => { onMoodSelect?.(m.id); setShowMoods(false); }}
-              disabled={disabled || isExhausted}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-subtle)] hover:bg-[var(--bg-elevated-hover)] border border-[var(--border-subtle)] hover:border-[var(--border-hover)] transition-all text-sm disabled:opacity-30"
-            >
-              <span>{m.emoji}</span>
-              <span>{m.label}</span>
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={() => setShowMoods(false)}
-          className="mt-2 text-xs text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={cn(
-        'p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] transition-all',
-        !disabled && !isExhausted ? 'hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)]' : 'opacity-60'
-      )}
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2.5">
-          <span className="text-lg">{action.icon}</span>
-          <div>
-            <h3 className="text-sm font-medium text-[var(--text-primary)]">{action.title}</h3>
-            <p className="text-xs text-[var(--text-tertiary)]">{action.desc}</p>
-          </div>
-        </div>
-        <div className={cn(
-          'text-xs font-medium px-2 py-0.5 rounded-full',
-          isExhausted ? 'bg-red-500/10 text-red-400' : 'bg-[var(--bg-strong)] text-[var(--text-secondary)]'
-        )}>
-          {current}/{action.limit}
-        </div>
-      </div>
-      <button
-        onClick={() => action.requiresSubAction ? setShowMoods(true) : onAction(action.id)}
-        disabled={disabled || isExhausted || pending}
-        className={cn(
-          'w-full py-2 rounded-lg text-xs font-medium transition-all',
-          isExhausted
-            ? 'bg-[var(--bg-card)] text-[var(--text-faint)] cursor-not-allowed'
-            : pending
-              ? 'bg-[var(--bg-strong)] text-[var(--text-tertiary)] cursor-wait'
-              : 'bg-[var(--bg-strong)] hover:bg-[var(--bg-strong-hover)] text-[var(--text-primary)] hover:text-[var(--text-bright)] active:scale-[0.98]'
-        )}
-      >
-        {pending ? 'Confirming...' : isExhausted ? 'Done for today' : action.requiresSubAction ? 'Choose mood...' : 'Execute'}
-      </button>
-    </div>
-  );
+interface TaskProgress {
+  status: TaskStatus;
+  txHash?: string;
+  error?: string;
 }
 
 const THEMES = [
-  { id: 'dark', label: 'Dark', icon: '🌙', primary: '#050505', secondary: '#0C0C0C' },
-  { id: 'light', label: 'Light', icon: '☀️', primary: '#f5f0eb', secondary: '#ffffff' },
-  { id: 'midnight', label: 'Midnight', icon: '🌌', primary: '#070714', secondary: '#0a0a24' },
-  { id: 'forest', label: 'Forest', icon: '🌿', primary: '#0a140a', secondary: '#0d1a0d' },
+  { id: 'dark', label: 'Dark', icon: '🌙' },
+  { id: 'light', label: 'Light', icon: '☀️' },
+  { id: 'midnight', label: 'Midnight', icon: '🌌' },
+  { id: 'forest', label: 'Forest', icon: '🌿' },
 ] as const;
 
 type ThemeId = (typeof THEMES)[number]['id'];
@@ -285,72 +130,27 @@ function getInitialTheme(): ThemeId {
   return 'dark';
 }
 
-function TurnstileWidget({ onVerify, onExpire }: { onVerify: (t: string) => void; onExpire: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    let widgetId: string | undefined;
-    const check = () => {
-      if (ref.current && !widgetId && (window as any).turnstile) {
-        widgetId = (window as any).turnstile.render(ref.current, {
-          sitekey: '0x4AAAAAAD5Ha7HCuxQTbBy8',
-          callback: (token: string) => { setDone(true); onVerify(token); },
-          'expired-callback': () => { setDone(false); onExpire(); },
-        });
-        setReady(true);
-      }
-    };
-    const id = setInterval(check, 200);
-    setTimeout(() => clearInterval(id), 10000);
-    return () => { clearInterval(id); if (widgetId && (window as any).turnstile) (window as any).turnstile.remove(widgetId); };
-  }, []);
-
-  return (
-    <div className="flex flex-col items-center gap-2">
-      {!done && <p className="text-[10px] text-[var(--text-tertiary)] tracking-wider uppercase">Verify you're human</p>}
-      <div ref={ref} />
-      {done && <p className="text-[10px] text-green-500">Verified</p>}
-    </div>
-  );
-}
-
-function ThemeSwitcher({
-  current,
-  onChange,
-}: {
-  current: ThemeId;
-  onChange: (t: ThemeId) => void;
-}) {
+function ThemeSwitcher({ current, onChange }: { current: ThemeId; onChange: (t: ThemeId) => void }) {
   const [open, setOpen] = useState(false);
-
   return (
     <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center justify-center w-9 h-9 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-default)] hover:bg-[var(--bg-strong)] hover:border-[var(--border-hover)] transition-all text-sm"
-        title={`Theme: ${current}`}
-      >
+      <button onClick={() => setOpen(!open)}
+        className="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-strong)] hover:bg-[var(--bg-strong)] transition-all duration-200 text-sm"
+        title={`Theme: ${current}`}>
         {THEMES.find(t => t.id === current)?.icon}
       </button>
-
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full right-0 mt-2 z-20 w-40 py-1.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)] shadow-2xl shadow-black/60 backdrop-blur-xl">
+          <div className="absolute top-full right-0 mt-2 z-20 w-36 py-1 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)] shadow-xl">
             {THEMES.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => { onChange(t.id); setOpen(false); }}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3.5 py-2.5 text-sm transition-colors',
+              <button key={t.id} onClick={() => { onChange(t.id); setOpen(false); }}
+                className={cn('w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors',
                   current === t.id ? 'bg-[var(--bg-strong)] text-[var(--text-bright)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-bright)] hover:bg-[var(--bg-subtle)]'
-                )}
-              >
+                )}>
                 <span className="text-base">{t.icon}</span>
                 <span>{t.label}</span>
-                {current === t.id && <span className="ml-auto text-xs opacity-50">✓</span>}
+                {current === t.id && <span className="ml-auto text-xs text-[var(--accent)]">✓</span>}
               </button>
             ))}
           </div>
@@ -360,12 +160,286 @@ function ThemeSwitcher({
   );
 }
 
+function NetworkBlock({
+  network,
+  isConnected,
+  walletChainId,
+  progress,
+  onStart,
+  isSelected,
+  isDisabled,
+}: {
+  network: NetworkConfig;
+  isConnected: boolean;
+  walletChainId?: number;
+  progress: number;
+  onStart: () => void;
+  isSelected: boolean;
+  isDisabled: boolean;
+}) {
+  const contractAddr = CONTRACTS[network.id];
+  const hasContract = !!contractAddr;
+  const completed = progress >= 9;
+
+  const canInteract = hasContract && !completed && !isDisabled;
+
+  return (
+    <div
+      onClick={canInteract ? onStart : undefined}
+      className={cn(
+        'p-6 rounded-xl bg-[var(--bg-card)] border transition-all duration-200',
+        isSelected
+          ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]'
+          : 'border-[var(--border-default)] hover:border-[var(--border-hover)]',
+        isDisabled ? 'opacity-40 pointer-events-none' : 'cursor-pointer',
+      )}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div dangerouslySetInnerHTML={{ __html: network.logo }} style={{ width: 28, height: 28 }} />
+        <div>
+          <h3 className="text-sm font-semibold text-[var(--text-bright)]">{network.name}</h3>
+          <p className="text-xs text-[var(--text-tertiary)]">{getNativeSymbol(network)}</p>
+        </div>
+        <span className={cn(
+          'ml-auto px-2.5 py-1 rounded-md text-xs font-medium',
+          completed ? 'bg-[var(--success)]/10 text-[var(--success)]' : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)]'
+        )}>
+          {completed ? '9/9 ✓' : `${progress}/9`}
+        </span>
+      </div>
+
+      {!isConnected ? (
+        <button onClick={(e) => { e.stopPropagation(); onStart(); }}
+          className="w-full py-2 rounded-lg bg-[var(--bg-strong)] border border-[var(--border-strong)] hover:bg-[var(--bg-strong-hover)] text-sm font-medium text-[var(--text-bright)] transition-all duration-200">
+          Start Daily Tasks
+        </button>
+      ) : !hasContract ? (
+        <p className="text-xs text-[var(--text-quaternary)]">Not deployed</p>
+      ) : completed ? (
+        <p className="text-xs text-[var(--success)]">Completed today</p>
+      ) : (
+        <button onClick={(e) => { e.stopPropagation(); onStart(); }}
+          disabled={isDisabled}
+          className={cn(
+            'w-full py-2 rounded-lg text-sm font-medium transition-all duration-200',
+            'bg-[var(--bg-strong)] border border-[var(--border-strong)] hover:bg-[var(--bg-strong-hover)] text-[var(--text-bright)]',
+            isDisabled ? 'opacity-40 cursor-not-allowed' : '',
+          )}>
+          Start Daily Tasks
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SequentialTaskPanel({
+  network,
+  onClose,
+  address,
+  contractAddress,
+  onComplete,
+  autoStart,
+}: {
+  network: NetworkConfig;
+  onClose: () => void;
+  address: `0x${string}`;
+  contractAddress: `0x${string}`;
+  onComplete: () => void;
+  autoStart?: boolean;
+}) {
+  const [tasks, setTasks] = useState<TaskProgress[]>(() => DAILY_TASKS.map(() => ({ status: 'pending' })));
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const isCancelled = useRef(false);
+
+  const wagmiConfig = useConfig();
+  const { writeContractAsync } = useWriteContract();
+
+  const completedCount = tasks.filter(t => t.status === 'confirmed').length;
+  const failedCount = tasks.filter(t => t.status === 'failed').length;
+
+  const startFrom = tasks.findIndex(t => t.status === 'pending');
+
+  const execute = useCallback(async () => {
+    if (isExecuting) return;
+    setIsExecuting(true);
+    isCancelled.current = false;
+
+    const startIdx = tasks.findIndex(t => t.status === 'pending');
+    if (startIdx === -1) { setIsExecuting(false); return; }
+
+    for (let i = startIdx; i < DAILY_TASKS.length; i++) {
+      if (isCancelled.current) break;
+
+      setCurrentIndex(i);
+      setTasks(prev => prev.map((t, idx) => idx === i ? { ...t, status: 'signing' as TaskStatus } : t));
+
+      const step = DAILY_TASKS[i];
+      let moods = ['happy', 'happy', 'happy'];
+      let actualArgs = step.args;
+      if (step.id === 'mood') {
+        const moodIndex = i - 7;
+        actualArgs = [moods[moodIndex]];
+      }
+
+      try {
+        const hash = await writeContractAsync({
+          address: contractAddress,
+          abi: NIKBASE_ABI,
+          functionName: step.method,
+          args: actualArgs,
+        });
+
+        setTasks(prev => prev.map((t, idx) => idx === i ? { ...t, txHash: hash } : t));
+
+        const receipt = await waitForTransactionReceipt(wagmiConfig, { hash, timeout: 120_000 });
+        if (receipt.status === 'reverted') {
+          setTasks(prev => prev.map((t, idx) => idx === i ? { ...t, status: 'failed' as TaskStatus, error: 'Transaction reverted' } : t));
+          break;
+        }
+
+        setTasks(prev => prev.map((t, idx) => idx === i ? { ...t, status: 'confirmed' as TaskStatus } : t));
+      } catch (err: any) {
+        const msg = parseTxError(err);
+        if (msg.toLowerCase().includes('rejected')) {
+          setTasks(prev => prev.map((t, idx) => idx === i ? { ...t, status: 'pending' as TaskStatus, error: 'Rejected — can resume' } : t));
+        } else {
+          setTasks(prev => prev.map((t, idx) => idx === i ? { ...t, status: 'failed' as TaskStatus, error: msg } : t));
+        }
+        break;
+      }
+    }
+
+    setIsExecuting(false);
+    setCurrentIndex(null);
+    const allDone = tasks.every(t => t.status === 'confirmed');
+    if (allDone) onComplete();
+  }, [contractAddress, writeContractAsync, tasks, isExecuting, onComplete]);
+
+  const executeRef = useRef<() => Promise<void>>();
+  executeRef.current = execute;
+
+  useEffect(() => {
+    if (autoStart) {
+      const t = setTimeout(() => {
+        executeRef.current?.();
+      }, 300);
+      return () => clearTimeout(t);
+    }
+  }, [autoStart]);
+
+  const handleCancel = () => {
+    if (isExecuting) {
+      isCancelled.current = true;
+    } else {
+      onClose();
+    }
+  };
+
+  const StatusIcon = ({ status }: { status: TaskStatus }) => {
+    switch (status) {
+      case 'confirmed': return <span className="text-[var(--success)]">✓</span>;
+      case 'failed': return <span className="text-[var(--danger)]">✗</span>;
+      case 'signing': return <span className="text-[var(--accent)] animate-pulse">◆</span>;
+      default: return <span className="text-[var(--text-faint)]">○</span>;
+    }
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40 bg-black/60" onClick={handleCancel} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)] shadow-xl max-h-[85vh] flex flex-col">
+          <div className="flex items-center justify-between p-5 pb-3 border-b border-[var(--border-subtle)]">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <div dangerouslySetInnerHTML={{ __html: network.logo }} style={{ width: 20, height: 20 }} />
+                <h2 className="text-base font-semibold text-[var(--text-bright)]">{network.name}</h2>
+              </div>
+              <p className="text-xs text-[var(--text-tertiary)] mt-1">Daily Tasks · {completedCount}/9</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {failedCount > 0 && !isExecuting && (
+                <button onClick={execute}
+                  className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-xs font-medium text-white hover:bg-[var(--accent-hover)] transition-all duration-200">
+                  Resume
+                </button>
+              )}
+              {completedCount === 0 && !isExecuting && startFrom === 0 && (
+                <button onClick={execute}
+                  className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-xs font-medium text-white hover:bg-[var(--accent-hover)] transition-all duration-200">
+                  Start
+                </button>
+              )}
+              <button onClick={handleCancel}
+                className="px-3 py-1.5 rounded-lg bg-[var(--bg-strong)] text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-strong-hover)] transition-all duration-200">
+                {isExecuting ? 'Cancel' : 'Close'}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-1">
+            {DAILY_TASKS.map((step, i) => {
+              const p = tasks[i];
+              const isActive = i === currentIndex;
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-2.5 rounded-lg mx-2 my-0.5 transition-all duration-200',
+                    isActive && p.status === 'signing' ? 'bg-[var(--accent-muted)] border border-[var(--border-default)]' : '',
+                    p.status === 'confirmed' ? 'opacity-60' : '',
+                    p.status === 'failed' ? 'bg-[var(--danger)]/5' : '',
+                  )}
+                >
+                  <div className="w-5 text-center text-sm">
+                    <StatusIcon status={p.status} />
+                  </div>
+                  <span className={cn(
+                    'flex-1 text-sm',
+                    p.status === 'confirmed' ? 'text-[var(--text-tertiary)]' : isActive ? 'text-[var(--text-bright)] font-medium' : 'text-[var(--text-secondary)]'
+                  )}>
+                    {step.label}
+                  </span>
+                  {p.status === 'signing' && (
+                    <span className="text-xs text-[var(--accent)]">Waiting for signature...</span>
+                  )}
+                  {p.status === 'confirmed' && p.txHash && (
+                    <a href={getExplorerUrl(network, p.txHash)} target="_blank" rel="noopener noreferrer"
+                      className="text-xs text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] underline underline-offset-2 transition-colors">
+                      {shortenHash(p.txHash)}
+                    </a>
+                  )}
+                  {p.status === 'failed' && p.error && (
+                    <span className="text-xs text-[var(--danger)] max-w-[200px] truncate" title={p.error}>{p.error}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {completedCount === DAILY_TASKS.length && (
+            <div className="p-5 pt-3 border-t border-[var(--border-subtle)]">
+              <div className="px-4 py-3 rounded-lg bg-[var(--success)]/10 text-sm text-[var(--success)] text-center">
+                All 9 tasks completed
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function App() {
   const [theme, setTheme] = useState<ThemeId>(getInitialTheme);
-  const [selectedNetwork, setSelectedNetwork] = useState(mainnetNetworks[0]);
-  const [lastTxHash, setLastTxHash] = useState<string | null>(null);
-  const [errMsg, setErrMsg] = useState<string | null>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [showFaq, setShowFaq] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkConfig | null>(null);
+  const [showTaskPanel, setShowTaskPanel] = useState(false);
+  const [panelAutoStart, setPanelAutoStart] = useState(false);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+  const [executingNetworkId, setExecutingNetworkId] = useState<number | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -373,206 +447,128 @@ export default function App() {
   }, [theme]);
 
   const { address, isConnected, chainId } = useAccount();
-  const { switchChain } = useSwitchChain();
+  const { switchChainAsync } = useSwitchChain();
   const { openConnectModal } = useConnectModal();
 
-  const contractAddress = CONTRACTS[selectedNetwork.id] || undefined;
-  const nftAddress = SOULBOUND_ADDR[selectedNetwork.id] || undefined;
-  const onRightChain = chainId === selectedNetwork.id;
+  const validatedAddr = address && isAddr(address) ? address as `0x${string}` : undefined;
+
+  const allNetworks = [...mainnetNetworks, ...testnetNetworks];
+  const [progressMap, setProgressMap] = useState<Record<number, number>>({});
+
+  const targetContract = selectedNetwork ? (CONTRACTS[selectedNetwork.id] || undefined) : undefined;
+  const validatedContract = targetContract && isAddr(targetContract) ? targetContract as `0x${string}` : undefined;
+  const onRightChain = selectedNetwork ? chainId === selectedNetwork.id : false;
 
   const { data: countsData, refetch: refetchCounts } = useReadContract({
-    address: contractAddress, abi: NIKBASE_ABI, functionName: 'getActionCounts',
-    args: address ? [address] : undefined,
-    query: { enabled: !!contractAddress && !!address && onRightChain, refetchInterval: 10_000 },
+    address: validatedContract,
+    abi: NIKBASE_ABI, functionName: 'getActionCounts',
+    args: validatedAddr ? [validatedAddr] : undefined,
+    query: { enabled: !!validatedContract && !!validatedAddr && onRightChain, refetchInterval: 10_000 },
   });
 
   const { data: flagsData, refetch: refetchFlags } = useReadContract({
-    address: contractAddress, abi: NIKBASE_ABI, functionName: 'getFlags',
-    args: address ? [address] : undefined,
-    query: { enabled: !!contractAddress && !!address && onRightChain, refetchInterval: 10_000 },
+    address: validatedContract, abi: NIKBASE_ABI, functionName: 'getFlags',
+    args: validatedAddr ? [validatedAddr] : undefined,
+    query: { enabled: !!validatedContract && !!validatedAddr && onRightChain, refetchInterval: 10_000 },
   });
 
   const { data: userData, refetch: refetchUser } = useReadContract({
-    address: contractAddress, abi: NIKBASE_ABI, functionName: 'getUserData',
-    args: address ? [address] : undefined,
-    query: { enabled: !!contractAddress && !!address && onRightChain },
+    address: validatedContract, abi: NIKBASE_ABI, functionName: 'getUserData',
+    args: validatedAddr ? [validatedAddr] : undefined,
+    query: { enabled: !!validatedContract && !!validatedAddr && onRightChain },
   });
 
-  const parsedState: DailyState | null = (countsData && flagsData)
-    ? {
-        actionCount: Number(countsData[0]),
-        maxActions: 15,
-        checkedIn: flagsData[0],
-        receptionDone: flagsData[1],
-        gmDone: flagsData[2],
-        gnDone: flagsData[3],
-        doseCount: Number(countsData[1]),
-        moodCount: Number(countsData[2]),
-        sanitizeCount: Number(countsData[3]),
-        counterCount: Number(countsData[4]),
-        spinCount: Number(countsData[5]),
-        maxSpins: 3,
-      }
-    : null;
+  const streak = userData ? Number(userData[0]) : 0;
+  const totalActions = userData ? Number(userData[2]) : 0;
+  const actionCount = countsData ? Number(countsData[0]) : 0;
+
+  const nftAddress = selectedNetwork ? (SOULBOUND_ADDR[selectedNetwork.id] || undefined) : undefined;
+  const validatedNft = nftAddress && isAddr(nftAddress) ? nftAddress as `0x${string}` : undefined;
 
   const { data: nftTokenId } = useReadContract({
-    address: nftAddress, abi: SOULBOUND_ABI, functionName: 'userTokenId',
-    args: address ? [address] : undefined,
-    query: { enabled: !!nftAddress && !!address && onRightChain },
+    address: validatedNft, abi: SOULBOUND_ABI, functionName: 'userTokenId',
+    args: validatedAddr ? [validatedAddr] : undefined,
+    query: { enabled: !!validatedNft && !!validatedAddr && onRightChain },
   });
   const hasNft = nftTokenId !== undefined && nftTokenId > 0;
 
   const { data: nftData } = useReadContract({
-    address: nftAddress, abi: SOULBOUND_ABI, functionName: 'tokenData',
+    address: validatedNft, abi: SOULBOUND_ABI, functionName: 'tokenData',
     args: hasNft && nftTokenId ? [nftTokenId] : undefined,
-    query: { enabled: hasNft && !!nftAddress && !!nftTokenId },
+    query: { enabled: hasNft && !!validatedNft && !!nftTokenId },
   });
 
   const nftTier = nftData ? Number(nftData[0]) : 0;
   const nftStreak = nftData ? Number(nftData[1]) : 0;
 
-  const streak = userData ? Number(userData[0]) : 0;
-  const totalActions = userData ? Number(userData[2]) : 0;
-
-  const { writeContract: writeMint, data: mintHash, isPending: mintPending } = useWriteContract();
-  const { writeContract: writeUpgrade, data: upgradeHash, isPending: upgradePending } = useWriteContract();
+  const { writeContract: writeMint, isPending: mintPending } = useWriteContract();
+  const { writeContract: writeUpgrade, isPending: upgradePending } = useWriteContract();
 
   const handleMint = useCallback(() => {
-    if (!ensureConnected() || !nftAddress) return;
-    setErrMsg(null);
-    writeMint({ address: nftAddress, abi: SOULBOUND_ABI, functionName: 'mint' });
-  }, [ensureConnected, nftAddress, writeMint]);
+    if (!validatedNft || !validatedAddr) return;
+    writeMint({ address: validatedNft, abi: SOULBOUND_ABI, functionName: 'mint' });
+  }, [validatedNft, validatedAddr, writeMint]);
 
   const handleUpgrade = useCallback(() => {
-    if (!ensureConnected() || !nftAddress) return;
-    setErrMsg(null);
-    writeUpgrade({ address: nftAddress, abi: SOULBOUND_ABI, functionName: 'upgrade' });
-  }, [ensureConnected, nftAddress, writeUpgrade]);
+    if (!validatedNft || !validatedAddr) return;
+    writeUpgrade({ address: validatedNft, abi: SOULBOUND_ABI, functionName: 'upgrade' });
+  }, [validatedNft, validatedAddr, writeUpgrade]);
 
-  const { writeContract: writeCheckIn, data: checkInHash, isPending: checkInPending, error: checkInError, reset: resetCheckIn } = useWriteContract();
-  const { writeContract: writeReception, data: receptionHash, isPending: receptionPending, error: receptionError } = useWriteContract();
-  const { writeContract: writeGm, data: gmHash, isPending: gmPending, error: gmError } = useWriteContract();
-  const { writeContract: writeGn, data: gnHash, isPending: gnPending, error: gnError } = useWriteContract();
-  const { writeContract: writeDose, data: doseHash, isPending: dosePending, error: doseError } = useWriteContract();
-  const { writeContract: writeMood, data: moodHash, isPending: moodPending, error: moodError } = useWriteContract();
-  const { writeContract: writeSanitize, data: sanitizeHash, isPending: sanitizePending, error: sanitizeError } = useWriteContract();
-  const { writeContract: writeCounter, data: counterHash, isPending: counterPending, error: counterError } = useWriteContract();
-  const { writeContract: writeSpin, data: spinHash, isPending: spinPending, error: spinError } = useWriteContract();
-
-  const allHashes = [checkInHash, receptionHash, gmHash, gnHash, doseHash, moodHash, sanitizeHash, counterHash, spinHash].filter(Boolean);
-  const allPending = checkInPending || receptionPending || gmPending || gnPending || dosePending || moodPending || sanitizePending || counterPending || spinPending;
-
-  const latestHash = allHashes[allHashes.length - 1] as `0x${string}` | undefined;
-  const { isSuccess: anySuccess } = useWaitForTransactionReceipt({ hash: latestHash });
-
-  useEffect(() => {
-    if (anySuccess) { refetchCounts(); refetchFlags(); refetchUser(); }
-  }, [anySuccess, refetchCounts, refetchFlags, refetchUser]);
-
-  const lastError = checkInError || receptionError || gmError || gnError || doseError || moodError || sanitizeError || counterError || spinError;
-  useEffect(() => {
-    if (lastError) {
-      const msg = lastError.message?.includes("Already") ? "Already done today" : lastError.message?.slice(0, 80) || "Transaction failed";
-      setErrMsg(msg);
-    } else if (allHashes.length > 0) {
-      setErrMsg(null);
+  const handleOpenNetwork = useCallback(async (network: NetworkConfig) => {
+    if (!isConnected) {
+      openConnectModal?.();
+      return;
     }
-  }, [lastError, allHashes.length]);
 
-  const handleNetworkChange = useCallback((network: NetworkConfig) => {
     setSelectedNetwork(network);
-    if (switchChain && isConnected) switchChain({ chainId: network.id });
-    setLastTxHash(null);
-    setErrMsg(null);
-  }, [switchChain, isConnected]);
 
-  const ensureConnected = useCallback(() => {
-    if (!isConnected) { openConnectModal?.(); return false; }
-    if (!contractAddress) { setErrMsg("Contract not deployed on this chain"); return false; }
-    return true;
-  }, [isConnected, openConnectModal, contractAddress]);
+    if (chainId !== network.id) {
+      try {
+        await switchChainAsync({ chainId: network.id });
+      } catch {
+        return;
+      }
+    }
 
-  const actions: ActionConfig[] = [
-    { id: 'checkIn', title: 'Daily Check-In', desc: 'Maintain your streak', icon: '🔥', limit: 1, getCurrent: (s) => s?.checkedIn ? 1 : 0 },
-    { id: 'reception', title: 'Reception', desc: 'Daily clinic entry', icon: '🏥', limit: 1, getCurrent: (s) => s?.receptionDone ? 1 : 0 },
-    { id: 'gm', title: 'GM', desc: 'Good morning!', icon: '☀️', limit: 1, getCurrent: (s) => s?.gmDone ? 1 : 0 },
-    { id: 'gn', title: 'GN', desc: 'Good night!', icon: '🌙', limit: 1, getCurrent: (s) => s?.gnDone ? 1 : 0 },
-    { id: 'dose', title: 'Take Dose', desc: 'Your daily medicine', icon: '💊', limit: 3, getCurrent: (s) => s?.doseCount ?? 0 },
-    { id: 'mood', title: 'Mood Check', desc: 'How are you feeling?', icon: '🎭', limit: 3, getCurrent: (s) => s?.moodCount ?? 0, requiresSubAction: true },
-    { id: 'sanitize', title: 'Sanitize', desc: 'Clean your wallet', icon: '🧼', limit: 3, getCurrent: (s) => s?.sanitizeCount ?? 0 },
-    { id: 'counter', title: 'Counter', desc: 'Increment the counter', icon: '🔢', limit: 3, getCurrent: (s) => s?.counterCount ?? 0 },
-    { id: 'spin', title: 'Lucky Spin', desc: 'Spin for rewards', icon: '🎲', limit: 3, getCurrent: (s) => s?.spinCount ?? 0 },
-  ];
+    setShowTaskPanel(true);
+    setPanelAutoStart(true);
+    setExecutingNetworkId(network.id);
+  }, [isConnected, chainId, switchChainAsync, openConnectModal]);
 
-  const actionWriters: Record<ActionId, { write: (args: any) => void; pending: boolean }> = {
-    checkIn: { write: writeCheckIn, pending: checkInPending },
-    reception: { write: writeReception, pending: receptionPending },
-    gm: { write: writeGm, pending: gmPending },
-    gn: { write: writeGn, pending: gnPending },
-    dose: { write: writeDose, pending: dosePending },
-    mood: { write: (args: any) => writeMood({ ...args, functionName: 'moodCheck', args: [] }), pending: moodPending },
-    sanitize: { write: writeSanitize, pending: sanitizePending },
-    counter: { write: writeCounter, pending: counterPending },
-    spin: { write: (args: any) => writeSpin({ ...args, functionName: 'luckySpin' }), pending: spinPending },
-  };
+  const handleTaskComplete = useCallback(() => {
+    refetchCounts();
+    refetchFlags();
+    refetchUser();
+    setRefetchTrigger(t => t + 1);
+    setExecutingNetworkId(null);
+  }, [refetchCounts, refetchFlags, refetchUser]);
 
-  const handleAction = useCallback((id: ActionId) => {
-    if (!ensureConnected() || !contractAddress) return;
-    if (!canExecute(id)) { setErrMsg("Please wait a moment before next action"); return; }
-    setErrMsg(null);
-    const addr = contractAddress;
-    const abi = NIKBASE_ABI;
-    const writers: Record<ActionId, () => void> = {
-      checkIn: () => { resetCheckIn(); writeCheckIn({ address: addr, abi, functionName: 'dailyCheckIn' }); },
-      reception: () => writeReception({ address: addr, abi, functionName: 'reception' }),
-      gm: () => writeGm({ address: addr, abi, functionName: 'gm' }),
-      gn: () => writeGn({ address: addr, abi, functionName: 'gn' }),
-      dose: () => writeDose({ address: addr, abi, functionName: 'takeDose' }),
-      mood: () => {},
-      sanitize: () => writeSanitize({ address: addr, abi, functionName: 'sanitizeWallet' }),
-      counter: () => writeCounter({ address: addr, abi, functionName: 'incrementCounter' }),
-      spin: () => writeSpin({ address: addr, abi, functionName: 'luckySpin' }),
-    };
-    writers[id]();
-  }, [ensureConnected, contractAddress, writeCheckIn, writeReception, writeGm, writeGn, writeDose, writeSanitize, writeCounter, writeSpin, resetCheckIn]);
+  const handleClosePanel = useCallback(() => {
+    setShowTaskPanel(false);
+    setSelectedNetwork(null);
+    setPanelAutoStart(false);
+    setExecutingNetworkId(null);
+  }, []);
 
-  const handleMoodSelect = useCallback((mood: string) => {
-    if (!ensureConnected() || !contractAddress) return;
-    if (!canExecute('mood')) { setErrMsg("Please wait a moment"); return; }
-    setErrMsg(null);
-    writeMood({ address: contractAddress, abi: NIKBASE_ABI, functionName: 'moodCheck', args: [mood] });
-  }, [ensureConnected, contractAddress, writeMood]);
-
-  const used = parsedState?.actionCount ?? 0;
-  const total = parsedState?.maxActions ?? 15;
-  const progressPct = Math.min((used / total) * 100, 100);
+  const knownProgress = selectedNetwork && onRightChain ? actionCount : 0;
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-bright)]">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 opacity-[0.015]" style={{
-          backgroundImage: 'radial-gradient(circle at 25% 25%, white 0%, transparent 50%), radial-gradient(circle at 75% 75%, white 0%, transparent 50%)'
-        }} />
-      </div>
-
-      <div className="relative z-10 max-w-5xl mx-auto px-4 py-6">
-        <header className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)]">
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        <header className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
-            <img src="/logos/ogo.png" alt="OGO" className="w-9 h-9 rounded-xl" />
+            <img src="/logos/ogo.png" alt="OGO" className="w-8 h-8 rounded-lg" />
             <div>
-              <h1 className="text-sm font-semibold tracking-wide">DGDreams</h1>
-              <p className="text-[10px] text-[var(--text-quaternary)] tracking-widest uppercase">Multi-Chain Hub</p>
+              <h1 className="text-base font-semibold text-[var(--text-bright)]">DGDreams</h1>
+              <p className="text-xs text-[var(--text-tertiary)] mt-0.5">A minimal multi-chain Web3 task hub. Execute daily on-chain actions across networks in one place.</p>
+              <a href="https://dgdreamss95.online" target="_blank" rel="noopener noreferrer" className="text-[10px] text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors mt-0.5 inline-block">dgdreamss95.online</a>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <NetworkSelector current={selectedNetwork} onSelect={handleNetworkChange} />
+          <div className="flex items-center gap-3">
             <ThemeSwitcher current={theme} onChange={setTheme} />
-            <button
-              onClick={() => openConnectModal?.()}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[var(--bg-strong)] border border-[var(--border-default)] hover:bg-[var(--bg-strong-hover)] hover:border-[var(--border-hover)] transition-all text-xs font-medium"
-            >
-              <svg className="w-3.5 h-3.5 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button onClick={() => openConnectModal?.()}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--bg-strong)] border border-[var(--border-strong)] hover:bg-[var(--bg-strong-hover)] transition-all duration-200 text-sm font-medium text-[var(--text-bright)]">
+              <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
               {isConnected ? `${address?.slice(0, 5)}...${address?.slice(-3)}` : 'Connect Wallet'}
@@ -580,161 +576,159 @@ export default function App() {
           </div>
         </header>
 
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-[var(--text-tertiary)]">Daily Progress</span>
-              <span className="text-xs font-medium text-[var(--text-secondary)]">{used}/{total}</span>
-            </div>
-            {streak > 0 && (
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-orange-400">🔥</span>
-                <span className="text-[var(--text-secondary)]">Streak: <span className="text-orange-400 font-medium">{streak}</span></span>
-              </div>
-            )}
-          </div>
-          <div className="w-full h-1.5 rounded-full bg-[var(--bg-strong)] overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${progressPct}%`,
-                background: `linear-gradient(90deg, ${selectedNetwork.color}88, ${selectedNetwork.color})`,
-              }}
-            />
-          </div>
-        </div>
-
-        {isConnected && contractAddress && onRightChain && nftAddress && turnstileToken && (
-          <div className="mb-6 p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{hasNft ? (TIER_INFO[nftTier]?.icon || '🎖️') : '🎫'}</span>
-                <div>
-                  <p className="text-xs text-[var(--text-tertiary)]">Membership</p>
-                  {hasNft ? (
-                    <p className="text-sm font-medium">{TIER_INFO[nftTier]?.label || `Tier ${nftTier}`} &middot; {nftStreak}-day streak</p>
-                  ) : (
-                    <p className="text-sm text-[var(--text-secondary)]">Mint your Soulbound NFT</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                {!hasNft && streak >= 7 ? (
-                  <button onClick={handleMint} disabled={mintPending}
-                    className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-strong)] hover:bg-[var(--bg-strong-hover)] border border-[var(--border-default)] text-xs font-medium transition-all disabled:opacity-40">
-                    {mintPending ? 'Minting...' : 'Mint NFT'}
-                  </button>
-                ) : hasNft && streak > nftStreak ? (
-                  <button onClick={handleUpgrade} disabled={upgradePending}
-                    className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-strong)] hover:bg-[var(--bg-strong-hover)] border border-[var(--border-default)] text-xs font-medium transition-all disabled:opacity-40">
-                    {upgradePending ? 'Upgrading...' : `Upgrade to ${TIER_INFO[streak >= 100 ? 5 : streak >= 60 ? 4 : streak >= 30 ? 3 : streak >= 14 ? 2 : 1]?.label || 'next'}`}
-                  </button>
-                ) : hasNft ? (
-                  <span className="text-[10px] text-[var(--text-faint)] self-center">Current</span>
-                ) : (
-                  <span className="text-[10px] text-[var(--text-faint)] self-center">Need {7 - streak} more day{streak >= 6 ? '' : 's'}</span>
-                )}
-              </div>
-            </div>
-            {hasNft && (
-              <div className="mt-3 flex gap-2">
-                {[1, 2, 3, 4, 5].map((t) => (
-                  <div key={t} className={`flex-1 h-1.5 rounded-full ${t <= nftTier ? '' : 'opacity-20'}`}
-                    style={{ background: TIER_INFO[t]?.color || '#555' }} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {errMsg && (
-          <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400">
-            {errMsg}
-          </div>
-        )}
-
         {!isConnected ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-2xl">
-              🔗
-            </div>
-            <p className="text-sm text-[var(--text-tertiary)]">Connect your wallet to start</p>
-            <button
-              onClick={() => openConnectModal?.()}
-              className="px-5 py-2.5 rounded-xl bg-[var(--bg-elevated-hover)] hover:bg-[var(--bg-accent)] border border-[var(--border-strong)] hover:border-[var(--border-hover)] transition-all text-xs font-medium"
-            >
+          <div className="flex flex-col items-center justify-center py-32 gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-default)] flex items-center justify-center text-2xl">🔗</div>
+            <p className="text-base text-[var(--text-tertiary)]">Connect your wallet to start</p>
+            <button onClick={() => openConnectModal?.()}
+              className="px-6 py-2.5 rounded-lg bg-[var(--bg-strong)] border border-[var(--border-strong)] hover:bg-[var(--bg-strong-hover)] text-sm font-medium text-[var(--text-bright)] transition-all duration-200">
               Connect Wallet
             </button>
           </div>
-        ) : !contractAddress ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-2xl">
-              ⚠️
-            </div>
-            <p className="text-sm text-[var(--text-tertiary)]">Contract not deployed on <span className="text-[var(--text-secondary)]">{selectedNetwork.name}</span></p>
-          </div>
-        ) : !onRightChain ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-2xl">
-              🔄
-            </div>
-            <p className="text-sm text-[var(--text-tertiary)]">Switch your wallet to <span className="text-[var(--text-secondary)]">{selectedNetwork.name}</span></p>
-            <button onClick={() => switchChain?.({ chainId: selectedNetwork.id })}
-              className="px-5 py-2.5 rounded-xl bg-[var(--bg-elevated-hover)] hover:bg-[var(--bg-accent)] border border-[var(--border-strong)] hover:border-[var(--border-hover)] transition-all text-xs font-medium">
-              Switch Network
-            </button>
-          </div>
         ) : (
-          <>
-            {!turnstileToken && (
-              <div className="mb-5 flex flex-col items-center p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)]">
-                <TurnstileWidget
-                  onVerify={(t) => setTurnstileToken(t)}
-                  onExpire={() => setTurnstileToken(null)}
-                />
+          <div className="flex gap-8">
+            <div className="flex-1">
+              <h2 className="text-sm font-semibold text-[var(--text-bright)] mb-4 uppercase tracking-wider">Mainnet</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+                {mainnetNetworks.map((net) => {
+                  const p = selectedNetwork?.id === net.id && onRightChain ? actionCount : 0;
+                  return (
+                    <NetworkBlock
+                      key={net.id}
+                      network={net}
+                      isConnected={isConnected}
+                      walletChainId={chainId}
+                      progress={p}
+                      onStart={() => handleOpenNetwork(net)}
+                      isSelected={selectedNetwork?.id === net.id}
+                      isDisabled={executingNetworkId !== null && executingNetworkId !== net.id}
+                    />
+                  );
+                })}
               </div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {actions.map((action) => {
-                const a = actionWriters[action.id];
-                const isLimitReached = parsedState ? parsedState.actionCount >= parsedState.maxActions : false;
-                return (
-                  <ActionCard
-                    key={action.id}
-                    action={action}
-                    state={parsedState}
-                    onAction={handleAction}
-                    onMoodSelect={handleMoodSelect}
-                    pending={a.pending}
-                    disabled={!turnstileToken || !isConnected || !contractAddress || isLimitReached || allPending}
-                  />
-                );
-              })}
+              <h2 className="text-sm font-semibold text-[var(--text-bright)] mb-4 uppercase tracking-wider text-[var(--accent)]">Testnet</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {testnetNetworks.map((net) => {
+                  const p = selectedNetwork?.id === net.id && onRightChain ? actionCount : 0;
+                  return (
+                    <NetworkBlock
+                      key={net.id}
+                      network={net}
+                      isConnected={isConnected}
+                      walletChainId={chainId}
+                      progress={p}
+                      onStart={() => handleOpenNetwork(net)}
+                      isSelected={selectedNetwork?.id === net.id}
+                      isDisabled={executingNetworkId !== null && executingNetworkId !== net.id}
+                    />
+                  );
+                })}
+              </div>
             </div>
 
-            {totalActions > 0 && (
-              <div className="mt-6 p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)]">
-                <div className="flex items-center gap-6 text-xs text-[var(--text-tertiary)]">
-                  <span>Total actions: <span className="text-[var(--text-secondary)] font-medium">{totalActions}</span></span>
-                  {streak > 0 && <span>Check-in streak: <span className="text-orange-400 font-medium">{streak}</span></span>}
-                  <span>Network: <span className="text-[var(--text-secondary)]">{selectedNetwork.name}</span></span>
+            {selectedNetwork && (
+              <div className="w-72 shrink-0">
+                <div className="p-5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)] sticky top-8">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div dangerouslySetInnerHTML={{ __html: selectedNetwork.logo }} style={{ width: 24, height: 24 }} />
+                    <div>
+                      <h3 className="text-sm font-semibold text-[var(--text-bright)]">{selectedNetwork.name}</h3>
+                      <p className="text-xs text-[var(--text-tertiary)]">{streak > 0 ? `Streak: ${streak}` : 'No streak'}</p>
+                    </div>
+                  </div>
+
+                  {streak >= 7 && validatedNft && (
+                    <div className="mb-4 p-3 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{hasNft ? TIER_INFO[nftTier]?.icon : '🎫'}</span>
+                        <div className="text-xs">
+                          {hasNft ? (
+                            <p className="text-[var(--text-secondary)]">{TIER_INFO[nftTier]?.label} · {nftStreak}d</p>
+                          ) : (
+                            <p className="text-[var(--text-secondary)]">Mint available</p>
+                          )}
+                        </div>
+                      </div>
+                      {!hasNft && streak >= 7 && (
+                        <button onClick={handleMint} disabled={mintPending}
+                          className="mt-2 w-full py-1.5 rounded-lg bg-[var(--bg-strong)] text-xs font-medium text-[var(--text-bright)] hover:bg-[var(--bg-strong-hover)] transition-all duration-200 disabled:opacity-40">
+                          {mintPending ? 'Minting...' : 'Mint NFT'}
+                        </button>
+                      )}
+                      {hasNft && streak > nftStreak && (
+                        <button onClick={handleUpgrade} disabled={upgradePending}
+                          className="mt-2 w-full py-1.5 rounded-lg bg-[var(--bg-strong)] text-xs font-medium text-[var(--text-bright)] hover:bg-[var(--bg-strong-hover)] transition-all duration-200 disabled:opacity-40">
+                          {upgradePending ? 'Upgrading...' : 'Upgrade'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="text-xs text-[var(--text-tertiary)] space-y-1.5">
+                    <div className="flex justify-between">
+                      <span>Daily progress</span>
+                      <span className="text-[var(--text-bright)] font-medium">{actionCount}/9</span>
+                    </div>
+                    {onRightChain && validatedContract && (
+                      <div className="flex justify-between">
+                        <span>Gas</span>
+                        <span className="text-[var(--text-secondary)]">{getNativeSymbol(selectedNetwork)}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
-
-            {lastTxHash && (
-              <div className="mt-4 text-xs text-[var(--text-quaternary)] break-all">
-                Last tx: <a href="#" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] underline underline-offset-2">{lastTxHash.slice(0, 20)}...</a>
-              </div>
-            )}
-          </>
+          </div>
         )}
 
-        <footer className="mt-12 pt-6 border-t border-[var(--border-subtle)] flex items-center justify-between text-[10px] text-[var(--text-faint)]">
-          <span>NikBase v2.0.0</span>
-          <span>Multi-Chain Hub</span>
+        <div className="mt-10 flex items-center justify-center gap-6 text-sm">
+          <button onClick={() => setShowFaq(!showFaq)}
+            className="text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors underline underline-offset-2">FAQ</button>
+          <button onClick={() => setShowDisclaimer(!showDisclaimer)}
+            className="text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors underline underline-offset-2">Disclaimer</button>
+        </div>
+
+        {showFaq && (
+          <div className="mt-6 p-6 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+            <h3 className="text-base font-semibold text-[var(--text-bright)] mb-4">FAQ</h3>
+            <div className="space-y-4 text-sm text-[var(--text-secondary)]">
+              <div><p className="text-[var(--text-bright)] font-medium mb-1">What is DGDreams?</p><p>Complete daily actions (Check-In, GM, GN, etc.) to build a streak and earn rewards.</p></div>
+              <div><p className="text-[var(--text-bright)] font-medium mb-1">Which wallets?</p><p>MetaMask, Rainbow, Coinbase Wallet, or any WalletConnect wallet.</p></div>
+              <div><p className="text-[var(--text-bright)] font-medium mb-1">How does the streak work?</p><p>Daily Check-In resets every 24h. Maintain streak to mint Soulbound NFTs.</p></div>
+            </div>
+          </div>
+        )}
+
+        {showDisclaimer && (
+          <div className="mt-6 p-6 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+            <h3 className="text-base font-semibold text-[var(--text-bright)] mb-4">Risk Disclaimer</h3>
+            <div className="text-sm text-[var(--text-secondary)] space-y-3">
+              <p>All transactions are irreversible. You are responsible for your wallet and private keys. Smart contract risks exist — use at your own risk.</p>
+              <p className="text-[var(--text-quaternary)]">By continuing, you accept these terms.</p>
+            </div>
+          </div>
+        )}
+
+        <footer className="mt-16 pt-6 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs text-[var(--text-quaternary)]">
+          <span>NikBase v3.0.0</span>
+          <a href="https://github.com/Misagh95" target="_blank" rel="noopener noreferrer" className="text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors group relative" title="View on GitHub">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md bg-[var(--bg-strong)] border border-[var(--border-default)] text-xs text-[var(--text-secondary)] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">View on GitHub</span>
+          </a>
         </footer>
       </div>
+
+      {showTaskPanel && selectedNetwork && validatedContract && validatedAddr && (
+        <SequentialTaskPanel
+          network={selectedNetwork}
+          onClose={handleClosePanel}
+          address={validatedAddr}
+          contractAddress={validatedContract}
+          onComplete={handleTaskComplete}
+          autoStart={panelAutoStart}
+        />
+      )}
     </div>
   );
 }
