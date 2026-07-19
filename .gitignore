@@ -1,0 +1,6 @@
+.vercel
+node_modules/
+dist/
+cache/
+artifacts/
+.env
