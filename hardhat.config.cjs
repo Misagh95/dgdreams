@@ -10,12 +10,17 @@ const config = {
     settings: { optimizer: { enabled: true, runs: 200 }, viaIR: true, evmVersion: "cancun" },
   },
   etherscan: {
-    apiKey: { robinhood: "no-key-required" },
+    apiKey: { robinhood: "no-key-required", ink: "no-key-required" },
     customChains: [
       {
         network: "robinhood",
         chainId: 4663,
         urls: { apiURL: "https://robinhoodchain.blockscout.com/api", browserURL: "https://robinhoodchain.blockscout.com" },
+      },
+      {
+        network: "ink",
+        chainId: 57073,
+        urls: { apiURL: "https://explorer.inkonchain.com/api", browserURL: "https://explorer.inkonchain.com" },
       },
     ],
   },
@@ -78,6 +83,11 @@ const config = {
     simpleChain: {
       url: "https://prod-simple-abroad.qukuaicunzheng.top/rpc/",
       chainId: 1913,
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+    },
+    ink: {
+      url: "https://rpc-gel.inkonchain.com",
+      chainId: 57073,
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
   },

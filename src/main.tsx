@@ -9,7 +9,7 @@ import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
 
-import { baseChain, hyperEvmChain, unichainChain, tempoChain, robinhoodChain } from './config/chains';
+import { baseChain, hyperEvmChain, unichainChain, tempoChain, robinhoodChain, inkChain } from './config/chains';
 import { mainnet, sepolia, baseSepolia } from 'viem/chains';
 import { defineChain } from 'viem';
 
@@ -53,7 +53,7 @@ if (!projectId) {
 const config = getDefaultConfig({
   appName: 'DGDreams',
   projectId,
-  chains: [mainnet, baseChain, hyperEvmChain, unichainChain, tempoChain, robinhoodChain, sepolia, baseSepolia, giwaSepoliaChain, liteforgeChain, arcTestChain, simpleChain],
+  chains: [mainnet, baseChain, hyperEvmChain, unichainChain, tempoChain, robinhoodChain, inkChain, sepolia, baseSepolia, giwaSepoliaChain, liteforgeChain, arcTestChain, simpleChain],
 });
 
 createRoot(document.getElementById("root")!).render(

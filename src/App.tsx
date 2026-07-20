@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAccount, useSwitchChain, useReadContract, useWriteContract, useConfig } from 'wagmi';
+import { getPublicClient } from '@wagmi/core';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { isAddress as isAddr } from 'viem';
@@ -47,6 +48,7 @@ const CONTRACTS: Record<number, `0x${string}` | ''> = {
   4441: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
   5042002: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
   1913: '0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B',
+  57073: '0x68bb9775B11551310D7A37Aae52e6505A0E1e733',
 };
 
 const SOULBOUND_ADDR: Record<number, `0x${string}` | ''> = {
@@ -57,6 +59,7 @@ const SOULBOUND_ADDR: Record<number, `0x${string}` | ''> = {
   4441: '0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0',
   5042002: '0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0',
   1913: '0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0',
+  57073: '',
 };
 
 const SOULBOUND_ABI = [
@@ -275,19 +278,27 @@ function SequentialTaskPanel({
       setTasks(prev => prev.map((t, idx) => idx === i ? { ...t, status: 'signing' as TaskStatus } : t));
 
       const step = DAILY_TASKS[i];
-      let moods = ['happy', 'happy', 'happy'];
       let actualArgs = step.args;
-      if (step.id === 'mood') {
-        const moodIndex = i - 7;
-        actualArgs = [moods[moodIndex]];
-      }
 
       try {
+        const pubClient = getPublicClient(wagmiConfig);
+        let gasOptions: Record<string, bigint> = {};
+        try {
+          const gp = await pubClient.getGasPrice();
+          const boosted = (gp * 150n) / 100n;
+          try {
+            const maxPriority = await pubClient.estimateMaxPriorityFeePerGas();
+            gasOptions = { maxFeePerGas: boosted + maxPriority, maxPriorityFeePerGas: (maxPriority * 150n) / 100n };
+          } catch {
+            gasOptions = { gasPrice: boosted };
+          }
+        } catch {}
         const hash = await writeContractAsync({
           address: contractAddress,
           abi: NIKBASE_ABI,
           functionName: step.method,
           args: actualArgs,
+          ...gasOptions,
         });
 
         setTasks(prev => prev.map((t, idx) => idx === i ? { ...t, txHash: hash } : t));
@@ -357,6 +368,10 @@ function SequentialTaskPanel({
                 <h2 className="text-base font-semibold text-[var(--text-bright)]">{network.name}</h2>
               </div>
               <p className="text-xs text-[var(--text-tertiary)] mt-1">Daily Tasks · {completedCount}/9</p>
+              <a href={getExplorerUrl(network, contractAddress, 'address')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] mt-0.5 font-mono transition-colors">
+                <svg className="w-3 h-3 text-[var(--success)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+                <span>{shortenHash(contractAddress)}</span>
+              </a>
             </div>
             <div className="flex items-center gap-3">
               {failedCount > 0 && !isExecuting && (
@@ -435,11 +450,15 @@ export default function App() {
   const [theme, setTheme] = useState<ThemeId>(getInitialTheme);
   const [showFaq, setShowFaq] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [acceptedDisclaimer, setAcceptedDisclaimer] = useState(() => localStorage.getItem('dgdreams-disclaimer') === 'accepted');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkConfig | null>(null);
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const [panelAutoStart, setPanelAutoStart] = useState(false);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
   const [executingNetworkId, setExecutingNetworkId] = useState<number | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyEvents, setHistoryEvents] = useState<{ block: number; streak: number; date: string }[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -576,6 +595,11 @@ export default function App() {
           </div>
         </header>
 
+        <div className="mb-6 px-4 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs text-[var(--text-tertiary)] flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+          <span>Always verify the network and contract address before signing. Transactions are irreversible.</span>
+        </div>
+
         {!isConnected ? (
           <div className="flex flex-col items-center justify-center py-32 gap-5">
             <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-default)] flex items-center justify-center text-2xl">🔗</div>
@@ -675,46 +699,162 @@ export default function App() {
                         <span className="text-[var(--text-secondary)]">{getNativeSymbol(selectedNetwork)}</span>
                       </div>
                     )}
+                    {validatedContract && (
+                      <a href={getExplorerUrl(selectedNetwork, validatedContract, 'address')} target="_blank" rel="noopener noreferrer" className="flex justify-between items-center text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors no-underline">
+                        <span>Contract</span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3 h-3 text-[var(--success)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+                          <span className="font-mono text-[var(--text-secondary)]">{shortenHash(validatedContract)}</span>
+                        </span>
+                      </a>
+                    )}
                   </div>
+                  {onRightChain && validatedAddr && totalActions > 0 && (
+                    <button onClick={async () => {
+                      setShowHistory(true);
+                      setHistoryLoading(true);
+                      try {
+                        const pc = getPublicClient(wagmiConfig);
+                        const logs = await pc.getLogs({
+                          address: validatedContract,
+                          event: { type: 'event', name: 'CheckedIn', inputs: [{ type: 'address', name: 'user', indexed: true }, { type: 'uint256', name: 'streak', indexed: false }] },
+                          args: { user: validatedAddr },
+                          fromBlock: 0n,
+                          toBlock: 'latest',
+                        });
+                        const evts = await Promise.all(logs.slice(-30).reverse().map(async (l) => {
+                          const b = await pc.getBlock({ blockNumber: l.blockNumber });
+                          return { block: Number(l.blockNumber), streak: Number(l.args.streak), date: new Date(Number(b.timestamp) * 1000).toLocaleDateString() };
+                        }));
+                        setHistoryEvents(evts);
+                      } catch {}
+                      setHistoryLoading(false);
+                    }} className="mt-3 w-full py-1.5 rounded-lg bg-[var(--bg-strong)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-bright)] transition-all duration-200">
+                      View History
+                    </button>
+                  )}
                 </div>
               </div>
             )}
           </div>
         )}
 
+        {showHistory && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowHistory(false)}>
+            <div className="w-full max-w-md rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)] shadow-xl max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-5 pb-3 border-b border-[var(--border-subtle)]">
+                <h2 className="text-base font-semibold text-[var(--text-bright)]">Check-In History</h2>
+                <button onClick={() => setShowHistory(false)} className="text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] text-sm">Close</button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-1">
+                {historyLoading ? (
+                  <div className="p-8 text-center text-sm text-[var(--text-quaternary)]">Loading...</div>
+                ) : historyEvents.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-[var(--text-quaternary)]">No check-ins found</div>
+                ) : (
+                  historyEvents.map((e, i) => (
+                    <div key={i} className="flex items-center justify-between px-4 py-2.5 mx-2 my-0.5 rounded-lg text-sm">
+                      <span className="text-[var(--text-secondary)]">{e.date}</span>
+                      <span className="text-[var(--text-bright)] font-medium">Streak {e.streak}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= 2048 SECTION ================= */}
+        <a href="/2048/" className="block mt-16 p-6 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)] hover:bg-[var(--bg-card-hover)] transition-all duration-200 no-underline group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">🎮</div>
+              <div>
+                <h2 className="text-sm font-semibold text-[var(--text-bright)] group-hover:text-[var(--accent)] transition-colors">
+                  Play 2048
+                </h2>
+                <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
+                  Keep your wallet active on-chain while you play
+                </p>
+              </div>
+            </div>
+            <span className="text-xs px-2.5 py-1 rounded-md bg-[var(--accent-muted)] text-[var(--accent)] font-medium">
+              Open →
+            </span>
+          </div>
+        </a>
+
+        {/* ================= LINKS ================= */}
         <div className="mt-10 flex items-center justify-center gap-6 text-sm">
-          <button onClick={() => setShowFaq(!showFaq)}
-            className="text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors underline underline-offset-2">FAQ</button>
-          <button onClick={() => setShowDisclaimer(!showDisclaimer)}
-            className="text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors underline underline-offset-2">Disclaimer</button>
+          <button
+            onClick={() => setShowFaq(!showFaq)}
+            className="text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors underline underline-offset-2"
+          >
+            FAQ
+          </button>
+          <button
+            onClick={() => setShowDisclaimer(true)}
+            className="text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors underline underline-offset-2"
+          >
+            Terms
+          </button>
         </div>
 
         {showFaq && (
           <div className="mt-6 p-6 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
             <h3 className="text-base font-semibold text-[var(--text-bright)] mb-4">FAQ</h3>
             <div className="space-y-4 text-sm text-[var(--text-secondary)]">
-              <div><p className="text-[var(--text-bright)] font-medium mb-1">What is DGDreams?</p><p>Complete daily actions (Check-In, GM, GN, etc.) to build a streak and earn rewards.</p></div>
-              <div><p className="text-[var(--text-bright)] font-medium mb-1">Which wallets?</p><p>MetaMask, Rainbow, Coinbase Wallet, or any WalletConnect wallet.</p></div>
-              <div><p className="text-[var(--text-bright)] font-medium mb-1">How does the streak work?</p><p>Daily Check-In resets every 24h. Maintain streak to mint Soulbound NFTs.</p></div>
+              <div>
+                <p className="text-[var(--text-bright)] font-medium mb-1">What is DGDreams?</p>
+                <p>Complete daily actions (Check-In, GM, GN, etc.) to build a streak.</p>
+              </div>
+              <div>
+                <p className="text-[var(--text-bright)] font-medium mb-1">Which wallets?</p>
+                <p>MetaMask, Rainbow, Coinbase Wallet, or any WalletConnect wallet.</p>
+              </div>
+              <div>
+                <p className="text-[var(--text-bright)] font-medium mb-1">How does the streak work?</p>
+                <p>Daily Check-In resets every 24h. Maintain streak to mint Soulbound NFTs.</p>
+              </div>
             </div>
           </div>
         )}
 
-        {showDisclaimer && (
+        {showDisclaimer && acceptedDisclaimer && (
           <div className="mt-6 p-6 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
-            <h3 className="text-base font-semibold text-[var(--text-bright)] mb-4">Risk Disclaimer</h3>
+            <h3 className="text-base font-semibold text-[var(--text-bright)] mb-4">Terms & Risks</h3>
             <div className="text-sm text-[var(--text-secondary)] space-y-3">
-              <p>All transactions are irreversible. You are responsible for your wallet and private keys. Smart contract risks exist — use at your own risk.</p>
-              <p className="text-[var(--text-quaternary)]">By continuing, you accept these terms.</p>
+              <p>All transactions are irreversible. You are responsible for your wallet and private keys. Smart contract risks exist.</p>
+              <button onClick={() => setShowDisclaimer(false)} className="text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] underline underline-offset-2 transition-colors">Close</button>
+            </div>
+          </div>
+        )}
+
+        {!acceptedDisclaimer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+            <div className="w-full max-w-md rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-default)] shadow-xl p-6">
+              <h2 className="text-base font-semibold text-[var(--text-bright)] mb-3">Before You Start</h2>
+              <div className="text-sm text-[var(--text-secondary)] space-y-3 mb-6">
+                <p>DGDreams interacts with smart contracts across multiple EVM networks. By using this site you acknowledge:</p>
+                <ul className="list-disc pl-4 space-y-1.5">
+                  <li>All blockchain transactions are irreversible</li>
+                  <li>You are solely responsible for your wallet, keys, and funds</li>
+                  <li>Smart contracts carry inherent risks — use at your own risk</li>
+                  <li>Always verify the network and contract address before signing</li>
+                </ul>
+              </div>
+              <button onClick={() => { localStorage.setItem('dgdreams-disclaimer', 'accepted'); setAcceptedDisclaimer(true); }}
+                className="w-full py-2.5 rounded-lg bg-[var(--accent)] text-sm font-medium text-white hover:opacity-90 transition-all duration-200">
+                I Understand & Continue
+              </button>
             </div>
           </div>
         )}
 
         <footer className="mt-16 pt-6 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs text-[var(--text-quaternary)]">
-          <span>NikBase v3.0.0</span>
-          <a href="https://github.com/Misagh95/dgdreams" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors">
+          <span>&copy; 2024 DG Dreams. All rights reserved.</span>
+          <a href="https://github.com/Misagh95/dgdreams" target="_blank" rel="noopener noreferrer" className="text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors" title="GitHub">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            <span>github.com/Misagh95/dgdreams</span>
           </a>
         </footer>
       </div>

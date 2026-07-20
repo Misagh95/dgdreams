@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dgdreamss95.online/sitemap.xml

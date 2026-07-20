@@ -72,6 +72,19 @@ export const robinhoodChain = defineChain({
   },
 });
 
+export const inkChain = defineChain({
+  id: 57073,
+  name: 'Ink',
+  nativeCurrency: { decimals: 18, name: 'Ethereum', symbol: 'ETH' },
+  rpcUrls: {
+    default: { http: ['https://rpc-gel.inkonchain.com'] },
+    public: { http: ['https://rpc-gel.inkonchain.com', 'https://rpc-qnd.inkonchain.com'] },
+  },
+  blockExplorers: {
+    default: { name: 'InkExplorer', url: 'https://explorer.inkonchain.com' },
+  },
+});
+
 export interface NetworkConfig {
   id: number;
   name: string;
@@ -148,6 +161,17 @@ export const mainnetNetworks: NetworkConfig[] = [
     glow: 'rgba(0, 191, 166, 0.3)',
     border: '#00BFA6',
     logo: '<img src="/logos/robinhood.png" alt="Robinhood" style="width:100%;height:100%;border-radius:6px;object-fit:cover" />',
+  },
+  {
+    id: 57073,
+    name: 'Ink',
+    shortName: 'INK',
+    chain: inkChain,
+    color: '#0052FF',
+    glow: 'rgba(0, 82, 255, 0.3)',
+    border: '#0052FF',
+    logo: '<img src="/logos/ink.svg" alt="Ink" style="width:100%;height:100%;border-radius:6px;object-fit:cover" />',
+    fallbackRpcUrls: ['https://rpc-qnd.inkonchain.com'],
   },
 ];
 

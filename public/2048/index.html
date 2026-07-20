@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2048 · DGDreams</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #f9fafb; color: #111827; min-height: 100vh; }
+    .container { max-width: 540px; margin: 0 auto; padding: 24px 16px; }
+
+    /* ── Header ── */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .header-left h1 { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
+    .header-left p { font-size: 13px; color: #6b7280; margin-top: 4px; }
+    .header-right { display: flex; gap: 8px; align-items: center; }
+    .stat-box {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 6px 14px; text-align: center; min-width: 56px;
+    }
+    .stat-box .stat-label { font-size: 9px; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; }
+    .stat-box .stat-value { font-size: 16px; font-weight: 700; color: #111827; margin-top: 1px; }
+    #restart-btn {
+      background: #111827; color: #fff; border: none; padding: 8px 16px; border-radius: 10px;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+    }
+    #restart-btn:hover { background: #1f2937; }
+
+    /* ── Web3 Dashboard ── */
+    .web3-panel {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; margin-bottom: 16px;
+    }
+    .web3-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .web3-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .web3-right { display: flex; align-items: center; gap: 8px; }
+
+    .network-select {
+      background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 10px;
+      font-size: 12px; font-weight: 500; color: #111827; cursor: pointer; outline: none;
+      font-family: 'Inter', sans-serif;
+    }
+    .network-select:focus { border-color: #111827; }
+
+    .wallet-status {
+      display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b7280;
+    }
+    .wallet-status .connected { color: #059669; font-weight: 500; }
+    .wallet-status .disconnected { color: #6b7280; }
+    .wallet-status .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+    .wallet-status .dot.on { background: #059669; }
+    .wallet-status .dot.off { background: #d1d5db; }
+
+    .tx-badge {
+      font-size: 12px; color: #6b7280; background: #f3f4f6; padding: 4px 10px; border-radius: 6px; font-weight: 500;
+    }
+    .tx-badge strong { color: #111827; }
+
+    .btn {
+      padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none;
+      cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif;
+    }
+    .btn-primary { background: #111827; color: #fff; }
+    .btn-primary:hover { background: #1f2937; }
+    .btn-secondary { background: #f3f4f6; color: #111827; border: 1px solid #e5e7eb; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .btn-danger:hover { background: #fee2e2; }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+    /* ── Notifications ── */
+    .notification {
+      padding: 10px 14px; border-radius: 10px; font-size: 12px; margin-bottom: 12px; display: none;
+      align-items: center; gap: 8px;
+    }
+    .notification.show { display: flex; }
+    .notification-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; }
+    .notification-warn { background: #fefce8; border: 1px solid #fef08a; color: #a16207; }
+    .notification-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+    .notification-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+
+    /* ── Game Board ── */
+    #game-container { position: relative; background: #e5e7eb; border-radius: 14px; padding: 8px; }
+    .grid-inner { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; aspect-ratio: 1; user-select: none; }
+    .cell {
+      background: #f3f4f6; border-radius: 10px; display: flex;
+      align-items: center; justify-content: center; position: relative;
+    }
+    .tile {
+      width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+      border-radius: 10px; font-size: 32px; font-weight: 700; color: #111827;
+    }
+    .tile-2 { background: #e8e4df; } .tile-4 { background: #ddd6cb; }
+    .tile-8 { background: #e3b396; color: #fff; } .tile-16 { background: #e2946e; color: #fff; }
+    .tile-32 { background: #e07c57; color: #fff; } .tile-64 { background: #de643b; color: #fff; }
+    .tile-128 { background: #e2c582; color: #fff; font-size: 28px; }
+    .tile-256 { background: #e0bc6a; color: #fff; font-size: 28px; }
+    .tile-512 { background: #deb454; color: #fff; font-size: 28px; }
+    .tile-1024 { background: #dcac3e; color: #fff; font-size: 24px; }
+    .tile-2048 { background: #daa428; color: #fff; font-size: 24px; }
+
+    .overlay {
+      display: none; position: absolute; inset: 0; background: rgba(255,255,255,0.85);
+      z-index: 10; flex-direction: column; align-items: center; justify-content: center;
+      border-radius: 14px; backdrop-filter: blur(4px);
+    }
+    .overlay.show { display: flex; }
+    .overlay p { font-size: 36px; font-weight: 800; color: #111827; }
+    .overlay .btns { margin-top: 16px; display: flex; gap: 10px; }
+    .overlay .btns button { background: #111827; color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .overlay .btns button:hover { background: #1f2937; }
+
+    /* ── Footer ── */
+    .footer { text-align: center; margin-top: 16px; font-size: 12px; color: #9ca3af; }
+    .footer a { color: #6b7280; text-decoration: none; }
+    .footer a:hover { color: #111827; }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .container { padding: 16px 12px; }
+      .header-left h1 { font-size: 32px; }
+      .stat-box { min-width: 48px; padding: 4px 10px; }
+      .stat-box .stat-value { font-size: 14px; }
+      .web3-row { flex-direction: column; align-items: stretch; }
+      .web3-right { justify-content: flex-end; }
+      .tile { font-size: 24px; }
+      .tile-128, .tile-256, .tile-512 { font-size: 20px; }
+      .tile-1024, .tile-2048 { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>2048</h1>
+        <p>Play & Keep Your Wallet Active</p>
+      </div>
+      <div class="header-right">
+        <div class="stat-box"><div class="stat-label">Score</div><div class="stat-value" id="score">0</div></div>
+        <div class="stat-box"><div class="stat-label">Moves</div><div class="stat-value" id="moves">0</div></div>
+        <div class="stat-box"><div class="stat-label">TX</div><div class="stat-value" id="tx-count">0</div></div>
+        <button id="restart-btn">New</button>
+      </div>
+    </div>
+
+    <!-- Web3 Dashboard -->
+    <div class="web3-panel">
+      <div class="web3-row">
+        <div class="web3-left">
+          <select class="network-select" id="network-select">
+            <option value="">Select Network</option>
+          </select>
+          <div class="wallet-status" id="wallet-status">
+            <span class="dot off" id="status-dot"></span>
+            <span id="status-text">Not connected</span>
+          </div>
+          <span class="tx-badge">TX: <strong id="session-tx">0</strong></span>
+        </div>
+        <div class="web3-right" id="web3-actions">
+          <button class="btn btn-primary" id="connect-btn" onclick="connectWallet()">Connect Wallet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="notification notification-warn" id="notif-wallet">
+      <span>Connect wallet to activate on-chain syncing</span>
+    </div>
+    <div class="notification notification-error" id="notif-network">
+      <span id="notif-network-text">Wrong network selected.</span>
+      <button onclick="doSwitchToSelected()" id="notif-switch-btn" style="display:none;margin-left:8px;padding:3px 10px;border-radius:6px;border:none;background:#111827;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Switch</button>
+    </div>
+
+    <!-- Game -->
+    <div id="game-container">
+      <div class="grid-inner" id="grid-inner"></div>
+      <div class="overlay" id="game-over"><p>Game Over</p><div class="btns"><button onclick="newGame()">Try Again</button><button onclick="backToMenu()">Menu</button></div></div>
+      <div class="overlay" id="game-won"><p>You Win!</p><div class="btns"><button onclick="keepPlaying()">Keep Going</button><button onclick="newGame()">New Game</button></div></div>
+    </div>
+
+    <div class="footer"><a href="/">DGDreams</a> · 2048</div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <script src="networks.js"></script>
+  <script src="blockchain.js"></script>
+  <script src="game_manager.js"></script>
+  <script>
+    // ── Init ──
+    let game = null;
+    let moveCount = 0;
+    let keepPlayingFlag = false;
+    const BINARY_MILESTONES = [16, 32, 64, 128, 256, 512, 1024, 2048];
+    let triggeredMilestones = new Set();
+
+    // Populate network dropdown
+    NETWORKS.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n.id; opt.textContent = n.name;
+      document.getElementById('network-select').appendChild(opt);
+    });
+
+    document.getElementById('network-select').onchange = function() {
+      const net = NETWORKS.find(n => n.id === Number(this.value));
+      if (net) switchNetwork(net);
+    };
+
+    // ── Notifications ──
+    function showNotif(id, show) {
+      document.getElementById(id).classList.toggle('show', show);
+    }
+
+    function refreshNotifs() {
+      showNotif('notif-wallet', !BLOCKCHAIN.connected && !!game);
+      const wrongNet = BLOCKCHAIN.connected && !BLOCKCHAIN.onCorrectNetwork;
+      showNotif('notif-network', wrongNet);
+      const switchBtn = document.getElementById('notif-switch-btn');
+      if (switchBtn) {
+        const sel = document.getElementById('network-select');
+        switchBtn.style.display = wrongNet && sel && sel.value ? 'inline-block' : 'none';
+        const netName = NETWORKS.find(n => n.id === Number(sel?.value));
+        document.getElementById('notif-network-text').textContent = wrongNet
+          ? 'Wrong network. Switch to ' + (netName ? netName.name : 'selected') + '?'
+          : 'Wrong network selected.';
+      }
+    }
+
+    // ── Game Engine ──
+    function buildBoard() {
+      const grid = document.getElementById('grid-inner');
+      grid.innerHTML = '';
+      for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell'; cell.dataset.x = x; cell.dataset.y = y;
+        const tile = document.createElement('div'); tile.className = 'tile';
+        cell.appendChild(tile); grid.appendChild(cell);
+      }
+    }
+
+    function newGame() {
+      document.getElementById('game-over').classList.remove('show');
+      document.getElementById('game-won').classList.remove('show');
+      game = { grid: Array(4).fill().map(() => Array(4).fill(0)), score: 0, over: false, won: false };
+      moveCount = 0; keepPlayingFlag = false; triggeredMilestones = new Set();
+      addRandomTile(); addRandomTile();
+      render(); refreshNotifs();
+    }
+
+    function addRandomTile() {
+      const empty = [];
+      for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) if (!game.grid[y][x]) empty.push({x,y});
+      if (!empty.length) return;
+      const cell = empty[Math.floor(Math.random() * empty.length)];
+      game.grid[cell.y][cell.x] = Math.random() < 0.9 ? 2 : 4;
+    }
+
+    function render() {
+      for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
+        const val = game.grid[y][x];
+        const tile = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"] .tile`);
+        if (tile) { tile.className = 'tile' + (val ? ' tile-' + val : ''); tile.textContent = val || ''; }
+      }
+      document.getElementById('score').textContent = game.score;
+      document.getElementById('moves').textContent = moveCount;
+    }
+
+    function slideRow(row) {
+      let arr = row.filter(v => v); let score = 0;
+      for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i] && arr[i] === arr[i+1]) { arr[i] *= 2; score += arr[i]; arr.splice(i+1, 1); }
+      }
+      while (arr.length < 4) arr.push(0);
+      return { row: arr, score };
+    }
+
+    function move(direction) {
+      if (!game || game.over || (game.won && !keepPlayingFlag)) return;
+      let moved = false, totalScore = 0;
+      const newGrid = Array(4).fill().map(() => Array(4).fill(0));
+      if (direction === 'left' || direction === 'right') {
+        for (let y = 0; y < 4; y++) {
+          const row = direction === 'left' ? [...game.grid[y]] : [...game.grid[y]].reverse();
+          const result = slideRow(row);
+          const final = direction === 'left' ? result.row : result.row.reverse();
+          for (let x = 0; x < 4; x++) { if (game.grid[y][x] !== final[x]) moved = true; newGrid[y][x] = final[x]; }
+          totalScore += result.score;
+        }
+      } else {
+        for (let x = 0; x < 4; x++) {
+          const col = []; for (let y = 0; y < 4; y++) col.push(game.grid[y][x]);
+          if (direction === 'down') col.reverse();
+          const result = slideRow(col);
+          const final = direction === 'down' ? result.row.reverse() : result.row;
+          for (let y = 0; y < 4; y++) { if (game.grid[y][x] !== final[y]) moved = true; newGrid[y][x] = final[y]; }
+          totalScore += result.score;
+        }
+      }
+      if (!moved) return;
+      game.grid = newGrid; game.score += totalScore; moveCount++;
+      if (game.grid.some(row => row.includes(2048)) && !game.won) { game.won = true; document.getElementById('game-won').classList.add('show'); }
+      addRandomTile();
+      const empty = game.grid.some(row => row.includes(0));
+      if (!empty) {
+        let canMerge = false;
+        for (let y = 0; y < 4 && !canMerge; y++) for (let x = 0; x < 4 && !canMerge; x++) {
+          if (x < 3 && game.grid[y][x] === game.grid[y][x+1]) canMerge = true;
+          if (y < 3 && game.grid[y][x] === game.grid[y+1][x]) canMerge = true;
+        }
+        if (!canMerge) { game.over = true; document.getElementById('game-over').classList.add('show'); }
+      }
+      render(); refreshNotifs();
+      // Binary milestones: trigger tx at each power-of-2 score threshold
+      const hit = BINARY_MILESTONES.filter(m => game.score >= m && !triggeredMilestones.has(m));
+      if (hit.length > 0) {
+        hit.forEach(m => triggeredMilestones.add(m));
+        sendSyncTransaction();
+      }
+    }
+
+    function keepPlaying() { keepPlayingFlag = true; document.getElementById('game-won').classList.remove('show'); }
+    function backToMenu() { window.location.href = '/'; }
+
+    // ── Input ──
+    document.addEventListener('keydown', function(e) {
+      const map = { ArrowLeft: 'left', ArrowUp: 'up', ArrowRight: 'right', ArrowDown: 'down' };
+      if (map[e.key]) { e.preventDefault(); move(map[e.key]); }
+    });
+    let tx, ty;
+    document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; });
+    document.addEventListener('touchend', e => {
+      if (!tx || !ty) return;
+      const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+      const ax = Math.abs(dx), ay = Math.abs(dy);
+      if (Math.max(ax, ay) < 30) return;
+      move(ax > ay ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+      tx = ty = null;
+    });
+
+    buildBoard(); newGame();
+    // ── Restart button ──
+    document.getElementById('restart-btn').onclick = newGame;
+    // Update dashboard every 2s
+    setInterval(refreshNotifs, 2000);
+
+    // ── Force switch to whatever is selected in dropdown ──
+    function doSwitchToSelected() {
+      const sel = document.getElementById('network-select');
+      const net = NETWORKS.find(n => n.id === Number(sel.value));
+      if (net) switchNetwork(net);
+    }
+  </script>
+</body>
+</html>
