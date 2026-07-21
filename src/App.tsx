@@ -653,7 +653,7 @@ export default function App() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 mt-4 text-xs text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors"
           >
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            <img src="/logos/ogo.png" alt="" className="w-4 h-4 rounded" />
             Follow @DGDreamsapp on X
           </a>
           {twErrorCode && (
@@ -678,7 +678,7 @@ export default function App() {
       <div className="max-w-5xl mx-auto px-6 py-8">
         <header className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
-            <img src="/logos/ogo.png" alt="OGO" className="w-8 h-8 rounded-lg" />
+            <img src="/logos/ogo.png" alt="OGO" className="w-10 h-10 rounded-lg" />
             <div>
               <h1 className="text-base font-semibold text-[var(--text-bright)]">DGDreams</h1>
               <p className="text-xs text-[var(--text-tertiary)] mt-0.5">A minimal multi-chain Web3 task hub. Execute daily on-chain actions across networks in one place.</p>
