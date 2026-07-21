@@ -24,6 +24,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   const savedState = cookies['tw_state'];
   const codeVerifier = cookies['tw_verifier'];
 
+  console.error('CALLBACK url=%s code=%s state=%s savedState=%s verifier=%s error=%s', req.url?.slice(0,80), code?.slice(0,8)||'-', state?.slice(0,8)||'-', savedState?.slice(0,8)||'-', codeVerifier?.slice(0,8)||'-', error||'-');
+
   const redirect = (params: string) => {
     res.writeHead(302, { Location: APP_URL + params });
     res.end();
