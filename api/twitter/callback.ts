@@ -2,7 +2,6 @@ import type { IncomingMessage, ServerResponse } from 'http';
 
 const CLIENT_ID = process.env.TWITTER_CLIENT_ID || '';
 const CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET || '';
-const TARGET_USERNAME = (process.env.TWITTER_TARGET_USERNAME || 'DGDreamsapp').toLowerCase();
 const APP_URL = process.env.APP_URL || 'http://localhost:5173';
 
 function parseCookies(header: string | undefined): Record<string, string> {
