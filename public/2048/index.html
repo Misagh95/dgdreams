@@ -77,6 +77,7 @@
     .notification-warn { background: #fefce8; border: 1px solid #fef08a; color: #a16207; }
     .notification-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
     .notification-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+    #notif-flash { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 999; max-width: 480px; white-space: nowrap; }
 
     /* ── Game Board ── */
     #game-container { position: relative; background: #e5e7eb; border-radius: 14px; padding: 8px; }
@@ -171,6 +172,7 @@
       <span id="notif-network-text">Wrong network selected.</span>
       <button onclick="doSwitchToSelected()" id="notif-switch-btn" style="display:none;margin-left:8px;padding:3px 10px;border-radius:6px;border:none;background:#111827;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Switch</button>
     </div>
+    <div class="notification" id="notif-flash"><span></span></div>
 
     <!-- Game -->
     <div id="game-container">
@@ -206,26 +208,6 @@
       if (net) switchNetwork(net);
     };
 
-    // ── Notifications ──
-    function showNotif(id, show) {
-      document.getElementById(id).classList.toggle('show', show);
-    }
-
-    function refreshNotifs() {
-      showNotif('notif-wallet', !BLOCKCHAIN.connected && !!game);
-      const wrongNet = BLOCKCHAIN.connected && !BLOCKCHAIN.onCorrectNetwork;
-      showNotif('notif-network', wrongNet);
-      const switchBtn = document.getElementById('notif-switch-btn');
-      if (switchBtn) {
-        const sel = document.getElementById('network-select');
-        switchBtn.style.display = wrongNet && sel && sel.value ? 'inline-block' : 'none';
-        const netName = NETWORKS.find(n => n.id === Number(sel?.value));
-        document.getElementById('notif-network-text').textContent = wrongNet
-          ? 'Wrong network. Switch to ' + (netName ? netName.name : 'selected') + '?'
-          : 'Wrong network selected.';
-      }
-    }
-
     // ── Game Engine ──
     function buildBoard() {
       const grid = document.getElementById('grid-inner');
@@ -244,7 +226,7 @@
       game = { grid: Array(4).fill().map(() => Array(4).fill(0)), score: 0, over: false, won: false };
       moveCount = 0; keepPlayingFlag = false; triggeredMilestones = new Set();
       addRandomTile(); addRandomTile();
-      render(); refreshNotifs();
+      render(); renderUI();
     }
 
     function addRandomTile() {
@@ -309,7 +291,7 @@
         }
         if (!canMerge) { game.over = true; document.getElementById('game-over').classList.add('show'); }
       }
-      render(); refreshNotifs();
+      render(); renderUI();
       // Binary milestones: trigger tx at each power-of-2 score threshold
       const hit = BINARY_MILESTONES.filter(m => game.score >= m && !triggeredMilestones.has(m));
       if (hit.length > 0) {
@@ -338,10 +320,8 @@
     });
 
     buildBoard(); newGame();
-    // ── Restart button ──
     document.getElementById('restart-btn').onclick = newGame;
-    // Update dashboard every 2s
-    setInterval(refreshNotifs, 2000);
+    setInterval(() => renderUI(), 2000);
 
     // ── Force switch to whatever is selected in dropdown ──
     function doSwitchToSelected() {

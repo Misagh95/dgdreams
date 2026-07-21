@@ -171,6 +171,8 @@ function NetworkBlock({
   onStart,
   isSelected,
   isDisabled,
+  isEnabled,
+  onToggle,
 }: {
   network: NetworkConfig;
   isConnected: boolean;
@@ -179,24 +181,41 @@ function NetworkBlock({
   onStart: () => void;
   isSelected: boolean;
   isDisabled: boolean;
+  isEnabled: boolean;
+  onToggle: (id: number) => void;
 }) {
   const contractAddr = CONTRACTS[network.id];
   const hasContract = !!contractAddr;
   const completed = progress >= 9;
 
-  const canInteract = hasContract && !completed && !isDisabled;
+  const canInteract = hasContract && !completed && !isDisabled && isEnabled;
 
   return (
     <div
       onClick={canInteract ? onStart : undefined}
       className={cn(
-        'p-6 rounded-xl bg-[var(--bg-card)] border transition-all duration-200',
+        'p-6 rounded-xl bg-[var(--bg-card)] border transition-all duration-200 relative',
         isSelected
           ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]'
           : 'border-[var(--border-default)] hover:border-[var(--border-hover)]',
-        isDisabled ? 'opacity-40 pointer-events-none' : 'cursor-pointer',
+        !isEnabled ? 'opacity-30' : '',
+        canInteract ? 'cursor-pointer' : '',
       )}
     >
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggle(network.id); }}
+        className={cn(
+          'absolute top-4 right-4 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200',
+          isEnabled ? 'bg-[var(--accent)] border-[var(--accent)]' : 'bg-transparent border-[var(--border-strong)]',
+        )}
+      >
+        {isEnabled && (
+          <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        )}
+      </button>
+
       <div className="flex items-center gap-3 mb-4">
         <div dangerouslySetInnerHTML={{ __html: network.logo }} style={{ width: 28, height: 28 }} />
         <div>
@@ -220,6 +239,8 @@ function NetworkBlock({
         <p className="text-xs text-[var(--text-quaternary)]">Not deployed</p>
       ) : completed ? (
         <p className="text-xs text-[var(--success)]">Completed today</p>
+      ) : !isEnabled ? (
+        <p className="text-xs text-[var(--text-quaternary)]">Disabled — toggle to enable</p>
       ) : (
         <button onClick={(e) => { e.stopPropagation(); onStart(); }}
           disabled={isDisabled}
@@ -459,6 +480,28 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [historyEvents, setHistoryEvents] = useState<{ block: number; streak: number; date: string }[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [enabledNetworks, setEnabledNetworks] = useState<Set<number>>(() => {
+    if (typeof window === 'undefined') return new Set<number>();
+    try { const v = JSON.parse(localStorage.getItem('dgdreams-enabled-nets') || 'null'); return v ? new Set(v) : new Set(); } catch { return new Set(); }
+  });
+  const [netFilter, setNetFilter] = useState<'all' | 'selected'>('all');
+  const [twitterHandle, setTwitterHandle] = useState<string>(() => localStorage.getItem('dgdreams-twitter') || '');
+  const [twError, setTwError] = useState<string>('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ok = params.get('tw_ok');
+    const handle = params.get('tw') || '';
+    const error = params.get('tw_error') || '';
+    if (ok && handle) {
+      localStorage.setItem('dgdreams-twitter', handle);
+      setTwitterHandle(handle);
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (error) {
+      setTwError(error + (handle ? ' (' + handle + ')' : ''));
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -569,7 +612,54 @@ export default function App() {
     setExecutingNetworkId(null);
   }, []);
 
+  const handleToggleNetwork = useCallback((id: number) => {
+    setEnabledNetworks(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) { next.delete(id); }
+      else { next.add(id); }
+      localStorage.setItem('dgdreams-enabled-nets', JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+
   const knownProgress = selectedNetwork && onRightChain ? actionCount : 0;
+
+  const needsTwitter = !twitterHandle;
+
+  if (needsTwitter) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center">
+          <div className="w-16 h-16 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-default)] flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <span className="text-3xl">🐦</span>
+          </div>
+          <h2 className="text-xl font-bold text-[var(--text-bright)] mb-2">Follow to Continue</h2>
+          <p className="text-sm text-[var(--text-tertiary)] mb-6 leading-relaxed">
+            To use DGDreams, follow <strong className="text-[var(--text-bright)]">@DGDreamsapp</strong> on X (Twitter) and connect your account.
+          </p>
+          <a
+            href="/api/twitter/auth"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--bg-strong)] border border-[var(--border-strong)] hover:bg-[var(--bg-strong-hover)] text-sm font-semibold text-[var(--text-bright)] transition-all duration-200 shadow-lg"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            Connect X (Twitter)
+          </a>
+          {twError && (
+            <div className="mt-4 p-3 rounded-lg bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-sm text-[var(--danger)]">
+              {twError === 'not_following' ? 'You must follow @DGDreamsapp first.' :
+               twError === 'oauth_failed' ? 'Twitter login was cancelled or failed.' :
+               twError === 'token_exchange_failed' || twError === 'userinfo_failed' || twError === 'follow_check_failed' ? 'Twitter verification failed. Try again.' :
+               twError === 'server_error' ? 'Server error. Try again later.' :
+               'Verification failed: ' + twError}
+            </div>
+          )}
+          <p className="mt-6 text-xs text-[var(--text-quaternary)]">
+            We only use this to verify you follow our account. No tweets are posted on your behalf.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)]">
@@ -580,7 +670,11 @@ export default function App() {
             <div>
               <h1 className="text-base font-semibold text-[var(--text-bright)]">DGDreams</h1>
               <p className="text-xs text-[var(--text-tertiary)] mt-0.5">A minimal multi-chain Web3 task hub. Execute daily on-chain actions across networks in one place.</p>
-              <a href="https://dgdreamss95.online" target="_blank" rel="noopener noreferrer" className="text-[10px] text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors mt-0.5 inline-block">dgdreamss95.online</a>
+              <div className="flex items-center gap-2 mt-0.5">
+                <a href="https://dgdreamss95.online" target="_blank" rel="noopener noreferrer" className="text-[10px] text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors">dgdreamss95.online</a>
+                <span className="text-[10px] text-[var(--text-quaternary)]">·</span>
+                <span className="text-[10px] text-[var(--text-secondary)]">{twitterHandle}</span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -601,20 +695,90 @@ export default function App() {
         </div>
 
         {!isConnected ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-default)] flex items-center justify-center text-2xl">🔗</div>
-            <p className="text-base text-[var(--text-tertiary)]">Connect your wallet to start</p>
+          <div className="flex flex-col items-center py-24 gap-8">
+            <div className="w-16 h-16 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-default)] flex items-center justify-center shadow-lg">
+              <span className="text-3xl">🌀</span>
+            </div>
+            <div className="text-center max-w-lg">
+              <h2 className="text-2xl font-bold text-[var(--text-bright)] mb-2">DGDreams</h2>
+              <p className="text-sm text-[var(--text-tertiary)] leading-relaxed">
+                A multi-chain Web3 task hub. Execute your daily on-chain actions — check-in, GM, GN,
+                dose, mood, sanitize, counter, and spin — across 13 EVM networks with one click.
+                Keep your wallet active, build streaks, and earn soulbound NFTs.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-6 max-w-lg w-full">
+              <div className="text-center p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+                <div className="text-xl mb-2">🔗</div>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">Connect</p>
+                <p className="text-[10px] text-[var(--text-quaternary)] mt-0.5">Your wallet</p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+                <div className="text-xl mb-2">⚙️</div>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">Select</p>
+                <p className="text-[10px] text-[var(--text-quaternary)] mt-0.5">Your networks</p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+                <div className="text-xl mb-2">✅</div>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">Execute</p>
+                <p className="text-[10px] text-[var(--text-quaternary)] mt-0.5">9 txs per chain</p>
+              </div>
+            </div>
             <button onClick={() => openConnectModal?.()}
-              className="px-6 py-2.5 rounded-lg bg-[var(--bg-strong)] border border-[var(--border-strong)] hover:bg-[var(--bg-strong-hover)] text-sm font-medium text-[var(--text-bright)] transition-all duration-200">
+              className="px-8 py-3 rounded-xl bg-[var(--bg-strong)] border border-[var(--border-strong)] hover:bg-[var(--bg-strong-hover)] text-sm font-semibold text-[var(--text-bright)] transition-all duration-200 shadow-lg">
               Connect Wallet
             </button>
+            <div className="flex items-center gap-6 text-xs text-[var(--text-quaternary)]">
+              <span>7 mainnets</span>
+              <span className="w-1 h-1 rounded-full bg-[var(--border-strong)]" />
+              <span>6 testnets</span>
+              <span className="w-1 h-1 rounded-full bg-[var(--border-strong)]" />
+              <span>13 EVM chains</span>
+            </div>
           </div>
         ) : (
           <div className="flex gap-8">
             <div className="flex-1">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setNetFilter(n => n === 'all' ? 'selected' : 'all')}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border',
+                      netFilter === 'all'
+                        ? 'bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30'
+                        : 'bg-[var(--bg-strong)] text-[var(--text-secondary)] border-[var(--border-strong)]',
+                    )}
+                  >
+                    {netFilter === 'all' ? 'All Networks' : 'Selected Only'}
+                  </button>
+                  {enabledNetworks.size > 0 && (
+                    <button
+                      onClick={() => { setEnabledNetworks(new Set()); localStorage.removeItem('dgdreams-enabled-nets'); }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] border border-[var(--border-strong)] bg-[var(--bg-strong)] transition-all duration-200"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      const all = [...mainnetNetworks, ...testnetNetworks].map(n => n.id);
+                      setEnabledNetworks(new Set(all));
+                      localStorage.setItem('dgdreams-enabled-nets', JSON.stringify(all));
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] border border-[var(--border-strong)] bg-[var(--bg-strong)] transition-all duration-200"
+                  >
+                    Select All
+                  </button>
+                </div>
+                <span className="text-xs text-[var(--text-quaternary)]">
+                  {enabledNetworks.size || 'no'}/{allNetworks.length} selected
+                </span>
+              </div>
+
               <h2 className="text-sm font-semibold text-[var(--text-bright)] mb-4 uppercase tracking-wider">Mainnet</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-                {mainnetNetworks.map((net) => {
+                {mainnetNetworks.filter(n => netFilter === 'all' || enabledNetworks.has(n.id)).map((net) => {
                   const p = selectedNetwork?.id === net.id && onRightChain ? actionCount : 0;
                   return (
                     <NetworkBlock
@@ -626,13 +790,15 @@ export default function App() {
                       onStart={() => handleOpenNetwork(net)}
                       isSelected={selectedNetwork?.id === net.id}
                       isDisabled={executingNetworkId !== null && executingNetworkId !== net.id}
+                      isEnabled={enabledNetworks.has(net.id)}
+                      onToggle={handleToggleNetwork}
                     />
                   );
                 })}
               </div>
               <h2 className="text-sm font-semibold text-[var(--text-bright)] mb-4 uppercase tracking-wider text-[var(--accent)]">Testnet</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {testnetNetworks.map((net) => {
+                {testnetNetworks.filter(n => netFilter === 'all' || enabledNetworks.has(n.id)).map((net) => {
                   const p = selectedNetwork?.id === net.id && onRightChain ? actionCount : 0;
                   return (
                     <NetworkBlock
@@ -644,6 +810,8 @@ export default function App() {
                       onStart={() => handleOpenNetwork(net)}
                       isSelected={selectedNetwork?.id === net.id}
                       isDisabled={executingNetworkId !== null && executingNetworkId !== net.id}
+                      isEnabled={enabledNetworks.has(net.id)}
+                      onToggle={handleToggleNetwork}
                     />
                   );
                 })}
