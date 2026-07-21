@@ -12,8 +12,8 @@ export default async function handler(_req: IncomingMessage, res: ServerResponse
 
   const maxAge = 5 * 60;
   res.setHeader('Set-Cookie', [
-    `tw_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`,
-    `tw_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`,
+    `tw_state=${state}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${maxAge}`,
+    `tw_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${maxAge}`,
   ]);
 
   const url = new URL('https://twitter.com/i/oauth2/authorize');
