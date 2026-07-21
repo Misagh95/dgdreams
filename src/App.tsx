@@ -486,7 +486,8 @@ export default function App() {
   });
   const [netFilter, setNetFilter] = useState<'all' | 'selected'>('all');
   const [twitterHandle, setTwitterHandle] = useState<string>(() => localStorage.getItem('dgdreams-twitter') || '');
-  const [twError, setTwError] = useState<string>('');
+  const [twErrorCode, setTwErrorCode] = useState<string>('');
+  const [twErrorDetail, setTwErrorDetail] = useState<string>('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -499,7 +500,8 @@ export default function App() {
       setTwitterHandle(handle);
       window.history.replaceState({}, '', window.location.pathname);
     } else if (error) {
-      setTwError(error + (handle ? ' (' + handle + ')' : '') + (detail ? ' [' + detail + ']' : ''));
+      setTwErrorCode(error);
+      setTwErrorDetail(detail);
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
@@ -654,12 +656,13 @@ export default function App() {
             <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             Follow @DGDreamsapp on X
           </a>
-          {twError && (
-            <div className="mt-4 p-3 rounded-lg bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-sm text-[var(--danger)]">
-              {twError === 'oauth_failed' ? 'Twitter login was cancelled or failed.' :
-               twError === 'token_exchange_failed' || twError === 'userinfo_failed' || twError === 'follow_check_failed' ? 'Twitter verification failed. Try again.' :
-               twError === 'server_error' ? 'Server error. Try again later.' :
-               'Verification failed: ' + twError}
+          {twErrorCode && (
+            <div className="mt-4 p-3 rounded-lg bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-sm text-[var(--danger)] text-left">
+              {twErrorCode === 'oauth_failed' ? 'Twitter login was cancelled or failed.' :
+               twErrorCode === 'token_exchange_failed' || twErrorCode === 'userinfo_failed' ? 'Twitter verification failed.' :
+               twErrorCode === 'server_error' ? 'Server error.' :
+               'Verification failed'}
+              {twErrorDetail && <span className="block mt-1 opacity-60 text-xs break-all">{twErrorDetail}</span>}
             </div>
           )}
           <p className="mt-6 text-xs text-[var(--text-quaternary)]">
@@ -682,7 +685,10 @@ export default function App() {
               <div className="flex items-center gap-2 mt-0.5">
                 <a href="https://dgdreamss95.online" target="_blank" rel="noopener noreferrer" className="text-[10px] text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors">dgdreamss95.online</a>
                 <span className="text-[10px] text-[var(--text-quaternary)]">·</span>
-                <span className="text-[10px] text-[var(--text-secondary)]">{twitterHandle}</span>
+                <button onClick={() => { localStorage.removeItem('dgdreams-twitter'); setTwitterHandle(''); }}
+                  className="text-[10px] text-[var(--text-secondary)] hover:text-[var(--danger)] transition-colors cursor-pointer underline decoration-dotted underline-offset-2">
+                  {twitterHandle}
+                </button>
               </div>
             </div>
           </div>
