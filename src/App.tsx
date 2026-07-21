@@ -493,12 +493,13 @@ export default function App() {
     const ok = params.get('tw_ok');
     const handle = params.get('tw') || '';
     const error = params.get('tw_error') || '';
+    const detail = params.get('tw_detail') || '';
     if (ok && handle) {
       localStorage.setItem('dgdreams-twitter', handle);
       setTwitterHandle(handle);
       window.history.replaceState({}, '', window.location.pathname);
     } else if (error) {
-      setTwError(error + (handle ? ' (' + handle + ')' : ''));
+      setTwError(error + (handle ? ' (' + handle + ')' : '') + (detail ? ' [' + detail + ']' : ''));
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);

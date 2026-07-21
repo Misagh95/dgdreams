@@ -49,36 +49,39 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       }),
     });
 
+    let body: any;
+    try { body = await tokenRes.json(); } catch { body = {}; }
     if (!tokenRes.ok) {
-      return redirect('/?tw_error=token_exchange_failed');
+      return redirect('/?tw_error=token_exchange_failed&tw_detail=' + encodeURIComponent(JSON.stringify({ status: tokenRes.status, body })));
     }
 
-    const tokenData: any = await tokenRes.json();
-    const accessToken = tokenData.access_token;
+    const accessToken = body.access_token;
 
     const meRes = await fetch('https://api.twitter.com/2/users/me', {
       headers: { Authorization: 'Bearer ' + accessToken },
     });
 
+    let meBody: any;
+    try { meBody = await meRes.json(); } catch { meBody = {}; }
     if (!meRes.ok) {
-      return redirect('/?tw_error=userinfo_failed');
+      return redirect('/?tw_error=userinfo_failed&tw_detail=' + encodeURIComponent(JSON.stringify({ status: meRes.status, body: meBody })));
     }
 
-    const meData: any = await meRes.json();
-    const username: string = meData.data?.username || '';
-    const userId: string = meData.data?.id || '';
+    const username: string = meBody.data?.username || '';
+    const userId: string = meBody.data?.id || '';
 
     const followRes = await fetch(
       `https://api.twitter.com/2/users/${userId}/following?max_results=1000&user.fields=username`,
       { headers: { Authorization: 'Bearer ' + accessToken } },
     );
 
+    let followBody: any;
+    try { followBody = await followRes.json(); } catch { followBody = {}; }
     if (!followRes.ok) {
-      return redirect('/?tw_error=follow_check_failed');
+      return redirect('/?tw_error=follow_check_failed&tw_detail=' + encodeURIComponent(JSON.stringify({ status: followRes.status, body: followBody })));
     }
 
-    const followData: any = await followRes.json();
-    const following: any[] = followData.data || [];
+    const following: any[] = followBody.data || [];
     const isFollowing = following.some(
       (u: any) => u.username?.toLowerCase() === TARGET_USERNAME,
     );
@@ -88,7 +91,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     }
 
     return redirect('/?tw_ok=1&tw=' + encodeURIComponent('@' + username));
-  } catch {
-    return redirect('/?tw_error=server_error');
+  } catch (e: any) {
+    return redirect('/?tw_error=server_error&tw_detail=' + encodeURIComponent(e?.message || 'unknown'));
   }
 }
