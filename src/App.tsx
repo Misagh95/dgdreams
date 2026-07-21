@@ -631,8 +631,8 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-default)] flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <span className="text-3xl">🐦</span>
+          <div className="w-16 h-16 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-default)] flex items-center justify-center mx-auto mb-6 shadow-lg overflow-hidden">
+            <img src="/logos/ogo.png" alt="OGO" className="w-10 h-10" />
           </div>
           <h2 className="text-xl font-bold text-[var(--text-bright)] mb-2">Connect X (Twitter)</h2>
           <p className="text-sm text-[var(--text-tertiary)] mb-6 leading-relaxed">
@@ -645,6 +645,15 @@ export default function App() {
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             Connect X (Twitter)
           </a>
+          <a
+            href="https://x.com/DGDreamsapp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 mt-4 text-xs text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors"
+          >
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            Follow @DGDreamsapp on X
+          </a>
           {twError && (
             <div className="mt-4 p-3 rounded-lg bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-sm text-[var(--danger)]">
               {twError === 'oauth_failed' ? 'Twitter login was cancelled or failed.' :
@@ -654,7 +663,7 @@ export default function App() {
             </div>
           )}
           <p className="mt-6 text-xs text-[var(--text-quaternary)]">
-            We only use this to verify you follow our account. No tweets are posted on your behalf.
+            We only use this to verify your account. No tweets are posted on your behalf.
           </p>
         </div>
       </div>
@@ -696,8 +705,8 @@ export default function App() {
 
         {!isConnected ? (
           <div className="flex flex-col items-center py-24 gap-8">
-            <div className="w-16 h-16 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-default)] flex items-center justify-center shadow-lg">
-              <span className="text-3xl">🌀</span>
+            <div className="w-16 h-16 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-default)] flex items-center justify-center shadow-lg overflow-hidden">
+              <img src="/logos/ogo.png" alt="OGO" className="w-10 h-10" />
             </div>
             <div className="text-center max-w-lg">
               <h2 className="text-2xl font-bold text-[var(--text-bright)] mb-2">DGDreams</h2>
