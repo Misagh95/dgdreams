@@ -640,13 +640,12 @@ export default function App() {
           <p className="text-sm text-[var(--text-tertiary)] mb-6 leading-relaxed">
             Connect your X (Twitter) account to verify you're human and access DGDreams. We only use this to verify your account.
           </p>
-          <a
-            href="/api/twitter/auth"
+          <button onClick={() => window.location.replace('/api/twitter/auth')}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--bg-strong)] border border-[var(--border-strong)] hover:bg-[var(--bg-strong-hover)] text-sm font-semibold text-[var(--text-bright)] transition-all duration-200 shadow-lg"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             Connect X (Twitter)
-          </a>
+          </button>
           <a
             href="https://x.com/DGDreamsapp"
             target="_blank"
@@ -685,10 +684,7 @@ export default function App() {
               <div className="flex items-center gap-2 mt-0.5">
                 <a href="https://dgdreamss95.online" target="_blank" rel="noopener noreferrer" className="text-[10px] text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] transition-colors">dgdreamss95.online</a>
                 <span className="text-[10px] text-[var(--text-quaternary)]">·</span>
-                <button onClick={() => { localStorage.removeItem('dgdreams-twitter'); setTwitterHandle(''); }}
-                  className="text-[10px] text-[var(--text-secondary)] hover:text-[var(--danger)] transition-colors cursor-pointer underline decoration-dotted underline-offset-2">
-                  {twitterHandle}
-                </button>
+                <span className="text-[10px] text-[var(--text-secondary)]">{twitterHandle}</span>
               </div>
             </div>
           </div>
