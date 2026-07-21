@@ -68,28 +68,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     }
 
     const username: string = meBody.data?.username || '';
-    const userId: string = meBody.data?.id || '';
-
-    const followRes = await fetch(
-      `https://api.twitter.com/2/users/${userId}/following?max_results=1000&user.fields=username`,
-      { headers: { Authorization: 'Bearer ' + accessToken } },
-    );
-
-    let followBody: any;
-    try { followBody = await followRes.json(); } catch { followBody = {}; }
-    if (!followRes.ok) {
-      return redirect('/?tw_error=follow_check_failed&tw_detail=' + encodeURIComponent(JSON.stringify({ status: followRes.status, body: followBody })));
+    if (!username) {
+      return redirect('/?tw_error=userinfo_failed&tw_detail=no_username');
     }
-
-    const following: any[] = followBody.data || [];
-    const isFollowing = following.some(
-      (u: any) => u.username?.toLowerCase() === TARGET_USERNAME,
-    );
-
-    if (!isFollowing) {
-      return redirect('/?tw_error=not_following&tw=' + encodeURIComponent('@' + username));
-    }
-
     return redirect('/?tw_ok=1&tw=' + encodeURIComponent('@' + username));
   } catch (e: any) {
     return redirect('/?tw_error=server_error&tw_detail=' + encodeURIComponent(e?.message || 'unknown'));

@@ -3,7 +3,7 @@ import crypto from 'crypto';
 
 const CLIENT_ID = process.env.TWITTER_CLIENT_ID || '';
 const CALLBACK_URL = (process.env.APP_URL || 'http://localhost:5173') + '/api/twitter/callback';
-const SCOPE = 'tweet.read users.read follows.read';
+const SCOPE = 'users.read';
 
 export default async function handler(_req: IncomingMessage, res: ServerResponse) {
   const state = crypto.randomBytes(16).toString('hex');

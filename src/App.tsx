@@ -634,9 +634,9 @@ export default function App() {
           <div className="w-16 h-16 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-default)] flex items-center justify-center mx-auto mb-6 shadow-lg">
             <span className="text-3xl">🐦</span>
           </div>
-          <h2 className="text-xl font-bold text-[var(--text-bright)] mb-2">Follow to Continue</h2>
+          <h2 className="text-xl font-bold text-[var(--text-bright)] mb-2">Connect X (Twitter)</h2>
           <p className="text-sm text-[var(--text-tertiary)] mb-6 leading-relaxed">
-            To use DGDreams, follow <strong className="text-[var(--text-bright)]">@DGDreamsapp</strong> on X (Twitter) and connect your account.
+            Connect your X (Twitter) account to verify you're human and access DGDreams. We only use this to verify your account.
           </p>
           <a
             href="/api/twitter/auth"
@@ -647,8 +647,7 @@ export default function App() {
           </a>
           {twError && (
             <div className="mt-4 p-3 rounded-lg bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-sm text-[var(--danger)]">
-              {twError === 'not_following' ? 'You must follow @DGDreamsapp first.' :
-               twError === 'oauth_failed' ? 'Twitter login was cancelled or failed.' :
+              {twError === 'oauth_failed' ? 'Twitter login was cancelled or failed.' :
                twError === 'token_exchange_failed' || twError === 'userinfo_failed' || twError === 'follow_check_failed' ? 'Twitter verification failed. Try again.' :
                twError === 'server_error' ? 'Server error. Try again later.' :
                'Verification failed: ' + twError}
