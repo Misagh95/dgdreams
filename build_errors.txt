@@ -1,0 +1,31 @@
+﻿Γû▓ Next.js 16.2.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+node.exe : (node:9420) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` 
+instead.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:9420) [DE...oks()` instead.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Γ£ô Compiled successfully in 17.5s
+  Running TypeScript ...
+Failed to type check.
+
+./src/app/dashboard/page.tsx:256:46
+Type error: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not 
+assignable to type 'number'.
+
+  [90m254 |[0m                 <motion.div
+  [90m255 |[0m                   animate={{ opacity: [[35m1[0m, [35m0.4[0m, [35m1[0m], scale: [[35m1[0m, 
+[35m0.85[0m, [35m1[0m] }}
+[31m[1m>[0m [90m256 |[0m                   transition={{ duration: [35m2[0m, repeat: [33mInfinity[0m, ease: 
+[32m"easeInOut"[0m }}
+  [90m    |[0m                                              [31m[1m^[0m
+  [90m257 |[0m                   className=[32m"w-2.5 h-2.5 rounded-full"[0m
+  [90m258 |[0m                   style={{
+  [90m259 |[0m                     background: [32m"var(--success)"[0m,
+Next.js build worker exited with code: 1 and signal: null
