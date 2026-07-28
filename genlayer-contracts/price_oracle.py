@@ -20,29 +20,23 @@ class PriceOracle(gl.Contract):
     def fetchPrice(self, symbol: str) -> str:
         url = "https://api.binance.com/api/v3/ticker/24hr?symbol=" + symbol + "USDT"
 
-        def fetch() -> str:
+        raw = gl.nondet.web.render(url, mode="text")
+
+        if raw is None or raw.strip() == "" or raw.strip() == "null":
+            result = json.dumps({"symbol": symbol, "price": 0, "error": "down", "status": "unavailable"}, sort_keys=True)
+        else:
             try:
-                raw = gl.nondet.web.render(url, mode="text")
-                if raw is None or raw.strip() == "" or raw.strip() == "null":
-                    return json.dumps({"error": "down", "status": "unavailable"})
                 j = json.loads(raw)
                 p = float(j["lastPrice"])
-                return json.dumps({
+                result = json.dumps({
                     "symbol": symbol,
                     "price": round(p, 2),
                     "status": "ok"
                 }, sort_keys=True)
             except Exception:
-                return json.dumps({"error": "down", "status": "unavailable"})
-
-        result = gl.eq_principle.prompt_comparative(
-            fetch,
-            "The outputs represent the same crypto price. "
-            "They are equivalent if both show unavailable, "
-            "or if price values are within 2% and symbol matches."
-        )
+                result = json.dumps({"symbol": symbol, "price": 0, "error": "parse", "status": "unavailable"}, sort_keys=True)
 
         data = json.loads(self.store)
-        data[symbol] = json.loads(str(result))
+        data[symbol] = json.loads(result)
         self.store = json.dumps(data, sort_keys=True)
-        return str(result)
+        return result
