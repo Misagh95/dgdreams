@@ -24,6 +24,7 @@ export default function GenLayerOraclePage() {
   const [onChainPrice, setOnChainPrice] = useState<number | null>(null);
   const [onChainStatus, setOnChainStatus] = useState<string>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [binanceError, setBinanceError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
   const [txConsensusStatus, setTxConsensusStatus] = useState<string | null>(null);
@@ -33,13 +34,15 @@ export default function GenLayerOraclePage() {
 
   const fetchBinancePrice = useCallback(async (sym: string) => {
     setLoadingBinance(true);
+    setBinanceError(null);
     try {
-      const res = await fetch(`/api/binance/price?symbol=${BINANCE_SYMBOLS[sym]}`);
-      if (!res.ok) throw new Error("API error");
+      const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${BINANCE_SYMBOLS[sym]}`);
+      if (!res.ok) throw new Error(`Binance HTTP ${res.status}`);
       const data = await res.json();
-      setLivePrice(data.price);
-    } catch {
+      setLivePrice(parseFloat(data.price));
+    } catch (e: any) {
       setLivePrice(null);
+      setBinanceError(e?.message || "Failed to fetch live price");
     } finally {
       setLoadingBinance(false);
     }
@@ -207,6 +210,11 @@ export default function GenLayerOraclePage() {
                 </div>
               )}
 
+              {binanceError && (
+                <p className="text-xs mt-2 text-center" style={{ color: "var(--danger)" }}>
+                  Binance API: {binanceError}
+                </p>
+              )}
               {error && (
                 <p className="text-xs mt-2 text-center" style={{ color: "var(--danger)" }}>
                   {error}
