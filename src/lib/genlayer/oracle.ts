@@ -34,11 +34,9 @@ export async function oracleFetchPrice(
 export async function getTxStatus(hash: string): Promise<{ hash: string; status: string }> {
   try {
     const client = getGenLayerReadClient();
-    const receipt = (await client.getTransactionReceipt({ hash: hash as `0x${string}` })) as any;
-    if (receipt?.status === "ACCEPTED" || receipt?.status === "FINALIZED") {
-      return { hash, status: "FINALIZED" };
-    }
-    return { hash, status: receipt?.status || "UNKNOWN" };
+    const tx = (await client.getTransaction({ hash: hash as any })) as any;
+    const s = tx?.statusName || tx?.status || "UNKNOWN";
+    return { hash, status: String(s) };
   } catch {
     return { hash, status: "UNKNOWN" };
   }
