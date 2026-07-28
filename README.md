@@ -212,6 +212,49 @@ class NikBase(gl.Contract):
 
 > ⚠️ GenLayer uses **Python** (not Solidity) and a non-EVM runtime. Contract interactions go through `genlayer-js`, not wagmi/viem.
 
+### AI Price Oracle
+
+An Intelligent Contract that fetches live cryptocurrency prices from the Binance API using GenLayer's AI-validator consensus — meaning 5 independent validators each fetch the data and agree on the result before it's written on-chain.
+
+**Contract**: [`PriceOracle`](genlayer-contracts/price_oracle.py)
+
+```python
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+from genlayer import *
+import json
+
+class PriceOracle(gl.Contract):
+    store: str
+
+    @gl.public.view
+    def getPrice(self, symbol: str) -> str: ...
+
+    @gl.public.write
+    def fetchPrice(self, symbol: str) -> typing.Any:
+        # 1. Each validator fetches price from Binance API
+        def fetch() -> str:
+            raw = gl.nondet.web.render(
+                f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}USDT",
+                mode="text"
+            )
+            ...
+        # 2. Validators reach consensus via prompt_comparative
+        result = gl.eq_principle.prompt_comparative(
+            fetch,
+            "Equivalent if same symbol and price within 1%"
+        )
+        # 3. Agreed price is stored on-chain
+        self.store = json.dumps(all_data, sort_keys=True)
+```
+
+**Flow**:
+1. User clicks "Fetch BTC/USDT" on the frontend
+2. Contract calls `gl.nondet.web.render()` — each validator independently fetches Binance
+3. `gl.eq_principle.prompt_comparative()` ensures validators agree within 1% tolerance
+4. Agreed-upon price is stored on GenLayer and displayed in real-time
+
+**Page**: [`/genlayer-oracle`](https://dgdreamss95.online/genlayer-oracle) — switch to GenLayer, select a symbol, and fetch
+
 ---
 
 ## Tech Stack
