@@ -1,7 +1,6 @@
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 from genlayer import *
 import json
-import typing
 
 class PriceOracle(gl.Contract):
     store: str
@@ -18,19 +17,19 @@ class PriceOracle(gl.Contract):
         return json.dumps(entry)
 
     @gl.public.write
-    def fetchPrice(self, symbol: str) -> typing.Any:
-        url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}USDT"
+    def fetchPrice(self, symbol: str) -> str:
+        url = "https://api.binance.com/api/v3/ticker/24hr?symbol=" + symbol + "USDT"
 
         def fetch() -> str:
             try:
                 raw = gl.nondet.web.render(url, mode="text")
-                if not raw or raw.strip() == "null":
+                if raw is None or raw.strip() == "" or raw.strip() == "null":
                     return json.dumps({"error": "down", "status": "unavailable"})
-                data = json.loads(raw)
-                price = float(data["lastPrice"])
+                j = json.loads(raw)
+                p = float(j["lastPrice"])
                 return json.dumps({
                     "symbol": symbol,
-                    "price": round(price, 2),
+                    "price": round(p, 2),
                     "status": "ok"
                 }, sort_keys=True)
             except Exception:
@@ -38,11 +37,12 @@ class PriceOracle(gl.Contract):
 
         result = gl.eq_principle.prompt_comparative(
             fetch,
-            "These are crypto price reports. They are equivalent if both report 'unavailable', "
-            "or if both have the same symbol and price within 1% of each other."
+            "The outputs represent the same crypto price. "
+            "They are equivalent if both show unavailable, "
+            "or if price values are within 2% and symbol matches."
         )
 
         data = json.loads(self.store)
-        data[symbol] = json.loads(result)
+        data[symbol] = json.loads(str(result))
         self.store = json.dumps(data, sort_keys=True)
-        return result
+        return str(result)

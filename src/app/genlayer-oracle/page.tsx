@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import DashboardLayout from "@/components/DashboardLayout";
 import { isGenLayerChain } from "@/lib/genlayer/client";
-import { oracleGetPrice, oracleFetchPrice } from "@/lib/genlayer/oracle";
+import { oracleGetPrice, oracleFetchPrice, getTxStatus } from "@/lib/genlayer/oracle";
 import { cn } from "@/lib/utils";
 
 const SYMBOLS = ["BTC", "ETH", "SOL", "DOGE", "LINK"];
@@ -17,10 +17,12 @@ export default function GenLayerOraclePage() {
 
   const [symbol, setSymbol] = useState("BTC");
   const [price, setPrice] = useState<number | null>(null);
-  const [status, setStatus] = useState<string>("idle");
+  const [dataStatus, setDataStatus] = useState<string>("idle");
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
+  const [txStatus, setTxStatus] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const onGenLayer = isGenLayerChain(chainId ?? 0);
 
@@ -28,10 +30,10 @@ export default function GenLayerOraclePage() {
     try {
       const data = await oracleGetPrice(symbol);
       setPrice(data.price);
-      setStatus(data.status);
+      setDataStatus(data.status);
     } catch {
       setPrice(null);
-      setStatus("unavailable");
+      setDataStatus("unavailable");
     }
   }, [symbol]);
 
@@ -39,17 +41,43 @@ export default function GenLayerOraclePage() {
     if (onGenLayer) loadPrice();
   }, [onGenLayer, loadPrice]);
 
+  useEffect(() => {
+    if (txHash && onGenLayer) {
+      pollRef.current = setInterval(async () => {
+        const s = await getTxStatus(txHash);
+        setTxStatus(s.status);
+        if (s.status === "FINALIZED" || s.status === "ACCEPTED") {
+          const data = await oracleGetPrice(symbol);
+          if (data.price) setPrice(data.price);
+          setDataStatus(data.status);
+        }
+      }, 5000);
+      return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    }
+  }, [txHash, onGenLayer, symbol]);
+
+  const handleChangeSymbol = useCallback(async (s: string) => {
+    setSymbol(s);
+    setTxHash(null);
+    setTxStatus(null);
+    setPrice(null);
+    setDataStatus("idle");
+    if (onGenLayer) {
+      const data = await oracleGetPrice(s);
+      setPrice(data.price);
+      setDataStatus(data.status);
+    }
+  }, [onGenLayer]);
+
   const handleFetch = useCallback(async () => {
     if (!address || !onGenLayer) return;
     setFetching(true);
     setError(null);
     setTxHash(null);
+    setTxStatus(null);
     try {
       const hash = await oracleFetchPrice(address, symbol);
       setTxHash(hash);
-      const fresh = await oracleGetPrice(symbol);
-      if (fresh.price) setPrice(fresh.price);
-      setStatus(fresh.status);
     } catch (err: any) {
       setError(err?.message || "Transaction failed");
     } finally {
@@ -65,7 +93,6 @@ export default function GenLayerOraclePage() {
   return (
     <DashboardLayout title="GenLayer Oracle" subtitle="// AI-validated price feeds">
       <div className="space-y-6 max-w-2xl">
-        {/* Info Card */}
         <div className="p-5 rounded-xl" style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "color-mix(in srgb, #00D4FF 15%, transparent)" }}>
@@ -82,8 +109,7 @@ export default function GenLayerOraclePage() {
           </div>
 
           {!onGenLayer ? (
-            <button
-              onClick={handleSwitch}
+            <button onClick={handleSwitch}
               className="w-full py-3 rounded-lg text-sm font-medium text-white transition-all duration-200"
               style={{ background: "var(--accent)" }}
             >
@@ -91,12 +117,11 @@ export default function GenLayerOraclePage() {
             </button>
           ) : (
             <>
-              {/* Symbol Selector */}
               <div className="flex gap-2 mb-4">
                 {SYMBOLS.map((s) => (
                   <button
                     key={s}
-                    onClick={() => setSymbol(s)}
+                    onClick={() => handleChangeSymbol(s)}
                     className={cn(
                       "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                       symbol === s ? "text-white" : "opacity-60 hover:opacity-100"
@@ -111,7 +136,6 @@ export default function GenLayerOraclePage() {
                 ))}
               </div>
 
-              {/* Price Display */}
               <div className="p-6 rounded-xl text-center mb-4" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)" }}>
                 <p className="text-xs font-mono mb-1" style={{ color: "var(--text-quaternary)" }}>
                   {symbol}/USDT · AI Validated
@@ -119,25 +143,34 @@ export default function GenLayerOraclePage() {
                 <p className="text-4xl font-bold font-mono" style={{ color: price ? "var(--text-bright)" : "var(--text-quaternary)" }}>
                   {price ? `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "---"}
                 </p>
-                <p className="text-xs mt-2" style={{ color: status === "ok" ? "var(--success)" : "var(--text-quaternary)" }}>
-                  {status === "ok" ? "Consensus reached" : status === "unavailable" ? "No data yet" : "Fetching..."}
+                <p className="text-xs mt-2" style={{ color: dataStatus === "ok" ? "var(--success)" : "var(--text-quaternary)" }}>
+                  {dataStatus === "ok" ? "Consensus reached" : dataStatus === "unavailable" ? "No data yet" : dataStatus}
                 </p>
               </div>
 
-              {/* Fetch Button */}
               <button
                 onClick={handleFetch}
                 disabled={fetching}
                 className="w-full py-3 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-40"
                 style={{ background: "var(--accent)", color: "white" }}
               >
-                {fetching ? "Fetching with AI consensus..." : `Fetch ${symbol}/USDT`}
+                {fetching ? "Waiting for AI consensus..." : `Fetch ${symbol}/USDT`}
               </button>
 
               {txHash && (
-                <p className="text-xs mt-2 text-center font-mono" style={{ color: "var(--text-quaternary)" }}>
-                  Tx: {txHash.slice(0, 10)}...{txHash.slice(-6)}
-                </p>
+                <div className="mt-3 text-center">
+                  <p className="text-xs font-mono" style={{ color: "var(--text-quaternary)" }}>
+                    Tx: {txHash.slice(0, 10)}...{txHash.slice(-6)}
+                  </p>
+                  {txStatus && (
+                    <p className="text-[10px] font-mono mt-1" style={{ color: "var(--text-tertiary)" }}>
+                      Status: {txStatus}
+                      {txStatus !== "FINALIZED" && txStatus !== "ACCEPTED" && txStatus !== "UNKNOWN" && (
+                        <span className="ml-1 animate-pulse" style={{ color: "var(--accent)" }}>●</span>
+                      )}
+                    </p>
+                  )}
+                </div>
               )}
 
               {error && (
@@ -149,7 +182,6 @@ export default function GenLayerOraclePage() {
           )}
         </div>
 
-        {/* How it works */}
         <div className="p-5 rounded-xl" style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
           <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text-bright)" }}>How It Works</h3>
           <div className="space-y-3 text-xs" style={{ color: "var(--text-tertiary)" }}>
