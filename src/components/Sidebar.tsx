@@ -17,12 +17,13 @@ import {
   Gauge,
   Trophy,
   BookOpen,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", badge: null },
-  { href: "/tasks", icon: Zap, label: "Daily Tasks", badge: "13" },
+  { href: "/tasks", icon: Zap, label: "Daily Tasks", badge: "14" },
   { href: "/litevm", icon: Star, label: "LiteVM Points", badge: null },
   { href: "/activity", icon: Activity, label: "Activity", badge: null },
   { href: "/profile", icon: User, label: "Profile", badge: null },
@@ -135,6 +136,31 @@ export default function Sidebar() {
               </div>
               <ChevronRight className="w-4 h-4" style={{ color: "var(--accent)" }} />
             </div>
+          </motion.div>
+        </Link>
+
+        {/* GenLayer */}
+        <div className="px-1 mb-2">
+          <span className="text-[9px] font-mono tracking-[0.2em] uppercase" style={{ color: "var(--text-quaternary)" }}>
+            GenLayer
+          </span>
+        </div>
+
+        <Link href="/genlayer-oracle">
+          <motion.div
+            whileHover={{ x: 2 }}
+            className="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs transition-all mb-3"
+            style={{
+              color: "var(--text-secondary)",
+              background: pathname === "/genlayer-oracle" ? "var(--bg-strong)" : "transparent",
+              border: pathname === "/genlayer-oracle" ? "1px solid color-mix(in srgb, #00D4FF 20%, transparent)" : "1px solid transparent",
+            }}
+          >
+            <Globe className="w-3.5 h-3.5" style={{ color: "#00D4FF" }} />
+            <span className="flex-1">Oracle</span>
+            <span className="text-[8px] px-1.5 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, #00D4FF 15%, transparent)", color: "#00D4FF" }}>
+              AI
+            </span>
           </motion.div>
         </Link>
 
