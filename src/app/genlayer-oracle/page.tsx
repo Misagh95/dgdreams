@@ -42,18 +42,23 @@ export default function GenLayerOraclePage() {
   }, [onGenLayer, loadPrice]);
 
   useEffect(() => {
-    if (txHash && onGenLayer) {
-      pollRef.current = setInterval(async () => {
-        const s = await getTxStatus(txHash);
-        setTxStatus(s.status);
-        if (s.status === "FINALIZED" || s.status === "ACCEPTED") {
-          const data = await oracleGetPrice(symbol);
-          if (data.price) setPrice(data.price);
-          setDataStatus(data.status);
-        }
-      }, 5000);
-      return () => { if (pollRef.current) clearInterval(pollRef.current); };
-    }
+    if (!txHash || !onGenLayer) return;
+    let cancelled = false;
+    pollRef.current = setInterval(async () => {
+      if (cancelled) return;
+      const s = await getTxStatus(txHash);
+      setTxStatus(s.status);
+      if (s.status === "FINALIZED" || s.status === "ACCEPTED") {
+        if (cancelled) return;
+        const data = await oracleGetPrice(symbol);
+        if (data.price) setPrice(data.price);
+        setDataStatus(data.status);
+      }
+    }, 5000);
+    return () => {
+      cancelled = true;
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
   }, [txHash, onGenLayer, symbol]);
 
   const handleChangeSymbol = useCallback(async (s: string) => {

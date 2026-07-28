@@ -1,7 +1,6 @@
 "use client";
 
 import { getGenLayerReadClient, getGenLayerWriteClient } from "./client";
-import { TransactionStatus, type Hash } from "genlayer-js/types";
 
 export const PRICE_ORACLE_CONTRACT = "0xe4edDda1250A0a3d70968798Ef09b70F1BfA94eF" as const;
 
@@ -27,27 +26,20 @@ export async function oracleFetchPrice(
     functionName: "fetchPrice",
     args: [symbol],
     value: BigInt(0),
-  })) as unknown as Hash;
+  })) as string;
 
-  const receipt = await client.waitForTransactionReceipt({
-    hash,
-    status: TransactionStatus.ACCEPTED,
-    retries: 90,
-    interval: 3000,
-  });
-
-  return hash as unknown as string;
+  return hash;
 }
 
-export async function getTxStatus(hash: string) {
-  const client = getGenLayerReadClient();
+export async function getTxStatus(hash: string): Promise<{ hash: string; status: string }> {
   try {
-    const tx = await client.getTransaction({ hash: hash as any });
-    return {
-      status: tx.statusName || "UNKNOWN",
-      result: tx.txExecutionResultName,
-    };
+    const client = getGenLayerReadClient();
+    const receipt = (await client.getTransactionReceipt({ hash })) as any;
+    if (receipt?.status === "ACCEPTED" || receipt?.status === "FINALIZED") {
+      return { hash, status: "FINALIZED" };
+    }
+    return { hash, status: receipt?.status || "UNKNOWN" };
   } catch {
-    return { status: "UNKNOWN", result: undefined };
+    return { hash, status: "UNKNOWN" };
   }
 }
