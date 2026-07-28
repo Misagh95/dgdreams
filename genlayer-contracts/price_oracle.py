@@ -20,23 +20,20 @@ class PriceOracle(gl.Contract):
     def fetchPrice(self, symbol: str) -> str:
         url = "https://api.binance.com/api/v3/ticker/24hr?symbol=" + symbol + "USDT"
 
-        raw = gl.nondet.web.render(url, mode="text")
-
-        if raw is None or raw.strip() == "" or raw.strip() == "null":
-            result = json.dumps({"symbol": symbol, "price": 0, "error": "down", "status": "unavailable"}, sort_keys=True)
-        else:
+        def fetch() -> str:
+            raw = gl.nondet.web.render(url, mode="text")
+            if raw is None or raw.strip() == "" or raw.strip() == "null":
+                return json.dumps({"symbol": symbol, "price": 0, "status": "unavailable"}, sort_keys=True)
             try:
                 j = json.loads(raw)
                 p = float(j["lastPrice"])
-                result = json.dumps({
-                    "symbol": symbol,
-                    "price": round(p, 2),
-                    "status": "ok"
-                }, sort_keys=True)
+                return json.dumps({"symbol": symbol, "price": round(p, 2), "status": "ok"}, sort_keys=True)
             except Exception:
-                result = json.dumps({"symbol": symbol, "price": 0, "error": "parse", "status": "unavailable"}, sort_keys=True)
+                return json.dumps({"symbol": symbol, "price": 0, "status": "unavailable"}, sort_keys=True)
+
+        result = gl.eq_principle.strict_eq(fetch)
 
         data = json.loads(self.store)
-        data[symbol] = json.loads(result)
+        data[symbol] = json.loads(str(result))
         self.store = json.dumps(data, sort_keys=True)
-        return result
+        return str(result)
