@@ -3,7 +3,7 @@
 import { getGenLayerReadClient, getGenLayerWriteClient } from "./client";
 import { TransactionStatus } from "genlayer-js/types";
 
-export const PRICE_ORACLE_CONTRACT = "0x1203ab4E8386220F792f129C605460fD0F52C412" as const;
+export const PRICE_ORACLE_CONTRACT = "0x44771EC9c74e91712Df7117dEF85993401a3D244" as const;
 
 export async function oracleGetPrice(symbol: string): Promise<{ symbol: string; price: number; status: string }> {
   const client = getGenLayerReadClient();
