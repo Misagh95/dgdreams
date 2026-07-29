@@ -217,6 +217,32 @@ export default function Game2048Page() {
   const [txPending, setTxPending] = useState(false);
   const [selectedNetId, setSelectedNetId] = useState<number>(0);
   const [lastMilestone, setLastMilestone] = useState(0);
+  const [tournamentStatus, setTournamentStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!gameOver || !address || score === 0) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/tournaments?status=active");
+        const data = await res.json();
+        const active = (data.tournaments || []) as any[];
+        for (const t of active) {
+          const now = Date.now();
+          const start = new Date(t.startsAt).getTime();
+          const end = new Date(t.endsAt).getTime();
+          if (now >= start && now <= end) {
+            await fetch(`/api/tournaments/${t.id}/entries`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ walletAddress: address, score, bestTile: getBestTile(board) }),
+            });
+            setTournamentStatus(`Submitted to "${t.name}"`);
+          }
+        }
+        if (!tournamentStatus) setTournamentStatus("");
+      } catch { setTournamentStatus(""); }
+    })();
+  }, [gameOver]);
 
   const scoreRef = useRef(0);
   const movesRef = useRef(0);
@@ -625,6 +651,11 @@ export default function Game2048Page() {
                           <p className="text-sm text-[#64748b] font-mono">
                             Final Score: {score.toLocaleString()}
                           </p>
+                          {tournamentStatus && (
+                            <p className="text-[10px] font-mono" style={{ color: "#F59E0B" }}>
+                              {tournamentStatus}
+                            </p>
+                          )}
                           <button
                             onClick={restartGame}
                             className="btn-primary px-8 py-3"

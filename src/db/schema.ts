@@ -120,3 +120,29 @@ export const walletSocials = pgTable("wallet_socials", {
 }, (table) => ({
   walletPlatformIdx: uniqueIndex("wallet_platform_idx").on(table.walletAddress, table.platform),
 }));
+
+export const tournaments = pgTable("tournaments", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  gameType: text("game_type").notNull().default("2048"),
+  entryFee: integer("entry_fee").default(0),
+  prizePool: integer("prize_pool").default(0),
+  maxPlayers: integer("max_players").default(100),
+  status: text("status").notNull().default("pending"), // pending | active | completed
+  startsAt: timestamp("starts_at").notNull(),
+  endsAt: timestamp("ends_at").notNull(),
+  createdBy: text("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const tournamentEntries = pgTable("tournament_entries", {
+  id: serial("id").primaryKey(),
+  tournamentId: integer("tournament_id").references(() => tournaments.id).notNull(),
+  walletAddress: text("wallet_address").notNull(),
+  score: integer("score").default(0),
+  bestTile: integer("best_tile").default(0),
+  rank: integer("rank"),
+  prize: integer("prize").default(0),
+  paid: integer("paid").default(0), // entry fee paid
+  createdAt: timestamp("created_at").defaultNow(),
+});

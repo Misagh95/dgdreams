@@ -14,6 +14,7 @@ import {
   X,
   Zap,
   Star,
+  Trophy,
   HelpCircle,
   BookOpen,
   Scale,
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/litevm", icon: Star, label: "LiteVM Points" },
   { href: "/activity", icon: Activity, label: "Activity" },
   { href: "/profile", icon: User, label: "Profile" },
+  { href: "/tournaments", icon: Trophy, label: "Tournaments" },
   { href: "/2048", icon: Gamepad2, label: "2048 Game" },
 ];
 
