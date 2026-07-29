@@ -5,7 +5,9 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Zap, Trophy, Star, Shield, Users, Flame, Target, Activity, BarChart3, Gamepad2, ListChecks, Timer } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { useAccount, useReadContract, useReadContracts, useSwitchChain } from "wagmi";
+import { useAccount, useReadContract, useReadContracts, useSwitchChain, useWriteContract, useConfig } from "wagmi";
+import { getPublicClient } from "@wagmi/core";
+import { LITE_PREDICTION_ADDR, LITE_PREDICTION_ABI } from "@/lib/litevm-prediction";
 import { liteforgeChain } from "@/config/chains";
 import { shortenAddress } from "@/lib/utils";
 
@@ -58,9 +60,143 @@ interface Entry {
   rank: number | null; prize: number;
 }
 
+function PredictionTab({ address, isConnected, chainId, onLiteVM }: { address: `0x${string}` | undefined; isConnected: boolean; chainId: number | undefined; onLiteVM: boolean }) {
+  const { writeContractAsync } = useWriteContract();
+  const wagmiConfig = useConfig();
+
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [dailyPrices, setDailyPrices] = useState<any>({});
+  const [actionMsg, setActionMsg] = useState<string | null>(null);
+
+  const { data: activeMarkets, refetch: refetchMarkets } = useReadContract({
+    address: LITE_PREDICTION_ADDR, abi: LITE_PREDICTION_ABI,
+    functionName: "getActiveMarkets", args: [], chainId: 4441,
+    query: { enabled: !!address },
+  });
+
+  useEffect(() => {
+    fetch("/api/predictions").then(r => r.json()).then(d => {
+      setSuggestions(d.suggestions || []);
+      setDailyPrices(d.prices || {});
+    }).catch(() => {});
+  }, []);
+
+  const doWrite = async (fn: () => Promise<any>, msg: string) => {
+    if (!address) return;
+    if (!onLiteVM) { setActionMsg("Switch to LiteVM first"); return; }
+    setActionMsg(null);
+    try { await fn(); setActionMsg(msg); refetchMarkets(); } catch (e: any) { setActionMsg(e.message); }
+  };
+
+  const createMarket = async (question: string, resolvesAt: number) => {
+    if (!writeContractAsync) return;
+    await writeContractAsync({
+      address: LITE_PREDICTION_ADDR, abi: LITE_PREDICTION_ABI,
+      functionName: "createMarket", args: [question, BigInt(resolvesAt)],
+      chainId: 4441,
+    });
+  };
+
+  const predictMarket = async (id: bigint, outcome: boolean, amount: string) => {
+    if (!writeContractAsync) return;
+    await writeContractAsync({
+      address: LITE_PREDICTION_ADDR, abi: LITE_PREDICTION_ABI,
+      functionName: "predict", args: [id, outcome],
+      value: BigInt(amount),
+      chainId: 4441,
+    });
+  };
+
+  const resolveMarket = async (id: bigint, outcome: boolean) => {
+    if (!writeContractAsync) return;
+    await writeContractAsync({
+      address: LITE_PREDICTION_ADDR, abi: LITE_PREDICTION_ABI,
+      functionName: "resolveMarket", args: [id, outcome],
+      chainId: 4441,
+    });
+  };
+
+  if (!isConnected) {
+    return <p className="text-xs font-mono" style={{ color: "var(--text-quaternary)" }}>Connect wallet to view predictions</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Daily suggestion */}
+      {suggestions.length > 0 && (
+        <div className="rounded-xl p-4" style={{ background: "var(--bg-strong)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <BarChart3 className="w-4 h-4" style={{ color: "#F59E0B" }} />
+            <span className="text-xs font-mono" style={{ color: "var(--text-primary)" }}>Daily Predictions</span>
+            <span className="text-[8px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: "color-mix(in srgb, #10B981 15%, transparent)", color: "#10B981" }}>CoinGecko</span>
+          </div>
+          {dailyPrices.btc && <p className="text-[10px] font-mono mb-3" style={{ color: "var(--text-quaternary)" }}>BTC: ${dailyPrices.btc.toLocaleString()} &middot; ETH: ${dailyPrices.eth?.toLocaleString()} &middot; SOL: ${dailyPrices.sol?.toLocaleString()}</p>}
+          <div className="space-y-2">
+            {suggestions.map((s, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-lg" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div>
+                  <p className="text-[11px] font-mono" style={{ color: "var(--text-primary)" }}>{s.question}</p>
+                  <p className="text-[9px] font-mono mt-0.5" style={{ color: "var(--text-quaternary)" }}>Resolves at {new Date(s.resolvesAt * 1000).toLocaleTimeString()}</p>
+                </div>
+                <button onClick={() => doWrite(() => createMarket(s.question, s.resolvesAt), "Market created!")} className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80" style={{ background: "#F59E0B", color: "#000", border: "none", whiteSpace: "nowrap" }}>
+                  Create Market
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active markets */}
+      <div>
+        <p className="text-[10px] font-mono mb-2" style={{ color: "var(--text-quaternary)" }}>Active Markets</p>
+        {!activeMarkets || (activeMarkets as any[])?.length === 0 ? (
+          <p className="text-xs font-mono" style={{ color: "var(--text-quaternary)" }}>No active markets</p>
+        ) : (
+          <div className="space-y-2">
+            {(activeMarkets as any[])?.map((m: any) => {
+              const poolTotal = Number(m.yesPool) + Number(m.noPool);
+              const yesPct = poolTotal > 0 ? (Number(m.yesPool) / poolTotal) * 100 : 50;
+              return (
+                <div key={String(m.id)} className="rounded-xl p-3 space-y-2" style={{ background: "var(--bg-strong)", border: "1px solid var(--border)" }}>
+                  <p className="text-[11px] font-mono" style={{ color: "var(--text-primary)" }}>{m.question}</p>
+                  <div className="flex items-center gap-3 text-[10px] font-mono" style={{ color: "var(--text-secondary)" }}>
+                    <span>YES: {Number(m.yesPool)}</span>
+                    <span>NO: {Number(m.noPool)}</span>
+                    <span>Ends: {new Date(Number(m.resolvesAt) * 1000).toLocaleTimeString()}</span>
+                  </div>
+                  {poolTotal > 0 && (
+                    <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--bg)" }}>
+                      <div className="h-full rounded-full" style={{ width: `${yesPct}%`, background: "linear-gradient(90deg, #10B981, #EF4444)" }} />
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <button onClick={() => doWrite(() => predictMarket(m.id, true, "1000000000000000"), "YES predicted!")} className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80" style={{ background: "#10B981", color: "#fff", border: "none" }}>
+                      YES (0.001 zkLTC)
+                    </button>
+                    <button onClick={() => doWrite(() => predictMarket(m.id, false, "1000000000000000"), "NO predicted!")} className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80" style={{ background: "#EF4444", color: "#fff", border: "none" }}>
+                      NO (0.001 zkLTC)
+                    </button>
+                    {onLiteVM && <button onClick={() => doWrite(() => resolveMarket(m.id, true), "Resolved!")} className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80" style={{ background: "#8B5CF6", color: "#fff", border: "none" }}>
+                      Resolve YES
+                    </button>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {actionMsg && <p className="text-xs font-mono" style={{ color: "var(--text-secondary)" }}>{actionMsg}</p>}
+    </div>
+  );
+}
+
 const TABS = [
   { id: "points", label: "Points", icon: Star },
   { id: "tournaments", label: "Tournaments", icon: Trophy },
+  { id: "predictions", label: "Predictions", icon: BarChart3 },
   { id: "tasks", label: "Tasks", icon: ListChecks },
 ];
 
@@ -419,6 +555,11 @@ export default function LitevmPage() {
             </p>
           </div>
         </div>
+      )}
+
+      {/* Tab: Predictions */}
+      {tab === "predictions" && (
+        <PredictionTab address={address} isConnected={isConnected} chainId={chainId} onLiteVM={onLiteVM} />
       )}
 
       {/* Tab: Tasks */}
