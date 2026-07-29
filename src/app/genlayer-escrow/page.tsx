@@ -154,6 +154,21 @@ export default function GenLayerEscrowPage() {
         {tab === "create" && (
           <div className="rounded-xl p-6 space-y-4" style={{ background: "var(--bg-strong)", border: "1px solid var(--border)" }}>
             <div>
+              <label className="text-[10px] font-mono uppercase tracking-wider mb-2 block" style={{ color: "var(--text-quaternary)" }}>Quick Presets</label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: "Freelance", terms: "Deliver smart contract code review by Friday", amount: "5" },
+                  { label: "NFT Trade", terms: "Transfer ownership of NFT #123 after payment", amount: "10" },
+                  { label: "DAO Grant", terms: "Complete milestone 3 of the DAO grant proposal", amount: "25" },
+                  { label: "Domain Sale", terms: "Transfer domain ownership upon release", amount: "3" },
+                ].map((p) => (
+                  <button key={p.label} onClick={() => { setTerms(p.terms); setAmount(p.amount); }} className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80" style={{ background: "color-mix(in srgb, #8B5CF6 12%, transparent)", color: "#8B5CF6", border: "1px solid color-mix(in srgb, #8B5CF6 20%, transparent)" }}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
               <label className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--text-quaternary)" }}>Party B Address</label>
               <input value={partyB} onChange={(e) => setPartyB(e.target.value)} placeholder="0x..." className="w-full mt-1 px-3 py-2 rounded-lg text-xs font-mono outline-none" style={{ background: "var(--bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
             </div>
