@@ -5,6 +5,7 @@ import { useAccount, useSwitchChain } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import DashboardLayout from "@/components/DashboardLayout";
 import { isGenLayerChain } from "@/lib/genlayer/client";
+import { syncPredictionActivity } from "@/lib/litevm-sync";
 import {
   marketGetMarkets,
   marketCreate,
@@ -73,6 +74,7 @@ export default function GenLayerMarketPage() {
       const tx = await marketCreate(address, form.question, form.sourceUrl, form.targetValue, form.condition, resolvesAt);
       addLog(`createMarket tx: ${tx}`);
       await new Promise((r) => setTimeout(r, 3000));
+      syncPredictionActivity(address, "create");
       setActionMsg("Market created!");
       setShowCreate(false);
       fetchMarkets();
@@ -89,6 +91,7 @@ export default function GenLayerMarketPage() {
       const tx = await marketPredict(address, marketId, outcome, parseInt(predictAmount) || 1);
       addLog(`predict #${marketId} tx: ${tx}`);
       await new Promise((r) => setTimeout(r, 3000));
+      syncPredictionActivity(address, "predict");
       setActionMsg("Prediction submitted!");
       fetchMarkets();
     } catch (e: any) {
@@ -104,6 +107,7 @@ export default function GenLayerMarketPage() {
       const tx = await marketResolve(address, marketId);
       addLog(`resolve #${marketId} tx: ${tx}`);
       await new Promise((r) => setTimeout(r, 3000));
+      syncPredictionActivity(address, "resolve");
       setActionMsg("Market resolved by AI validators!");
       fetchMarkets();
     } catch (e: any) {

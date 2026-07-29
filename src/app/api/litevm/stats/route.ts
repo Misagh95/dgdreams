@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { walletAddress, playCount, highScore, streak, totalCi, totalAct, totalPoints } = body;
+    const { walletAddress, playCount, highScore, streak, totalCi, totalAct, totalPred, totalPoints } = body;
     if (!walletAddress) {
       return NextResponse.json({ error: "walletAddress required" }, { status: 400 });
     }
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
           streak: streak ?? existing[0].streak,
           totalCi: totalCi ?? existing[0].totalCi,
           totalAct: totalAct ?? existing[0].totalAct,
+          totalPred: totalPred ?? existing[0].totalPred,
           totalPoints: totalPoints ?? existing[0].totalPoints,
           lastSyncAt: now,
         })
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
         streak: streak ?? 0,
         totalCi: totalCi ?? 0,
         totalAct: totalAct ?? 0,
+        totalPred: totalPred ?? 0,
         totalPoints: totalPoints ?? 0,
         lastSyncAt: now,
       });

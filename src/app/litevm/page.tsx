@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Zap, Trophy, Star, Shield, Users, Flame, Target, Activity } from "lucide-react";
+import { Zap, Trophy, Star, Shield, Users, Flame, Target, Activity, BarChart3 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAccount, useReadContract, useReadContracts, useSwitchChain } from "wagmi";
 import { liteforgeChain } from "@/config/chains";
@@ -34,18 +34,21 @@ const NIK_ADDR = "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B" as const;
 const POINTS_PER_ACTION = 10;
 const POINTS_PER_STREAK_DAY = 5;
 const POINTS_PER_GAME_PLAY = 50;
+const POINTS_PER_PRED = 20;
 
 function calculatePoints(
   streak: number,
   totalAct: number,
   playCount: number,
-  highScore: number
+  highScore: number,
+  totalPred: number
 ): { total: number; breakdown: { label: string; points: number; icon: string }[] } {
   const actions = totalAct * POINTS_PER_ACTION;
   const streakPts = streak * POINTS_PER_STREAK_DAY;
   const gamePlays = playCount * POINTS_PER_GAME_PLAY;
   const scoreBonus = Math.floor(highScore / 100);
-  const total = actions + streakPts + gamePlays + scoreBonus;
+  const predPts = totalPred * POINTS_PER_PRED;
+  const total = actions + streakPts + gamePlays + scoreBonus + predPts;
 
   return {
     total,
@@ -54,6 +57,7 @@ function calculatePoints(
       { label: "Streak Bonus", points: streakPts, icon: "🔥" },
       { label: "Game Plays", points: gamePlays, icon: "🎮" },
       { label: "Score Bonus", points: scoreBonus, icon: "🏆" },
+      { label: "Predictions", points: predPts, icon: "🎲" },
     ],
   };
 }
@@ -62,6 +66,17 @@ export default function LitevmPage() {
   const { address, isConnected, chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const [switching, setSwitching] = useState(false);
+  const [totalPred, setTotalPred] = useState(0);
+
+  useEffect(() => {
+    if (!address) return;
+    fetch(`/api/litevm/stats?wallet=${encodeURIComponent(address)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.totalPred != null) setTotalPred(data.totalPred);
+      })
+      .catch(() => {});
+  }, [address]);
 
   const onLiteVM = isConnected && chainId === LITVM_CHAIN_ID;
 
@@ -101,7 +116,7 @@ export default function LitevmPage() {
   const totalCI = userData.data?.[1] ? Number(userData.data[1]) : 0;
   const totalAct = userData.data?.[2] ? Number(userData.data[2]) : 0;
 
-  const points = calculatePoints(streak, totalAct, playCount, highScore);
+  const points = calculatePoints(streak, totalAct, playCount, highScore, totalPred);
 
   const handleSwitch = async () => {
     if (!switchChainAsync) return;
@@ -133,13 +148,14 @@ export default function LitevmPage() {
             streak,
             totalCi: totalCI,
             totalAct,
+            totalPred,
             totalPoints: points.total,
           }),
         });
       } catch { /* silent */ }
     }, 2000);
     return () => clearTimeout(timeout);
-  }, [address, isConnected, onLiteVM, isLoading, playCount, highScore, streak, totalCI, totalAct, points.total]);
+  }, [address, isConnected, onLiteVM, isLoading, playCount, highScore, streak, totalCI, totalAct, totalPred, points.total]);
 
   return (
     <DashboardLayout title="LiteVM Point System" subtitle="// rewards & activity">
@@ -220,7 +236,7 @@ export default function LitevmPage() {
             <p className="text-xs text-[#64748b] font-mono">
               {isLoading
                 ? "Loading..."
-                : `From ${totalAct} actions, ${streak}-day streak, ${playCount} game plays`}
+                : `${totalAct} actions, ${streak}d streak, ${playCount} games, ${totalPred} predictions`}
             </p>
           </div>
         </motion.div>
@@ -232,6 +248,7 @@ export default function LitevmPage() {
             { label: "Actions", value: totalAct, icon: Activity, color: "#00d4ff" },
             { label: "Check-ins", value: totalCI, icon: Target, color: "#00ff88" },
             { label: "Games Played", value: playCount, icon: Trophy, color: "#ffaa00" },
+            { label: "Predictions", value: totalPred, icon: BarChart3, color: "#F59E0B" },
           ].map((stat) => {
             const Icon = stat.icon;
             return (

@@ -105,6 +105,7 @@ export const litevmStats = pgTable("litevm_stats", {
   streak: integer("streak").default(0),
   totalCi: integer("total_ci").default(0),
   totalAct: integer("total_act").default(0),
+  totalPred: integer("total_pred").default(0),
   totalPoints: integer("total_points").default(0),
   lastSyncAt: timestamp("last_sync_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
