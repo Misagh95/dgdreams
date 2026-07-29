@@ -26,8 +26,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", badge: null },
   { href: "/tasks", icon: Zap, label: "Daily Tasks", badge: "14" },
-  { href: "/litevm", icon: Star, label: "LiteVM Points", badge: null },
-  { href: "/tournaments", icon: Trophy, label: "Tournaments", badge: null },
+  { href: "/litevm", icon: Star, label: "LiteVM Hub", badge: null },
   { href: "/activity", icon: Activity, label: "Activity", badge: null },
   { href: "/profile", icon: User, label: "Profile", badge: null },
 ];
