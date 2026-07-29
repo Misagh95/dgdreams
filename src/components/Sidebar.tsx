@@ -19,6 +19,7 @@ import {
   BookOpen,
   Globe,
   Shield,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -179,6 +180,24 @@ export default function Sidebar() {
             <Shield className="w-3.5 h-3.5" style={{ color: "#8B5CF6" }} />
             <span className="flex-1">Escrow</span>
             <span className="text-[8px] px-1.5 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, #8B5CF6 15%, transparent)", color: "#8B5CF6" }}>
+              AI
+            </span>
+          </motion.div>
+        </Link>
+
+        <Link href="/genlayer-market">
+          <motion.div
+            whileHover={{ x: 2 }}
+            className="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs transition-all mb-3"
+            style={{
+              color: "var(--text-secondary)",
+              background: pathname === "/genlayer-market" ? "var(--bg-strong)" : "transparent",
+              border: pathname === "/genlayer-market" ? "1px solid color-mix(in srgb, #F59E0B 20%, transparent)" : "1px solid transparent",
+            }}
+          >
+            <BarChart3 className="w-3.5 h-3.5" style={{ color: "#F59E0B" }} />
+            <span className="flex-1">Markets</span>
+            <span className="text-[8px] px-1.5 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, #F59E0B 15%, transparent)", color: "#F59E0B" }}>
               AI
             </span>
           </motion.div>

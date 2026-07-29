@@ -1,0 +1,143 @@
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+from genlayer import *
+import json
+
+class PredictionMarket(gl.Contract):
+    store: str
+
+    def __init__(self):
+        self.store = "{}"
+
+    @gl.public.view
+    def getMarket(self, market_id: int) -> str:
+        data = json.loads(self.store)
+        entry = data.get(str(market_id))
+        if entry is None:
+            return json.dumps({"error": "not found"})
+        return json.dumps(entry, sort_keys=True)
+
+    @gl.public.view
+    def getMarkets(self) -> str:
+        data = json.loads(self.store)
+        result = []
+        for mid, market in data.items():
+            market["id"] = int(mid)
+            result.append(market)
+        return json.dumps(result, sort_keys=True)
+
+    @gl.public.view
+    def getMyPredictions(self, wallet: str) -> str:
+        data = json.loads(self.store)
+        result = []
+        for mid, market in data.items():
+            preds = market.get("predictions", {})
+            if wallet in preds:
+                m = dict(market)
+                m["id"] = int(mid)
+                m["my_prediction"] = preds[wallet]
+                result.append(m)
+        return json.dumps(result, sort_keys=True)
+
+    @gl.public.write
+    def createMarket(self, question: str, source_url: str, target_value: str, condition: str, resolves_at: int) -> int:
+        data = json.loads(self.store)
+        next_id = len(data) + 1
+        mid = str(next_id)
+        market = {
+            "question": question,
+            "source_url": source_url,
+            "target_value": target_value,
+            "condition": condition,
+            "resolves_at": resolves_at,
+            "resolved": False,
+            "outcome": "",
+            "yes_pool": 0,
+            "no_pool": 0,
+            "predictions": {},
+            "creator": gl.message.sender(),
+            "created_at": resolves_at,
+        }
+        data[mid] = market
+        self.store = json.dumps(data, sort_keys=True)
+        return next_id
+
+    @gl.public.write
+    def predict(self, market_id: int, outcome: int, amount: int) -> str:
+        if outcome not in (0, 1):
+            return json.dumps({"error": "outcome must be 0 (NO) or 1 (YES)"})
+        data = json.loads(self.store)
+        mid = str(market_id)
+        market = data.get(mid)
+        if market is None:
+            return json.dumps({"error": "market not found"})
+        if market["resolved"]:
+            return json.dumps({"error": "market already resolved"})
+        sender = gl.message.sender()
+        preds = market["predictions"]
+        if sender in preds:
+            return json.dumps({"error": "already predicted"})
+        preds[sender] = {"outcome": outcome, "amount": amount}
+        if outcome == 1:
+            market["yes_pool"] += amount
+        else:
+            market["no_pool"] += amount
+        market["predictions"] = preds
+        data[mid] = market
+        self.store = json.dumps(data, sort_keys=True)
+        return json.dumps({"market_id": market_id, "outcome": outcome, "amount": amount})
+
+    @gl.public.write
+    def resolveMarket(self, market_id: int) -> str:
+        data = json.loads(self.store)
+        mid = str(market_id)
+        market = data.get(mid)
+        if market is None:
+            return json.dumps({"error": "market not found"})
+        if market["resolved"]:
+            return json.dumps({"error": "already resolved", "outcome": market["outcome"]})
+
+        def decide() -> str:
+            raw = gl.nondet.web.render(market["source_url"], mode="text")
+            if raw is None or raw.strip() == "":
+                return "no_result"
+            value = market["target_value"]
+            cond = market["condition"]
+            result = "no_result"
+            try:
+                j = json.loads(raw)
+                if cond == "gt":
+                    if float(value) > 0 and float(j["lastPrice"]) > float(value):
+                        result = "yes"
+                    else:
+                        result = "no"
+                elif cond == "lt":
+                    if float(value) > 0 and float(j["lastPrice"]) < float(value):
+                        result = "yes"
+                    else:
+                        result = "no"
+                elif cond == "eq":
+                    if str(j.get("lastPrice", "")).strip() == value.strip():
+                        result = "yes"
+                    else:
+                        result = "no"
+                elif cond == "contains":
+                    if value.lower() in str(raw).lower():
+                        result = "yes"
+                    else:
+                        result = "no"
+                else:
+                    result = "no_result"
+            except Exception:
+                result = "no_result"
+            return result
+
+        outcome = str(gl.eq_principle.strict_eq(decide))
+        market["resolved"] = True
+        market["outcome"] = outcome
+        data[mid] = market
+        self.store = json.dumps(data, sort_keys=True)
+        return json.dumps({"market_id": market_id, "outcome": outcome})
+
+    @gl.public.view
+    def getVersion(self) -> str:
+        return json.dumps({"name": "PredictionMarket", "version": "1.0.0"})
