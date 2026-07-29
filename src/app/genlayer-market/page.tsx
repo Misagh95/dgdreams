@@ -128,6 +128,10 @@ export default function GenLayerMarketPage() {
     }
   };
 
+  const requireGenLayer = async () => {
+    if (!onGenLayer) { try { await switchChainAsync({ chainId: 4221 } as any); } catch {} }
+  };
+
   if (!isConnected) {
     return (
       <DashboardLayout title="Prediction Market">
@@ -137,10 +141,6 @@ export default function GenLayerMarketPage() {
       </DashboardLayout>
     );
   }
-
-  const requireGenLayer = useCallback(async () => {
-    if (!onGenLayer) { try { await switchChainAsync({ chainId: 4221 } as any); } catch {} }
-  }, [onGenLayer, switchChainAsync]);
 
   return (
     <DashboardLayout title="Prediction Market">

@@ -103,6 +103,10 @@ export default function GenLayerEscrowPage() {
     }
   };
 
+  const requireGenLayer = async () => {
+    if (!onGenLayer) { try { await switchChainAsync({ chainId: 4221 } as any); } catch {} }
+  };
+
   if (!isConnected) {
     return (
       <DashboardLayout title="AI Escrow">
@@ -114,10 +118,6 @@ export default function GenLayerEscrowPage() {
       </DashboardLayout>
     );
   }
-
-  const requireGenLayer = useCallback(async () => {
-    if (!onGenLayer) { try { await switchChainAsync({ chainId: 4221 } as any); } catch {} }
-  }, [onGenLayer, switchChainAsync]);
 
   return (
     <DashboardLayout title="AI Escrow">
