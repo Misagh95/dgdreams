@@ -51,6 +51,13 @@ export default function GenLayerMarketPage() {
     resolvesInHours: "24",
   });
 
+  const PRESET_MARKETS = [
+    { label: "BTC > $70k", question: "Will BTC exceed $70,000 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", targetValue: "70000", condition: "gt" },
+    { label: "BTC < $60k", question: "Will BTC drop below $60,000 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", targetValue: "60000", condition: "lt" },
+    { label: "ETH > $4k", question: "Will ETH exceed $4,000 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT", targetValue: "4000", condition: "gt" },
+    { label: "SOL > $200", question: "Will SOL exceed $200 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=SOLUSDT", targetValue: "200", condition: "gt" },
+  ];
+
   // Predict
   const [predictAmount, setPredictAmount] = useState("1");
   const [predicting, setPredicting] = useState<number | null>(null);
@@ -156,6 +163,16 @@ export default function GenLayerMarketPage() {
 
         {showCreate && (
           <div className="rounded-xl p-6 mb-6 space-y-3" style={{ background: "var(--bg-strong)", border: "1px solid var(--border)" }}>
+            <div>
+              <label className="text-[10px] font-mono uppercase tracking-wider mb-2 block" style={{ color: "var(--text-quaternary)" }}>Quick Presets</label>
+              <div className="flex flex-wrap gap-2">
+                {PRESET_MARKETS.map((p) => (
+                  <button key={p.label} onClick={() => setForm({ question: p.question, sourceUrl: p.sourceUrl, targetValue: p.targetValue, condition: p.condition, resolvesInHours: form.resolvesInHours })} className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80" style={{ background: "color-mix(in srgb, #F59E0B 12%, transparent)", color: "#F59E0B", border: "1px solid color-mix(in srgb, #F59E0B 20%, transparent)" }}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div>
               <label className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--text-quaternary)" }}>Question</label>
               <input value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} placeholder="Will BTC exceed $70k within 24h?" className="w-full mt-1 px-3 py-2 rounded-lg text-xs font-mono outline-none" style={{ background: "var(--bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
