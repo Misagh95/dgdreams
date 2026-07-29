@@ -50,7 +50,9 @@ export default function GenLayerEscrowPage() {
   }, []);
 
   const handleCreate = async () => {
-    if (!address || !onGenLayer) return;
+    if (!address) return;
+    await requireGenLayer();
+    if (chainId !== 4221) { setCreateMsg("Switch to GenLayer first"); return; }
     setCreating(true);
     setCreateMsg(null);
     try {
@@ -86,6 +88,9 @@ export default function GenLayerEscrowPage() {
   }, [tab, fetchEscrows]);
 
   const doAction = async (label: string, fn: () => Promise<string>, escrowId: number) => {
+    if (!address) return;
+    await requireGenLayer();
+    if (chainId !== 4221) { setActionMsg("Switch to GenLayer first"); return; }
     setActionMsg(null);
     try {
       const tx = await fn();
@@ -110,18 +115,9 @@ export default function GenLayerEscrowPage() {
     );
   }
 
-  if (!onGenLayer) {
-    return (
-      <DashboardLayout title="AI Escrow">
-        <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <p className="text-sm font-mono" style={{ color: "var(--text-secondary)" }}>Switch to GenLayer Bradbury</p>
-          <button onClick={() => switchChainAsync({ chainId: 4221 }) as any} className="px-6 py-3 rounded-xl text-sm font-mono transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
-            Switch Network
-          </button>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const requireGenLayer = useCallback(async () => {
+    if (!onGenLayer) { try { await switchChainAsync({ chainId: 4221 } as any); } catch {} }
+  }, [onGenLayer, switchChainAsync]);
 
   return (
     <DashboardLayout title="AI Escrow">
@@ -132,6 +128,7 @@ export default function GenLayerEscrowPage() {
           <span className="text-[9px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: "color-mix(in srgb, #8B5CF6 15%, transparent)", color: "#8B5CF6" }}>
             GenLayer
           </span>
+          {!onGenLayer && <span className="text-[9px] px-2 py-0.5 rounded-full font-mono" style={{ background: "color-mix(in srgb, #EF4444 15%, transparent)", color: "#EF4444" }}>Requires GenLayer</span>}
         </div>
 
         <p className="text-xs font-mono mb-6" style={{ color: "var(--text-secondary)" }}>

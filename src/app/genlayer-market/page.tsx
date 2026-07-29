@@ -74,7 +74,9 @@ export default function GenLayerMarketPage() {
   useEffect(() => { fetchMarkets(); }, [fetchMarkets]);
 
   const handleCreate = async () => {
-    if (!address || !onGenLayer) return;
+    if (!address) return;
+    await requireGenLayer();
+    if (chainId !== 4221) { setActionMsg("Switch to GenLayer first"); return; }
     setActionMsg(null);
     const resolvesAt = Math.floor(Date.now() / 1000) + parseInt(form.resolvesInHours) * 3600;
     try {
@@ -91,7 +93,9 @@ export default function GenLayerMarketPage() {
   };
 
   const handlePredict = async (marketId: number, outcome: number) => {
-    if (!address || !onGenLayer) return;
+    if (!address) return;
+    await requireGenLayer();
+    if (chainId !== 4221) { setPredicting(null); setActionMsg("Switch to GenLayer first"); return; }
     setPredicting(marketId);
     setActionMsg(null);
     try {
@@ -108,7 +112,9 @@ export default function GenLayerMarketPage() {
   };
 
   const handleResolve = async (marketId: number) => {
-    if (!address || !onGenLayer) return;
+    if (!address) return;
+    await requireGenLayer();
+    if (chainId !== 4221) { setActionMsg("Switch to GenLayer first"); return; }
     setActionMsg(null);
     try {
       const tx = await marketResolve(address, marketId);
@@ -132,16 +138,9 @@ export default function GenLayerMarketPage() {
     );
   }
 
-  if (!onGenLayer) {
-    return (
-      <DashboardLayout title="Prediction Market">
-        <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <p className="text-sm font-mono" style={{ color: "var(--text-secondary)" }}>Switch to GenLayer Bradbury</p>
-          <button onClick={() => switchChainAsync({ chainId: 4221 }) as any} className="px-6 py-3 rounded-xl text-sm font-mono" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>Switch Network</button>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const requireGenLayer = useCallback(async () => {
+    if (!onGenLayer) { try { await switchChainAsync({ chainId: 4221 } as any); } catch {} }
+  }, [onGenLayer, switchChainAsync]);
 
   return (
     <DashboardLayout title="Prediction Market">
@@ -152,9 +151,13 @@ export default function GenLayerMarketPage() {
             <h1 className="text-lg font-mono font-semibold" style={{ color: "var(--text-primary)" }}>Prediction Market</h1>
             <span className="text-[9px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: "color-mix(in srgb, #F59E0B 15%, transparent)", color: "#F59E0B" }}>AI</span>
           </div>
-          <button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 rounded-xl text-xs font-mono transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
-            {showCreate ? "Cancel" : "+ New Market"}
-          </button>
+          <div className="flex items-center gap-2">
+            {!onGenLayer && <span className="text-[9px] px-2 py-1 rounded-full font-mono" style={{ background: "color-mix(in srgb, #EF4444 15%, transparent)", color: "#EF4444" }}>Requires GenLayer</span>}
+            {onGenLayer && <span className="text-[9px] px-2 py-1 rounded-full font-mono" style={{ background: "color-mix(in srgb, #10B981 15%, transparent)", color: "#10B981" }}>GenLayer</span>}
+            <button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 rounded-xl text-xs font-mono transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
+              {showCreate ? "Cancel" : "+ New Market"}
+            </button>
+          </div>
         </div>
 
         <p className="text-[10px] font-mono mb-6" style={{ color: "var(--text-quaternary)" }}>
