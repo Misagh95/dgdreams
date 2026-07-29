@@ -6,6 +6,7 @@ import {
   timestamp,
   boolean,
   jsonb,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -108,3 +109,14 @@ export const litevmStats = pgTable("litevm_stats", {
   lastSyncAt: timestamp("last_sync_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const walletSocials = pgTable("wallet_socials", {
+  id: serial("id").primaryKey(),
+  walletAddress: text("wallet_address").notNull(),
+  platform: text("platform").notNull(), // gmail, telegram, twitter, discord, github
+  handle: text("handle").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  walletPlatformIdx: uniqueIndex("wallet_platform_idx").on(table.walletAddress, table.platform),
+}));

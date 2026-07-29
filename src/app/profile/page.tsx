@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Wallet,
@@ -9,27 +9,82 @@ import {
   CheckCircle2,
   Copy,
   ExternalLink,
-  Shield,
-  Zap,
-  TrendingUp,
-  Calendar,
-  Award,
+  Save,
+  Loader2,
+  Mail,
+  Send,
+  MessageCircle,
+  GitBranch,
+  Globe,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAccount, useBalance, useEnsName } from "wagmi";
 import { mainnet } from "viem/chains";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
+const SOCIAL_PLATFORMS = [
+  { key: "gmail", label: "Gmail", icon: Mail, color: "#EA4335" },
+  { key: "telegram", label: "Telegram", icon: Send, color: "#26A5E4" },
+  { key: "twitter", label: "Twitter / X", icon: MessageCircle, color: "#1DA1F2" },
+  { key: "discord", label: "Discord", icon: MessageCircle, color: "#5865F2" },
+  { key: "github", label: "GitHub", icon: GitBranch, color: "#ffffff" },
+];
+
 export default function ProfilePage() {
   const { address, isConnected, chainId } = useAccount();
   const { data: balance } = useBalance({ address, chainId: chainId || mainnet.id });
   const { data: ensName } = useEnsName({ address });
   const [copied, setCopied] = useState(false);
+  const [socials, setSocials] = useState<Record<string, string>>({});
+  const [socialsLoading, setSocialsLoading] = useState(false);
+  const [socialsSaving, setSocialsSaving] = useState(false);
+  const [socialSaved, setSocialSaved] = useState(false);
 
   const copyAddress = (addr: string) => {
     navigator.clipboard.writeText(addr).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const fetchSocials = useCallback(async () => {
+    if (!address) return;
+    setSocialsLoading(true);
+    try {
+      const res = await fetch(`/api/profile/socials?address=${address}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSocials(data.socials || {});
+      }
+    } catch {} finally {
+      setSocialsLoading(false);
+    }
+  }, [address]);
+
+  useEffect(() => {
+    if (isConnected) fetchSocials();
+  }, [isConnected, fetchSocials]);
+
+  const handleSocialChange = (platform: string, value: string) => {
+    setSocials((prev) => ({ ...prev, [platform]: value }));
+  };
+
+  const handleSaveSocials = async () => {
+    if (!address) return;
+    setSocialsSaving(true);
+    setSocialSaved(false);
+    try {
+      const res = await fetch("/api/profile/socials", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, socials }),
+      });
+      if (res.ok) {
+        setSocialSaved(true);
+        setTimeout(() => setSocialSaved(false), 3000);
+      }
+    } catch {} finally {
+      setSocialsSaving(false);
+    }
   };
 
   return (
@@ -195,77 +250,84 @@ export default function ProfilePage() {
           </motion.div>
         )}
 
-        {/* On-Chain Statistics */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="glass-panel rounded-xl p-5"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-[#00d4ff]" />
-            <span className="font-semibold text-sm text-[#e2e8f0]">On-Chain Statistics</span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[
-              { label: "Total Txs", value: "0", icon: Zap, color: "#00d4ff" },
-              { label: "Active Days", value: "0", icon: Calendar, color: "#00ff88" },
-              { label: "Chains Active", value: "0", icon: TrendingUp, color: "#ffaa00" },
-              { label: "Gas Spent", value: "$0", icon: Flame, color: "#ff6b00" },
-              { label: "Points Earned", value: "0", icon: Star, color: "#ffaa00" },
-              { label: "Achievements", value: "0", icon: Award, color: "#8b5cf6" },
-            ].map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <div key={stat.label} className="text-center p-3 rounded-xl"
-                  style={{ background: "rgba(6,13,26,0.8)", border: "1px solid rgba(26,58,92,0.4)" }}>
-                  <Icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
-                  <div className="text-xl font-black" style={{ color: stat.color }}>{stat.value}</div>
-                  <div className="text-[10px] text-[#334155] font-mono mt-0.5">{stat.label}</div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* Preferences */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="glass-panel rounded-xl p-5"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <Shield className="w-4 h-4 text-[#8b5cf6]" />
-            <span className="font-semibold text-sm text-[#e2e8f0]">Preferences</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { label: "Email Notifications", value: "Disabled", status: false },
-              { label: "Streak Reminders", value: "Off", status: false },
-              { label: "Gas Price Alerts", value: "Off", status: false },
-              { label: "Public Profile", value: "Visible", status: true },
-            ].map((pref) => (
-              <div key={pref.label} className="flex items-center justify-between p-3 rounded-xl"
-                style={{ background: "rgba(6,13,26,0.8)", border: "1px solid rgba(26,58,92,0.4)" }}>
-                <div>
-                  <div className="text-sm text-[#e2e8f0]">{pref.label}</div>
-                  <div className="text-xs text-[#475569] font-mono mt-0.5">{pref.value}</div>
-                </div>
-                <div className="w-10 h-5 rounded-full relative cursor-pointer flex-shrink-0"
-                  style={{ background: pref.status ? "rgba(0,212,255,0.3)" : "rgba(26,58,92,0.6)", border: "1px solid rgba(0,212,255,0.3)" }}>
-                  <div className="absolute top-0.5 rounded-full w-4 h-4 transition-all"
-                    style={{
-                      background: pref.status ? "#00d4ff" : "#334155",
-                      left: pref.status ? "auto" : "2px",
-                      right: pref.status ? "2px" : "auto",
-                      boxShadow: pref.status ? "0 0 6px rgba(0,212,255,0.5)" : "none",
-                    }} />
-                </div>
+        {/* Social Accounts */}
+        {isConnected && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass-panel rounded-xl p-5"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-[#00d4ff]" />
+                <span className="font-semibold text-sm text-[#e2e8f0]">Social Accounts</span>
               </div>
-            ))}
-          </div>
-        </motion.div>
+              {socialSaved && (
+                <span className="text-[10px] font-mono text-[#00ff88] flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Saved
+                </span>
+              )}
+            </div>
+            {socialsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 animate-spin" style={{ color: "var(--accent)" }} />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {SOCIAL_PLATFORMS.map(({ key, label, icon: Icon, color }) => (
+                  <div key={key}
+                    className="flex items-center gap-3 p-3 rounded-xl"
+                    style={{ background: "rgba(6,13,26,0.8)", border: "1px solid rgba(26,58,92,0.4)" }}
+                  >
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: `color-mix(in srgb, ${color} 15%, transparent)`,
+                        border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
+                      }}>
+                      <Icon className="w-4 h-4" style={{ color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <label className="text-xs font-medium text-[#e2e8f0]">{label}</label>
+                      <input
+                        type={key === "gmail" ? "email" : "text"}
+                        value={socials[key] || ""}
+                        onChange={(e) => handleSocialChange(key, e.target.value)}
+                        placeholder={key === "gmail" ? "example@gmail.com" : key === "telegram" ? "@username" : key === "twitter" ? "@username" : key === "discord" ? "username#0000" : "username"}
+                        className="w-full mt-1 px-3 py-1.5 rounded-lg text-xs font-mono outline-none transition-colors"
+                        style={{
+                          background: "rgba(6,13,26,0.5)",
+                          border: "1px solid rgba(26,58,92,0.6)",
+                          color: "#cbd5e1",
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = "rgba(0,212,255,0.4)"}
+                        onBlur={(e) => e.target.style.borderColor = "rgba(26,58,92,0.6)"}
+                      />
+                    </div>
+                  </div>
+                ))}
+                <button
+                  onClick={handleSaveSocials}
+                  disabled={socialsSaving}
+                  className="flex items-center justify-center gap-2 w-full mt-2 py-3 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    background: "var(--accent)",
+                    color: "white",
+                    opacity: socialsSaving ? 0.6 : 1,
+                  }}
+                >
+                  {socialsSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  {socialsSaving ? "Saving..." : "Save Social Accounts"}
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
+
       </div>
     </DashboardLayout>
   );
