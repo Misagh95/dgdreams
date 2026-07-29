@@ -19,51 +19,14 @@ export default function GenLayerOraclePage() {
   const { openConnectModal } = useConnectModal();
 
   const [symbol, setSymbol] = useState("BTC");
-  const [livePrice, setLivePrice] = useState<number | null>(null);
-  const [loadingBinance, setLoadingBinance] = useState(true);
-  const [onChainPrice, setOnChainPrice] = useState<number | null>(null);
-  const [onChainStatus, setOnChainStatus] = useState<string>("idle");
+  const [price, setPrice] = useState<number | null>(null);
+  const [priceStatus, setPriceStatus] = useState<string>("idle"); // idle | pending | verified | failed
   const [error, setError] = useState<string | null>(null);
-  const [binanceError, setBinanceError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
-  const [txConsensusStatus, setTxConsensusStatus] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const onGenLayer = isGenLayerChain(chainId ?? 0);
-
-  const fetchBinancePrice = useCallback(async (sym: string) => {
-    setLoadingBinance(true);
-    setBinanceError(null);
-    try {
-      const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${BINANCE_SYMBOLS[sym]}`);
-      if (!res.ok) throw new Error(`Binance HTTP ${res.status}`);
-      const data = await res.json();
-      setLivePrice(parseFloat(data.price));
-    } catch (e: any) {
-      setLivePrice(null);
-      setBinanceError(e?.message || "Failed to fetch live price");
-    } finally {
-      setLoadingBinance(false);
-    }
-  }, []);
-
-  const loadOnChainPrice = useCallback(async () => {
-    if (!onGenLayer) return;
-    try {
-      const data = await oracleGetPrice(symbol);
-      setOnChainPrice(data.price);
-      setOnChainStatus(data.status);
-    } catch {
-      setOnChainPrice(null);
-      setOnChainStatus("unavailable");
-    }
-  }, [symbol, onGenLayer]);
-
-  useEffect(() => {
-    fetchBinancePrice(symbol);
-    if (onGenLayer) loadOnChainPrice();
-  }, [symbol, fetchBinancePrice, onGenLayer, loadOnChainPrice]);
 
   useEffect(() => {
     if (!txHash || !onGenLayer) return;
@@ -71,12 +34,15 @@ export default function GenLayerOraclePage() {
     pollRef.current = setInterval(async () => {
       if (cancelled) return;
       const s = await getTxStatus(txHash);
-      setTxConsensusStatus(s.status);
       if (s.status === "FINALIZED" || s.status === "ACCEPTED") {
         if (cancelled) return;
-        const data = await oracleGetPrice(symbol);
-        if (data.price) setOnChainPrice(data.price);
-        setOnChainStatus(data.status);
+        try {
+          const data = await oracleGetPrice(symbol);
+          if (data.price) setPrice(data.price);
+          setPriceStatus("verified");
+        } catch {
+          setPriceStatus("failed");
+        }
       }
     }, 5000);
     return () => {
@@ -85,26 +51,34 @@ export default function GenLayerOraclePage() {
     };
   }, [txHash, onGenLayer, symbol]);
 
-  const handleChangeSymbol = useCallback(async (s: string) => {
+  const handleChangeSymbol = useCallback((s: string) => {
     setSymbol(s);
     setTxHash(null);
-    setTxConsensusStatus(null);
-    setOnChainPrice(null);
-    setOnChainStatus("idle");
-    // fetchBinancePrice and loadOnChainPrice triggered by useEffect
+    setPrice(null);
+    setPriceStatus("idle");
+    setError(null);
   }, []);
 
   const handleFetch = useCallback(async () => {
     if (!address || !onGenLayer) return;
     setFetching(true);
     setError(null);
+    setPrice(null);
+    setPriceStatus("idle");
     setTxHash(null);
-    setTxConsensusStatus(null);
     try {
-      const hash = await oracleFetchPrice(address, symbol);
+      const [hash] = await Promise.all([
+        oracleFetchPrice(address, symbol),
+        fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${BINANCE_SYMBOLS[symbol]}`)
+          .then(r => r.json())
+          .then(d => setPrice(parseFloat(d.price)))
+          .catch(() => {}),
+      ]);
       setTxHash(hash);
+      setPriceStatus("pending");
     } catch (err: any) {
       setError(err?.message || "Transaction failed");
+      setPriceStatus("failed");
     } finally {
       setFetching(false);
     }
@@ -114,8 +88,6 @@ export default function GenLayerOraclePage() {
     if (!isConnected) { openConnectModal?.(); return; }
     try { await switchChainAsync({ chainId: 4221 }); } catch {}
   }, [isConnected, switchChainAsync, openConnectModal]);
-
-  const displayedPrice = onChainPrice ?? livePrice;
 
   return (
     <DashboardLayout title="GenLayer Oracle" subtitle="// AI-validated price feeds">
@@ -130,7 +102,7 @@ export default function GenLayerOraclePage() {
             <div>
               <h3 className="text-sm font-semibold" style={{ color: "var(--text-bright)" }}>GenLayer AI Oracle</h3>
               <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                Live price from Binance · Recorded on GenLayer with AI consensus
+                Submit a price fetch transaction and get AI-validated price data
               </p>
             </div>
           </div>
@@ -165,24 +137,22 @@ export default function GenLayerOraclePage() {
 
               <div className="p-6 rounded-xl text-center mb-4" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)" }}>
                 <p className="text-xs font-mono mb-1" style={{ color: "var(--text-quaternary)" }}>
-                  {symbol}/USDT
-                  {onChainPrice ? " · On-Chain" : livePrice ? " · Live" : ""}
+                  {symbol}/USDT · {priceStatus === "verified" ? "On-Chain" : priceStatus === "pending" ? "Awaiting Consensus" : priceStatus === "failed" ? "Failed" : "No Data"}
                 </p>
-                <p className="text-4xl font-bold font-mono" style={{ color: displayedPrice ? "var(--text-bright)" : "var(--text-quaternary)" }}>
-                  {loadingBinance && !onChainPrice ? "..." : displayedPrice ? `$${displayedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "---"}
+                <p className="text-4xl font-bold font-mono" style={{ color: price ? "var(--text-bright)" : "var(--text-quaternary)" }}>
+                  {price ? `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "---"}
                 </p>
-                <div className="flex items-center justify-center gap-3 mt-2">
-                  {onChainPrice && (
-                    <span className="text-[10px] px-2 py-0.5 rounded font-mono" style={{ background: "color-mix(in srgb, var(--success) 15%, transparent)", color: "var(--success)" }}>
-                      ✓ Recorded on GenLayer
-                    </span>
-                  )}
-                  {livePrice && !onChainPrice && (
-                    <span className="text-[10px] px-2 py-0.5 rounded font-mono" style={{ background: "color-mix(in srgb, #00D4FF 15%, transparent)", color: "#00D4FF" }}>
-                      Live from Binance
-                    </span>
-                  )}
-                </div>
+                {priceStatus === "pending" && (
+                  <p className="text-[10px] font-mono mt-2" style={{ color: "var(--text-tertiary)" }}>
+                    <span className="inline-block w-2 h-2 rounded-full mr-1 animate-pulse" style={{ background: "var(--accent)" }} />
+                    Waiting for {txHash ? "AI consensus" : "transaction..."}
+                  </p>
+                )}
+                {priceStatus === "verified" && (
+                  <p className="text-[10px] font-mono mt-2" style={{ color: "var(--success)" }}>
+                    ✓ Verified by GenLayer validators
+                  </p>
+                )}
               </div>
 
               <button
@@ -191,30 +161,17 @@ export default function GenLayerOraclePage() {
                 className="w-full py-3 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-40"
                 style={{ background: "var(--accent)", color: "white" }}
               >
-                {fetching ? "Submitting..." : `Record ${symbol}/USDT on GenLayer`}
+                {fetching ? "Submitting transaction..." : `Fetch ${symbol}/USDT via GenLayer`}
               </button>
 
-              {txHash && (
+              {txHash && priceStatus !== "pending" && priceStatus !== "verified" && (
                 <div className="mt-3 text-center">
                   <p className="text-xs font-mono" style={{ color: "var(--text-quaternary)" }}>
-                    Tx: {txHash.slice(0, 10)}...{txHash.slice(-6)}
+                    Tx: {txHash.slice(0, 14)}...{txHash.slice(-6)}
                   </p>
-                  {txConsensusStatus && (
-                    <p className="text-[10px] font-mono mt-1" style={{ color: "var(--text-tertiary)" }}>
-                      Consensus: {txConsensusStatus}
-                      {txConsensusStatus !== "FINALIZED" && txConsensusStatus !== "ACCEPTED" && txConsensusStatus !== "UNKNOWN" && (
-                        <span className="ml-1 animate-pulse" style={{ color: "var(--accent)" }}>●</span>
-                      )}
-                    </p>
-                  )}
                 </div>
               )}
 
-              {binanceError && (
-                <p className="text-xs mt-2 text-center" style={{ color: "var(--danger)" }}>
-                  Binance API: {binanceError}
-                </p>
-              )}
               {error && (
                 <p className="text-xs mt-2 text-center" style={{ color: "var(--danger)" }}>
                   {error}
@@ -229,15 +186,15 @@ export default function GenLayerOraclePage() {
           <div className="space-y-3 text-xs" style={{ color: "var(--text-tertiary)" }}>
             <div className="flex gap-3">
               <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}>1</span>
-              <div><strong style={{ color: "var(--text-secondary)" }}>Live Price</strong> — Fetched directly from Binance API and displayed instantly. No waiting.</div>
+              <div><strong style={{ color: "var(--text-secondary)" }}>Submit Transaction</strong> — Click "Fetch" to submit a price request to the GenLayer oracle contract. The price is fetched from Binance and shown immediately.</div>
             </div>
             <div className="flex gap-3">
               <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}>2</span>
-              <div><strong style={{ color: "var(--text-secondary)" }}>Submit to GenLayer</strong> — Click "Record on GenLayer" to submit the price to the AI oracle contract. 5 validators independently fetch and compare results using <code className="text-[10px] px-1 py-0.5 rounded" style={{ background: "var(--bg-subtle)" }}>strict_eq</code>.</div>
+              <div><strong style={{ color: "var(--text-secondary)" }}>AI Consensus</strong> — 5 independent validators each fetch the price. <code className="text-[10px] px-1 py-0.5 rounded" style={{ background: "var(--bg-subtle)" }}>strict_eq</code> ensures they agree before the result is stored on-chain.</div>
             </div>
             <div className="flex gap-3">
               <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}>3</span>
-              <div><strong style={{ color: "var(--text-secondary)" }}>On-Chain Storage</strong> — After consensus (&lt;30 min), the verified price is stored on GenLayer and displayed with a ✓ badge.</div>
+              <div><strong style={{ color: "var(--text-secondary)" }}>On-Chain Storage</strong> — After consensus (&lt;30 min), the verified price is stored on GenLayer and becomes available to other smart contracts.</div>
             </div>
           </div>
         </div>
