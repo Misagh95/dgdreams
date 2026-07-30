@@ -5,12 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet,
   MessageCircle,
-  Trophy,
-  Flame,
-  Star,
-  TrendingUp,
-  Shield,
-  Zap,
   Link2,
   ChevronDown,
   ChevronUp,
@@ -20,7 +14,7 @@ import {
   GitBranch,
   AtSign,
 } from "lucide-react";
-import { cn, shortenAddress } from "@/lib/utils";
+import { shortenAddress } from "@/lib/utils";
 import WalletModal from "./WalletModal";
 import { useAccount } from "wagmi";
 
@@ -28,20 +22,6 @@ const SOCIAL_PLATFORMS = [
   { key: "x", label: "X / Twitter", icon: AtSign, color: "#00d4ff", urlPrefix: "https://x.com/" },
   { key: "discord", label: "Discord", icon: MessageCircle, color: "#7289da", urlPrefix: "" },
   { key: "github", label: "GitHub", icon: GitBranch, color: "#6e7681", urlPrefix: "https://github.com/" },
-];
-
-const achievements = [
-  { icon: "🔥", label: "7-Day Streak", color: "#ff6b00" },
-  { icon: "🌐", label: "Multi-Chain", color: "#8b5cf6" },
-  { icon: "💎", label: "Diamond Hands", color: "#00ccff" },
-  { icon: "🚀", label: "Early Adopter", color: "#00ff88" },
-];
-
-const chainStats = [
-  { chain: "Ethereum", txCount: 0, color: "#627eea" },
-  { chain: "Base", txCount: 0, color: "#0052ff" },
-  { chain: "HyperEVM", txCount: 0, color: "#FF6B6B" },
-  { chain: "Ink", txCount: 0, color: "#0052ff" },
 ];
 
 export default function UserPanel() {
@@ -126,47 +106,6 @@ export default function UserPanel() {
               </div>
             </div>
 
-            {/* Streak Hero */}
-            <div className="rounded-xl p-3 mb-3"
-              style={{
-                background: "linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,68,68,0.08))",
-                border: "1px solid rgba(255,107,0,0.2)",
-              }}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Flame className="w-5 h-5 text-orange-400" style={{ filter: "drop-shadow(0 0 6px rgba(255,107,0,0.6))" }} />
-                  <div>
-                    <div className="text-[10px] text-[#475569] font-mono uppercase tracking-widest">Current Streak</div>
-                    <div className="text-2xl font-bold text-orange-400" style={{ textShadow: "0 0 10px rgba(255,107,0,0.5)" }}>
-                      0 <span className="text-base font-normal text-orange-500">days</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] text-[#475569] font-mono">Best</div>
-                  <div className="text-lg font-bold text-[#ffaa00]">0</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: "Points", value: "0", icon: Star, color: "#ffaa00" },
-                { label: "Actions", value: "0", icon: Zap, color: "#00d4ff" },
-                { label: "Chains", value: "0", icon: TrendingUp, color: "#8b5cf6" },
-              ].map((stat) => {
-                const Icon = stat.icon;
-                return (
-                  <div key={stat.label} className="text-center rounded-lg p-2"
-                    style={{ background: "rgba(10,22,40,0.6)", border: "1px solid rgba(26,58,92,0.4)" }}>
-                    <Icon className="w-3.5 h-3.5 mx-auto mb-1" style={{ color: stat.color }} />
-                    <div className="text-sm font-bold" style={{ color: stat.color }}>{stat.value}</div>
-                    <div className="text-[10px] text-[#334155] font-mono">{stat.label}</div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
 
           {/* Wallets Section */}
@@ -223,7 +162,7 @@ export default function UserPanel() {
                     ) : (
                       <div className="text-center py-3">
                         <p className="text-xs text-[#475569] font-mono mb-2">No wallet connected</p>
-                        <button className="btn-primary w-full py-2 text-xs">Connect Wallet</button>
+                        <button onClick={() => setWalletModalOpen(true)} className="btn-primary w-full py-2 text-xs">Connect Wallet</button>
                       </div>
                     )}
                   </div>
@@ -321,52 +260,7 @@ export default function UserPanel() {
             </AnimatePresence>
           </div>
 
-          {/* Achievements */}
-          <div className="glass-panel p-3 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Trophy className="w-4 h-4 text-[#ffaa00]" />
-              <span className="text-sm font-semibold text-[#e2e8f0]">Achievements</span>
-              <span className="badge-amber text-[10px] py-0">0</span>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {achievements.map((ach) => (
-                <motion.div
-                  key={ach.label}
-                  className="flex flex-col items-center gap-1 rounded-lg p-2 cursor-default opacity-40"
-                  style={{ background: "rgba(6,13,26,0.8)", border: "1px solid rgba(26,58,92,0.4)" }}
-                  title={ach.label}
-                >
-                  <span className="text-lg leading-none">{ach.icon}</span>
-                  <span className="text-[9px] text-[#475569] text-center leading-tight font-mono">{ach.label}</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
 
-          {/* Chain Activity */}
-          <div className="glass-panel p-3 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Shield className="w-4 h-4 text-[#00d4ff]" />
-              <span className="text-sm font-semibold text-[#e2e8f0]">Chain Activity</span>
-            </div>
-            <div className="flex flex-col gap-2.5">
-              {chainStats.map((stat) => {
-                return (
-                  <div key={stat.chain}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-[#64748b] font-mono">{stat.chain}</span>
-                      <span className="text-xs font-bold" style={{ color: stat.color }}>0 txs</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="h-full rounded-full"
-                        style={{ width: "0%", background: `linear-gradient(90deg, ${stat.color}88, ${stat.color})` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </aside>
 

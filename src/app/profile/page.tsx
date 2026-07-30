@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Wallet,
@@ -16,6 +16,10 @@ import {
   MessageCircle,
   GitBranch,
   Globe,
+  TrendingUp,
+  TrendingDown,
+  Sparkles,
+  Target,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAccount, useBalance, useEnsName } from "wagmi";
@@ -39,6 +43,22 @@ export default function ProfilePage() {
   const [socialsLoading, setSocialsLoading] = useState(false);
   const [socialsSaving, setSocialsSaving] = useState(false);
   const [socialSaved, setSocialSaved] = useState(false);
+  const [activities, setActivities] = useState<any[]>([]);
+
+  const fetchActivities = useCallback(async () => {
+    if (!address) return;
+    try {
+      const res = await fetch(`/api/prediction-activities?wallet=${address}`);
+      if (res.ok) {
+        const data = await res.json();
+        setActivities(data.activities || []);
+      }
+    } catch {}
+  }, [address]);
+
+  useEffect(() => {
+    if (isConnected) fetchActivities();
+  }, [isConnected, fetchActivities]);
 
   const copyAddress = (addr: string) => {
     navigator.clipboard.writeText(addr).catch(() => {});
@@ -325,6 +345,59 @@ export default function ProfilePage() {
                 </button>
               </div>
             )}
+          </motion.div>
+        )}
+
+        {/* Prediction Activities */}
+        {isConnected && activities.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="glass-panel rounded-xl p-5"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="w-4 h-4 text-[#10B981]" />
+              <span className="font-semibold text-sm text-[#e2e8f0]">Prediction Activity</span>
+            </div>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {activities.map((a: any) => {
+                const icon = a.action === "create_market" ? Sparkles
+                  : a.action === "predict_yes" ? TrendingUp
+                  : a.action === "predict_no" ? TrendingDown
+                  : Target;
+                const color = a.action === "create_market" ? "#F59E0B"
+                  : a.action === "predict_yes" ? "#10B981"
+                  : a.action === "predict_no" ? "#EF4444"
+                  : "#8B5CF6";
+                const label = a.action === "create_market" ? "Created"
+                  : a.action === "predict_yes" ? "Predicted YES"
+                  : a.action === "predict_no" ? "Predicted NO"
+                  : "Resolved";
+                return (
+                  <div key={a.id} className="flex items-start gap-3 p-3 rounded-xl"
+                    style={{ background: "rgba(6,13,26,0.8)", border: "1px solid rgba(26,58,92,0.4)" }}>
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                      style={{ background: `color-mix(in srgb, ${color} 15%, transparent)` }}>
+                      {React.createElement(icon, { className: "w-4 h-4", style: { color } })}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold font-mono" style={{ color }}>{label}</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-mono"
+                          style={{ background: `color-mix(in srgb, ${a.chain === "litvm" ? "#8B5CF6" : "#F59E0B"} 15%, transparent)`, color: a.chain === "litvm" ? "#8B5CF6" : "#F59E0B" }}>
+                          {a.chain === "litvm" ? "LITVM" : "GenLayer"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-mono mt-1 leading-snug" style={{ color: "var(--text-primary)" }}>{a.question}</p>
+                      <p className="text-[9px] font-mono mt-1" style={{ color: "var(--text-quaternary)" }}>
+                        {new Date(a.createdAt).toLocaleString()} · +{a.points} pts
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </motion.div>
         )}
 

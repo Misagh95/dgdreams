@@ -6,6 +6,11 @@ function roundToNearest(value: number, step: number): number {
   return Math.round(value / step) * step;
 }
 
+function rng(seed: number): () => number {
+  let s = seed;
+  return () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+}
+
 export async function GET() {
   try {
     const res = await fetch(COINGECKO, { next: { revalidate: 3600 } });
@@ -18,123 +23,76 @@ export async function GET() {
     const link = data?.chainlink?.usd || 0;
     const matic = data?.polygon?.usd || 0;
 
+    const prices = { btc, eth, sol, ada, avax, link, matic };
+
     const btcChange = data?.bitcoin?.["usd_24h_change"] || 0;
     const ethChange = data?.ethereum?.["usd_24h_change"] || 0;
     const solChange = data?.solana?.["usd_24h_change"] || 0;
 
-    const now = Date.now();
-    const endOfDay = new Date();
-    endOfDay.setUTCHours(23, 59, 59, 999);
-    const eodTs = Math.floor(endOfDay.getTime() / 1000);
+    const today = new Date();
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    const rand = rng(dayOfYear * 1000);
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setUTCHours(12, 0, 0, 0);
-    const tomorrowTs = Math.floor(tomorrow.getTime() / 1000);
+    const eod = new Date();
+    eod.setUTCHours(23, 59, 59, 999);
+    const eodTs = Math.floor(eod.getTime() / 1000);
+
+    const tom = new Date();
+    tom.setDate(tom.getDate() + 1);
+    tom.setUTCHours(12, 0, 0, 0);
+    const tomTs = Math.floor(tom.getTime() / 1000);
+
+    const week = new Date();
+    week.setDate(week.getDate() + 7);
+    week.setUTCHours(12, 0, 0, 0);
+    const weekTs = Math.floor(week.getTime() / 1000);
+
+    const pick = <T>(arr: T[]): T => arr[Math.floor(rand() * arr.length)];
+
+    const and = (a: number, b: number) => roundToNearest(a + b, b < 1 ? 0.01 : b < 10 ? 1 : b < 100 ? 10 : 100);
+    const sub = (a: number, b: number) => roundToNearest(a - b, b < 1 ? 0.01 : b < 10 ? 1 : b < 100 ? 10 : 100);
 
     const suggestions = [
-      // BTC predictions
-      {
-        question: `Will BTC close above $${(btc + 1000).toLocaleString()} by end of day?`,
-        targetPrice: roundToNearest(btc + 1000, 1000),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: btc,
-      },
-      {
-        question: `Will BTC drop below $${(btc - 1000).toLocaleString()} by end of day?`,
-        targetPrice: roundToNearest(btc - 1000, 1000),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: btc,
-      },
-      {
-        question: `Will BTC 24h change exceed ${btcChange > 0 ? "+" : ""}${btcChange.toFixed(1)}% by midnight?`,
-        targetPrice: roundToNearest(btc * (1 + Math.abs(btcChange) / 10000), 1000),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: btc,
-      },
-      // ETH predictions
-      {
-        question: `Will ETH break $${roundToNearest(eth + 200, 100).toLocaleString()} by end of day?`,
-        targetPrice: roundToNearest(eth + 200, 100),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: eth,
-      },
-      {
-        question: `Will ETH hold above $${(eth - 100).toLocaleString()} by end of day?`,
-        targetPrice: roundToNearest(eth - 100, 100),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: eth,
-      },
-      {
-        question: `Will ETH outperform BTC today (${(ethChange - btcChange).toFixed(1)}% diff)?`,
-        targetPrice: roundToNearest(eth + 50, 100),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: eth,
-      },
-      // SOL predictions
-      {
-        question: `Will SOL exceed $${roundToNearest(sol + 10, 5).toLocaleString()} by end of day?`,
-        targetPrice: roundToNearest(sol + 10, 5),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: sol,
-      },
-      {
-        question: `Will SOL stay above $${(sol - 5).toLocaleString()} by end of day?`,
-        targetPrice: roundToNearest(sol - 5, 5),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: sol,
-      },
-      // Cross-asset predictions
-      {
-        question: `Will BTC dominance increase by end of day?`,
-        targetPrice: btc,
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: btc,
-      },
-      {
-        question: `Will total crypto market cap go up by tomorrow noon?`,
-        targetPrice: btc,
-        resolvesAt: tomorrowTs,
-        source: "coingecko",
-        currentPrice: btc,
-      },
-      // Altcoin predictions
-      ...(ada > 0 ? [{
-        question: `Will ADA break $${roundToNearest(ada + 0.05, 0.05).toFixed(2)} by end of day?`,
-        targetPrice: roundToNearest(ada + 0.05, 0.05),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: ada,
+      // BTC
+      { question: `Will BTC close above $${and(btc, 1000).toLocaleString()} by end of day?`, resolvesAt: eodTs, currentPrice: btc },
+      { question: `Will BTC drop below $${sub(btc, 1000).toLocaleString()} by end of day?`, resolvesAt: eodTs, currentPrice: btc },
+      { question: `Will BTC break $${roundToNearest(btc + 3000, 1000).toLocaleString()} by end of week?`, resolvesAt: weekTs, currentPrice: btc },
+      { question: `Will BTC 24h volume exceed $${roundToNearest(btc * 0.05, 1000).toLocaleString()}B by midnight?`, resolvesAt: eodTs, currentPrice: btc },
+
+      // ETH
+      { question: `Will ETH break $${and(eth, 200).toLocaleString()} by end of day?`, resolvesAt: eodTs, currentPrice: eth },
+      { question: `Will ETH hold above $${sub(eth, 100).toLocaleString()} by end of day?`, resolvesAt: eodTs, currentPrice: eth },
+      { question: `Will ETH surpass $${roundToNearest(eth * 1.1, 500).toLocaleString()} by next week?`, resolvesAt: weekTs, currentPrice: eth },
+
+      // SOL
+      { question: `Will SOL exceed $${and(sol, 10).toLocaleString()} by end of day?`, resolvesAt: eodTs, currentPrice: sol },
+      { question: `Will SOL drop below $${sub(sol, 8).toLocaleString()} by end of day?`, resolvesAt: eodTs, currentPrice: sol },
+
+      // Cross-asset
+      { question: `Will ${pick(["BTC", "ETH", "SOL"])} outperform ${pick(["BTC", "ETH", "SOL"])} today?`, resolvesAt: eodTs, currentPrice: btc },
+      { question: `Will 3 of top 5 coins close green today?`, resolvesAt: eodTs, currentPrice: btc },
+      { question: `Will total market cap go up by tomorrow noon?`, resolvesAt: tomTs, currentPrice: btc },
+
+      // Altcoins (randomized selection each day)
+      ...(ada > 0 && rand() > 0.3 ? [{
+        question: `Will ADA break $${and(ada, 0.05).toFixed(2)} by end of day?`, resolvesAt: eodTs, currentPrice: ada,
       }] : []),
-      ...(avax > 0 ? [{
-        question: `Will AVAX close above $${roundToNearest(avax + 2, 1).toLocaleString()} by end of day?`,
-        targetPrice: roundToNearest(avax + 2, 1),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: avax,
+      ...(avax > 0 && rand() > 0.4 ? [{
+        question: `Will AVAX close above $${and(avax, 2).toLocaleString()} by end of day?`, resolvesAt: eodTs, currentPrice: avax,
       }] : []),
-      ...(link > 0 ? [{
-        question: `Will LINK exceed $${roundToNearest(link + 1, 0.5).toFixed(1)} by end of day?`,
-        targetPrice: roundToNearest(link + 1, 0.5),
-        resolvesAt: eodTs,
-        source: "coingecko",
-        currentPrice: link,
+      ...(link > 0 && rand() > 0.5 ? [{
+        question: `Will LINK exceed $${and(link, 1).toFixed(1)} by end of day?`, resolvesAt: eodTs, currentPrice: link,
+      }] : []),
+      ...(matic > 0 && rand() > 0.6 ? [{
+        question: `Will MATIC reclaim $${and(matic, 0.1).toFixed(2)} by end of day?`, resolvesAt: eodTs, currentPrice: matic,
       }] : []),
     ];
 
     return NextResponse.json({
-      date: now,
+      date: Date.now(),
+      dayOfYear,
       suggestions,
-      prices: { btc, eth, sol, ada, avax, link, matic },
+      prices,
     });
   } catch {
     return NextResponse.json({

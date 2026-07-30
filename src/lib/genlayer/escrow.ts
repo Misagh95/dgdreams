@@ -3,7 +3,7 @@
 import { getGenLayerReadClient, getGenLayerWriteClient } from "./client";
 import type { Address } from "viem";
 
-export const ESCROW_CONTRACT = "0x13c15Ba23CA9160F1B358d3a8062AE6592fFdf15" as const; // placeholder until deployed
+export const ESCROW_CONTRACT = "0xc13eaa595adfB212Ba0A88d8F7b0f13E05E92757" as const; // placeholder until deployed
 
 export async function escrowGetEscrow(escrowId: number): Promise<any> {
   const client = getGenLayerReadClient();

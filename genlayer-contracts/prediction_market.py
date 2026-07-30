@@ -93,7 +93,7 @@ class PredictionMarket(gl.Contract):
                 return "0"
             try:
                 j = json.loads(raw)
-                return str(int(j["unixtime"]))
+                return str(round(int(j["unixtime"]) / 60) * 60)
             except Exception:
                 return "0"
         return int(gl.eq_principle.strict_eq(fetch_time))
@@ -143,7 +143,10 @@ class PredictionMarket(gl.Contract):
                 result = "no_result"
             return result
 
-        outcome = str(gl.eq_principle.strict_eq(decide))
+        outcome = str(gl.eq_principle.prompt_comparative(
+            decide,
+            "Two outcomes are equivalent if they are the same word: 'yes', 'no', or 'no_result'."
+        ))
         market["resolved"] = True
         market["outcome"] = outcome
         market["resolved_at"] = self._now()

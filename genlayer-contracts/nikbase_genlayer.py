@@ -15,7 +15,7 @@ class NikBase(gl.Contract):
                 return "0"
             try:
                 j = json.loads(raw)
-                return str(int(j["unixtime"]))
+                return str(round(int(j["unixtime"]) / 60) * 60)
             except Exception:
                 return "0"
         return int(gl.eq_principle.strict_eq(fetch_time))

@@ -19,6 +19,7 @@ import {
   BookOpen,
   Scale,
   BarChart3,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,7 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/tasks", icon: Zap, label: "Daily Tasks" },
   { href: "/litevm", icon: Star, label: "LITVM Hub" },
-  { href: "/litvm-market", icon: BarChart3, label: "LITVM Predictions" },
+  { href: "/genlayer", icon: Globe, label: "GenLayer Hub" },
   { href: "/activity", icon: Activity, label: "Activity" },
   { href: "/profile", icon: User, label: "Profile" },
   { href: "/2048", icon: Gamepad2, label: "2048 Game" },

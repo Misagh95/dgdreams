@@ -4,7 +4,7 @@ import { getGenLayerReadClient, getGenLayerWriteClient } from "./client";
 import type { Address } from "viem";
 import { PRICE_ORACLE_CONTRACT } from "./oracle";
 
-export const MARKET_CONTRACT = "0xEFAF04a8f1d1e89Cd277da9a784b131ECE727054" as const;
+export const MARKET_CONTRACT = "0xf3A951D4c2659C276aefA8bfd0B859564894fe76" as const;
 
 export interface Market {
   id: number;

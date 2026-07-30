@@ -111,6 +111,18 @@ export const litevmStats = pgTable("litevm_stats", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const predictionActivities = pgTable("prediction_activities", {
+  id: serial("id").primaryKey(),
+  walletAddress: text("wallet_address").notNull(),
+  action: text("action").notNull(), // create_market, predict_yes, predict_no, resolve_market
+  question: text("question").notNull(),
+  marketId: text("market_id"),
+  chain: text("chain").notNull().default("genlayer"), // genlayer, litvm
+  txHash: text("tx_hash"),
+  points: integer("points").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const walletSocials = pgTable("wallet_socials", {
   id: serial("id").primaryKey(),
   walletAddress: text("wallet_address").notNull(),
