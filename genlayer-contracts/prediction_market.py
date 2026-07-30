@@ -86,8 +86,20 @@ class PredictionMarket(gl.Contract):
         self.store = json.dumps(data, sort_keys=True)
         return json.dumps({"market_id": market_id, "outcome": outcome, "amount": amount})
 
+    def _now(self) -> int:
+        def fetch_time() -> str:
+            raw = gl.nondet.web.render("https://worldtimeapi.org/api/timezone/Etc/UTC", mode="text")
+            if raw is None or raw.strip() == "" or raw.strip() == "null":
+                return "0"
+            try:
+                j = json.loads(raw)
+                return str(int(j["unixtime"]))
+            except Exception:
+                return "0"
+        return int(gl.eq_principle.strict_eq(fetch_time))
+
     @gl.public.write
-    def resolveMarket(self, market_id: int) -> str:
+    def resolveMarket(self, market_id: int, oracle_addr: str = "") -> str:
         data = json.loads(self.store)
         mid = str(market_id)
         market = data.get(mid)
@@ -134,10 +146,63 @@ class PredictionMarket(gl.Contract):
         outcome = str(gl.eq_principle.strict_eq(decide))
         market["resolved"] = True
         market["outcome"] = outcome
+        market["resolved_at"] = self._now()
+
+        # If oracle address provided, store reference for audit trail
+        if oracle_addr != "":
+            market["oracle"] = oracle_addr
+
         data[mid] = market
         self.store = json.dumps(data, sort_keys=True)
-        return json.dumps({"market_id": market_id, "outcome": outcome})
+        return json.dumps({"market_id": market_id, "outcome": outcome, "oracle": oracle_addr})
+
+    @gl.public.write
+    def resolveWithOracle(self, market_id: int, oracle_addr: str, symbol: str, max_age: int) -> str:
+        data = json.loads(self.store)
+        mid = str(market_id)
+        market = data.get(mid)
+        if market is None:
+            return json.dumps({"error": "market not found"})
+        if market["resolved"]:
+            return json.dumps({"error": "already resolved", "outcome": market["outcome"]})
+
+        oracle = gl.Contract.at(oracle_addr)
+        fresh_raw = str(oracle.isFresh(symbol, max_age))
+        fresh_info = json.loads(fresh_raw)
+        if not fresh_info.get("fresh", False):
+            return json.dumps({"error": "oracle price not fresh", "fresh_info": fresh_info})
+
+        price_raw = str(oracle.getPrice(symbol))
+        price_data = json.loads(price_raw)
+        if price_data.get("status") != "ok":
+            return json.dumps({"error": "oracle price unavailable", "price_data": price_data})
+
+        current_price = price_data["price"]
+        value = float(market["target_value"])
+        cond = market["condition"]
+
+        if cond == "gt":
+            outcome = "yes" if current_price > value else "no"
+        elif cond == "lt":
+            outcome = "yes" if current_price < value else "no"
+        elif cond == "eq":
+            outcome = "yes" if abs(current_price - value) / max(value, 1) < 0.01 else "no"
+        elif cond == "contains":
+            outcome = "yes" if str(value) in str(current_price) else "no"
+        else:
+            outcome = "no_result"
+
+        market["resolved"] = True
+        market["outcome"] = outcome
+        market["resolved_at"] = self._now()
+        market["oracle"] = oracle_addr
+        market["oracle_price"] = current_price
+        market["oracle_fresh"] = fresh_info
+
+        data[mid] = market
+        self.store = json.dumps(data, sort_keys=True)
+        return json.dumps({"market_id": market_id, "outcome": outcome, "oracle_price": current_price, "oracle_fresh": fresh_info})
 
     @gl.public.view
     def getVersion(self) -> str:
-        return json.dumps({"name": "PredictionMarket", "version": "1.0.0"})
+        return json.dumps({"name": "PredictionMarket", "version": "2.0.0"})

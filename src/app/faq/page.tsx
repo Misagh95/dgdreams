@@ -24,7 +24,7 @@ const faqs = [
     items: [
       { q: "What is DGDreams?", a: "DGDreams is a cross-chain on-chain operations dashboard that gamifies daily Web3 activity. It tracks your streaks, points, and transactions across 13 EVM networks through a unified mission-control interface." },
       { q: "How do I connect my wallet?", a: "Click the 'Connect Wallet' button in the top bar or profile page. DGDreams supports any wallet through RainbowKit — MetaMask, WalletConnect, Rainbow, Ledger, and more." },
-      { q: "Which networks are supported?", a: "We support 7 mainnets (Base, HyperEVM, Unichain, Tempo, Robinhood Chain, Ethereum, Ink) and 6 testnets (Sepolia, Base Sepolia, GIWA Sepolia, LitVM Liteforge, ARC Testnet, SimpleChain)." },
+      { q: "Which networks are supported?", a: "We support 7 mainnets (Base, HyperEVM, Unichain, Tempo, Robinhood Chain, Ethereum, Ink) and 6 testnets (Sepolia, Base Sepolia, GIWA Sepolia, LITVM Liteforge, ARC Testnet, SimpleChain)." },
     ],
   },
   {
@@ -34,7 +34,7 @@ const faqs = [
     items: [
       { q: "How do I earn points?", a: "Points are earned by completing on-chain actions: daily tasks (+10 pts each), maintaining streaks (+5 pts per day), playing 2048 (+50 pts per game), and high score bonuses." },
       { q: "What is the streak system?", a: "Your streak tracks consecutive days of on-chain activity. A 7-day streak unlocks soulbound NFT minting. Streaks are tracked per wallet on the NikBase contract." },
-      { q: "How are LiteVM points calculated?", a: "LiteVM points combine: Task Actions (totalAct × 10), Streak Bonus (streak × 5), Game Plays (playCount × 50), and Score Bonus (highScore ÷ 100). Total is viewable at /litevm." },
+      { q: "How are LITVM points calculated?", a: "LITVM points combine: Task Actions (totalAct × 10), Streak Bonus (streak × 5), Game Plays (playCount × 50), and Score Bonus (highScore ÷ 100). Total is viewable at /litevm." },
     ],
   },
   {

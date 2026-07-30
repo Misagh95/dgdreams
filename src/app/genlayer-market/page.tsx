@@ -11,9 +11,11 @@ import {
   marketCreate,
   marketPredict,
   marketResolve,
+  marketResolveWithOracle,
   MARKET_CONTRACT,
   type Market,
 } from "@/lib/genlayer/market";
+import { PRICE_ORACLE_CONTRACT } from "@/lib/genlayer/oracle";
 
 const CONDITIONS = [
   { id: "gt", label: "Price >" },
@@ -22,11 +24,16 @@ const CONDITIONS = [
   { id: "contains", label: "Contains text" },
 ];
 
-const PRESET_URLS = [
-  { label: "BTC/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT" },
-  { label: "ETH/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT" },
-  { label: "SOL/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=SOLUSDT" },
-];
+  const PRESET_URLS = [
+    { label: "BTC/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT" },
+    { label: "ETH/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT" },
+    { label: "SOL/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=SOLUSDT" },
+    { label: "ADA/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=ADAUSDT" },
+    { label: "AVAX/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=AVAXUSDT" },
+    { label: "LINK/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=LINKUSDT" },
+    { label: "OP/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=OPUSDT" },
+    { label: "ARB/USDT", url: "https://api.binance.com/api/v3/ticker/24hr?symbol=ARBUSDT" },
+  ];
 
 export default function GenLayerMarketPage() {
   const { address, isConnected, chainId } = useAccount();
@@ -54,8 +61,16 @@ export default function GenLayerMarketPage() {
   const PRESET_MARKETS = [
     { label: "BTC > $70k", question: "Will BTC exceed $70,000 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", targetValue: "70000", condition: "gt" },
     { label: "BTC < $60k", question: "Will BTC drop below $60,000 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", targetValue: "60000", condition: "lt" },
+    { label: "BTC > $100k", question: "Will BTC exceed $100,000 by next week?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", targetValue: "100000", condition: "gt" },
     { label: "ETH > $4k", question: "Will ETH exceed $4,000 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT", targetValue: "4000", condition: "gt" },
+    { label: "ETH < $3k", question: "Will ETH drop below $3,000 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT", targetValue: "3000", condition: "lt" },
     { label: "SOL > $200", question: "Will SOL exceed $200 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=SOLUSDT", targetValue: "200", condition: "gt" },
+    { label: "SOL < $120", question: "Will SOL drop below $120 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=SOLUSDT", targetValue: "120", condition: "lt" },
+    { label: "ADA > $1", question: "Will ADA break $1 within 48h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=ADAUSDT", targetValue: "1", condition: "gt" },
+    { label: "AVAX > $30", question: "Will AVAX exceed $30 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=AVAXUSDT", targetValue: "30", condition: "gt" },
+    { label: "LINK > $15", question: "Will LINK break $15 within 24h?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=LINKUSDT", targetValue: "15", condition: "gt" },
+    { label: "ETH beats BTC", question: "Will ETH outperform BTC by 2% today?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT", targetValue: "2", condition: "gt" },
+    { label: "Total 3 up", question: "Will BTC, ETH, and SOL all close positive today?", sourceUrl: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", targetValue: "1", condition: "gt" },
   ];
 
   // Predict
@@ -122,6 +137,23 @@ export default function GenLayerMarketPage() {
       await new Promise((r) => setTimeout(r, 3000));
       syncPredictionActivity(address, "resolve");
       setActionMsg("Market resolved by AI validators!");
+      fetchMarkets();
+    } catch (e: any) {
+      setActionMsg(`Error: ${e.message || e}`);
+    }
+  };
+
+  const handleOracleResolve = async (marketId: number, symbol: string) => {
+    if (!address) return;
+    await requireGenLayer();
+    if (chainId !== 4221) { setActionMsg("Switch to GenLayer first"); return; }
+    setActionMsg(null);
+    try {
+      const tx = await marketResolveWithOracle(address, marketId, symbol);
+      addLog(`oracle-resolve #${marketId} tx: ${tx}`);
+      await new Promise((r) => setTimeout(r, 3000));
+      syncPredictionActivity(address, "resolve");
+      setActionMsg("Market resolved via PriceOracle!");
       fetchMarkets();
     } catch (e: any) {
       setActionMsg(`Error: ${e.message || e}`);
@@ -264,9 +296,14 @@ export default function GenLayerMarketPage() {
                       </div>
                     )}
                     {!m.resolved && isExpired && (
-                      <button onClick={() => handleResolve(m.id)} className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80" style={{ background: "#8B5CF6", color: "#fff", border: "none" }}>
-                        Resolve (AI Verdict)
-                      </button>
+                      <>
+                        <button onClick={() => handleResolve(m.id)} className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80" style={{ background: "#8B5CF6", color: "#fff", border: "none" }}>
+                          Resolve (AI)
+                        </button>
+                        <button onClick={() => handleOracleResolve(m.id, (m.source_url || "").includes("BTC") ? "BTC" : (m.source_url || "").includes("ETH") ? "ETH" : "SOL")} className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80" style={{ background: "#00D4FF", color: "#000", border: "none" }}>
+                          Resolve (Oracle)
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

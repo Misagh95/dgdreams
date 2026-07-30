@@ -8,6 +8,18 @@ class PriceOracle(gl.Contract):
     def __init__(self):
         self.store = "{}"
 
+    def _now(self) -> int:
+        def fetch_time() -> str:
+            raw = gl.nondet.web.render("https://worldtimeapi.org/api/timezone/Etc/UTC", mode="text")
+            if raw is None or raw.strip() == "" or raw.strip() == "null":
+                return "0"
+            try:
+                j = json.loads(raw)
+                return str(int(j["unixtime"]))
+            except Exception:
+                return "0"
+        return int(gl.eq_principle.strict_eq(fetch_time))
+
     @gl.public.view
     def getPrice(self, symbol: str) -> str:
         data = json.loads(self.store)
@@ -15,6 +27,16 @@ class PriceOracle(gl.Contract):
         if entry is None:
             return json.dumps({"symbol": symbol, "price": 0, "status": "unavailable"})
         return json.dumps(entry)
+
+    @gl.public.view
+    def isFresh(self, symbol: str, max_age_seconds: int) -> str:
+        data = json.loads(self.store)
+        entry = data.get(symbol)
+        if entry is None:
+            return json.dumps({"fresh": False, "reason": "no data"})
+        now = self._now()
+        age = now - entry.get("updated_at", 0)
+        return json.dumps({"fresh": age <= max_age_seconds, "age": age, "max_age": max_age_seconds})
 
     @gl.public.write
     def fetchPrice(self, symbol: str) -> str:
@@ -31,9 +53,14 @@ class PriceOracle(gl.Contract):
             except Exception:
                 return json.dumps({"symbol": symbol, "price": 0, "status": "unavailable"}, sort_keys=True)
 
-        result = gl.eq_principle.strict_eq(fetch)
+        result = gl.eq_principle.prompt_comparative(
+            fetch,
+            "Two prices are equivalent if they are for the same symbol and the price values differ by less than 1%."
+        )
 
         data = json.loads(self.store)
-        data[symbol] = json.loads(str(result))
+        parsed = json.loads(str(result))
+        parsed["updated_at"] = self._now()
+        data[symbol] = parsed
         self.store = json.dumps(data, sort_keys=True)
         return str(result)

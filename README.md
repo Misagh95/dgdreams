@@ -186,9 +186,13 @@ npm run dev
 
 ---
 
-## GenLayer Contract
+## GenLayer Contracts
 
-The NikBase Intelligent Contract is written in Python and deployed on GenLayer Bradbury testnet:
+Intelligent Contracts written in Python and deployed on GenLayer Bradbury testnet. All contracts use real UTC time fetched via `gl.nondet.web.render("https://worldtimeapi.org/api/timezone/Etc/UTC")` with `gl.eq_principle.strict_eq` consensus.
+
+### NikBase — Daily Check-In & Activity Tracker
+
+[`genlayer-contracts/nikbase_genlayer.py`](genlayer-contracts/nikbase_genlayer.py)
 
 ```python
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
@@ -198,8 +202,14 @@ import json
 class NikBase(gl.Contract):
     store: str
 
-    def __init__(self):
-        self.store = "{}"
+    def _now(self) -> int:
+        def fetch_time() -> str:
+            raw = gl.nondet.web.render("https://worldtimeapi.org/api/timezone/Etc/UTC", mode="text")
+            ...
+        return int(gl.eq_principle.strict_eq(fetch_time))
+
+    def _today(self) -> int:
+        return self._now() // 86400
 
     @gl.public.write
     def dailyCheckIn(self) -> str: ...
@@ -207,55 +217,90 @@ class NikBase(gl.Contract):
     def gm(self) -> None: ...
     @gl.public.write
     def gn(self) -> None: ...
-    # ... see genlayer-contracts/nikbase_genlayer.py for full code
 ```
 
-> ⚠️ GenLayer uses **Python** (not Solidity) and a non-EVM runtime. Contract interactions go through `genlayer-js`, not wagmi/viem.
+Tracks daily on-chain actions (`gm`, `gn`, `checkIn`, `dose`, `mood`, `sanitize`, `counter`, `spin`) using real UTC time. Each action type can only be performed once per UTC day — enforced by comparing `_today()` against the stored `lastActionDay` per user.
 
 ### AI Price Oracle
 
-An Intelligent Contract that fetches live cryptocurrency prices from the Binance API using GenLayer's AI-validator consensus — meaning 5 independent validators each fetch the data and agree on the result before it's written on-chain.
+[`genlayer-contracts/price_oracle.py`](genlayer-contracts/price_oracle.py)
 
-**Contract**: [`PriceOracle`](genlayer-contracts/price_oracle.py)
+Fetches live cryptocurrency prices from the Binance API using GenLayer's AI-validator consensus — 5 independent validators fetch the data and agree on the result via `gl.eq_principle.prompt_comparative` with 1% tolerance before it's written on-chain.
 
 ```python
-# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
-from genlayer import *
-import json
-
 class PriceOracle(gl.Contract):
     store: str
 
     @gl.public.view
     def getPrice(self, symbol: str) -> str: ...
 
+    @gl.public.view
+    def isFresh(self, symbol: str, max_age_seconds: int) -> str:
+        # Returns {"fresh": bool, "age": int, "max_age": int}
+
     @gl.public.write
     def fetchPrice(self, symbol: str) -> typing.Any:
-        # 1. Each validator fetches price from Binance API
         def fetch() -> str:
             raw = gl.nondet.web.render(
                 f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}USDT",
                 mode="text"
             )
-            ...
-        # 2. Validators reach consensus via prompt_comparative
         result = gl.eq_principle.prompt_comparative(
             fetch,
-            "Equivalent if same symbol and price within 1%"
+            "Two prices are equivalent if they are for the same symbol and the price values differ by less than 1%."
         )
-        # 3. Agreed price is stored on-chain
-        self.store = json.dumps(all_data, sort_keys=True)
+        parsed = json.loads(str(result))
+        parsed["updated_at"] = self._now()           # freshness timestamp
+        data[symbol] = parsed
+        self.store = json.dumps(data, sort_keys=True)
 ```
 
 **Flow**:
 1. User clicks "Fetch BTC/USDT" on the frontend
 2. Contract calls `gl.nondet.web.render()` — each validator independently fetches Binance
 3. `gl.eq_principle.prompt_comparative()` ensures validators agree within 1% tolerance
-4. Agreed-upon price is stored on GenLayer and displayed in real-time
+4. Agreed price + `updated_at` timestamp is stored on-chain
+5. `isFresh(symbol, max_age_seconds)` view method checks whether stored data is still fresh
 
 **Page**: [`/genlayer-oracle`](https://dgdreamss95.online/genlayer-oracle) — switch to GenLayer, select a symbol, and fetch
 
+### Prediction Market
+
+[`genlayer-contracts/prediction_market.py`](genlayer-contracts/prediction_market.py)
+
+A decentralized prediction market contract supporting conditional outcome resolution via direct web fetching or via the PriceOracle contract.
+
+```python
+class PredictionMarket(gl.Contract):
+    store: str
+
+    @gl.public.write
+    def createMarket(self, question: str, source_url: str, target_value: str, condition: str, resolves_at: int) -> int: ...
+
+    @gl.public.write
+    def predict(self, market_id: int, outcome: int, amount: int) -> str: ...
+
+    @gl.public.write
+    def resolveMarket(self, market_id: int, oracle_addr: str = "") -> str:
+        # Direct resolution: validators fetch source_url and reach strict_eq consensus on outcome
+        # Optionally accepts oracle_addr for audit trail
+
+    @gl.public.write
+    def resolveWithOracle(self, market_id: int, oracle_addr: str, symbol: str, max_age: int) -> str:
+        # Oracle-mediated resolution:
+        #   1. Checks oracle.isFresh(symbol, max_age) — rejects if stale
+        #   2. Calls oracle.getPrice(symbol) for the current price
+        #   3. Resolves market by comparing price against target_value/condition
+        #   4. Stores oracle price + freshness info for audit trail
+```
+
+Two resolution modes:
+- **`resolveMarket`** — validators directly fetch the market's `source_url` and reach consensus via `strict_eq`. The optional `oracle_addr` parameter stores a reference for audit purposes.
+- **`resolveWithOracle`** — resolves via a PriceOracle contract. First checks freshness via `isFresh(symbol, max_age)`, then fetches the price and resolves the market. Rejects stale data with an error message.
+
 ---
+
+> ⚠️ GenLayer uses **Python** (not Solidity) and a non-EVM runtime. Contract interactions go through `genlayer-js`, not wagmi/viem.
 
 ## Tech Stack
 

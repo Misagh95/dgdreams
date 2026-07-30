@@ -8,6 +8,21 @@ class NikBase(gl.Contract):
     def __init__(self):
         self.store = "{}"
 
+    def _now(self) -> int:
+        def fetch_time() -> str:
+            raw = gl.nondet.web.render("https://worldtimeapi.org/api/timezone/Etc/UTC", mode="text")
+            if raw is None or raw.strip() == "" or raw.strip() == "null":
+                return "0"
+            try:
+                j = json.loads(raw)
+                return str(int(j["unixtime"]))
+            except Exception:
+                return "0"
+        return int(gl.eq_principle.strict_eq(fetch_time))
+
+    def _today(self) -> int:
+        return self._now() // 86400
+
     @gl.public.write
     def dailyCheckIn(self) -> str:
         return self._exec("checkIn")
@@ -82,6 +97,7 @@ class NikBase(gl.Contract):
                 "moodCount": 0, "sanitizeCount": 0,
                 "counterValue": 0, "spinCount": 0,
                 "lastResetDay": 0,
+                "lastActions": {},
             }
             self.store = json.dumps(data, sort_keys=True)
         return data
@@ -97,13 +113,20 @@ class NikBase(gl.Contract):
                 "moodCount": 0, "sanitizeCount": 0,
                 "counterValue": 0, "spinCount": 0,
                 "lastResetDay": 0,
+                "lastActions": {},
             }
         u = data[addr]
-        now = 1234567890
+        now = self._now()
         now_days = now // 86400
         if now_days != u["lastResetDay"]:
             u["actionCount"] = 0
             u["lastResetDay"] = now_days
+
+        last_action_day = u["lastActions"].get(action, 0)
+        if last_action_day == now_days:
+            return json.dumps({"error": "already done today", "action": action})
+
+        u["lastActions"][action] = now_days
         u["totalActions"] += 1
         u["actionCount"] += 1
         if action == "checkIn":

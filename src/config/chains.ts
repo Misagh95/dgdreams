@@ -16,7 +16,7 @@ export const giwaSepoliaChain = /*#__PURE__*/ defineChain({
 
 export const liteforgeChain = /*#__PURE__*/ defineChain({
   id: 4441,
-  name: "LitVM Liteforge",
+  name: "LITVM Liteforge",
   nativeCurrency: { decimals: 18, name: "zkLTC", symbol: "zkLTC" },
   rpcUrls: {
     default: { http: ["https://liteforge.rpc.caldera.xyz/http"] },

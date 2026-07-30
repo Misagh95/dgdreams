@@ -2,6 +2,7 @@
 
 import { getGenLayerReadClient, getGenLayerWriteClient } from "./client";
 import type { Address } from "viem";
+import { PRICE_ORACLE_CONTRACT } from "./oracle";
 
 export const MARKET_CONTRACT = "0xEFAF04a8f1d1e89Cd277da9a784b131ECE727054" as const;
 
@@ -95,7 +96,23 @@ export async function marketResolve(
   return (await client.writeContract({
     address: MARKET_CONTRACT,
     functionName: "resolveMarket",
-    args: [marketId],
+    args: [marketId, ""],
+    value: BigInt(0),
+  })) as string;
+}
+
+export async function marketResolveWithOracle(
+  wallet: Address,
+  marketId: number,
+  symbol: string,
+  maxAge: number = 3600
+): Promise<string> {
+  const client = getGenLayerWriteClient(wallet);
+  if (!client) throw new Error("GenLayer wallet not connected");
+  return (await client.writeContract({
+    address: MARKET_CONTRACT,
+    functionName: "resolveWithOracle",
+    args: [marketId, PRICE_ORACLE_CONTRACT, symbol, maxAge],
     value: BigInt(0),
   })) as string;
 }

@@ -303,7 +303,7 @@ export default function LitevmPage() {
 
   if (!isConnected) {
     return (
-      <DashboardLayout title="LiteVM Hub">
+      <DashboardLayout title="LITVM Hub">
         <div className="flex items-center justify-center h-64">
           <button onClick={() => {}} className="px-6 py-3 rounded-xl text-sm font-mono transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>Connect Wallet</button>
         </div>
@@ -336,11 +336,11 @@ export default function LitevmPage() {
             <div className="flex items-center gap-3">
               <Zap className="w-5 h-5 text-[#FFD700]" />
               <div>
-                <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>LitVM Liteforge</h3>
+                <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>LITVM Liteforge</h3>
                 <p className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>Chain ID: {LITVM_CHAIN_ID}{isConnected && ` • ${address?.slice(0, 6)}...${address?.slice(-4)}`}</p>
               </div>
             </div>
-            {isConnected && !onLiteVM && <button onClick={handleSwitch} disabled={switching} className="btn-primary px-4 py-2 text-xs">{switching ? "Switching..." : "Switch to LiteVM"}</button>}
+            {isConnected && !onLiteVM && <button onClick={handleSwitch} disabled={switching} className="btn-primary px-4 py-2 text-xs">{switching ? "Switching..." : "Switch to LITVM"}</button>}
             {onLiteVM && <span className="text-[10px] px-2.5 py-1 rounded-full font-mono" style={{ background: "rgba(0,255,136,0.1)", color: "#00ff88", border: "1px solid rgba(0,255,136,0.2)" }}>Connected</span>}
           </div>
 
@@ -411,8 +411,8 @@ export default function LitevmPage() {
                   <div className="flex items-center gap-2"><Gamepad2 className="w-4 h-4" style={{ color: "#FFD700" }} /><span className="text-xs" style={{ color: "var(--text-secondary)" }}>Play 2048</span></div>
                   <span className="text-[9px] font-mono" style={{ color: "var(--text-quaternary)" }}>Play →</span>
                 </Link>
-                <Link href="/genlayer-market" className="p-3 rounded-lg flex items-center justify-between transition-all hover:opacity-80" style={{ background: "rgba(6,13,26,0.8)", border: "1px solid rgba(245,158,11,0.15)" }}>
-                  <div className="flex items-center gap-2"><BarChart3 className="w-4 h-4" style={{ color: "#F59E0B" }} /><span className="text-xs" style={{ color: "var(--text-secondary)" }}>Prediction Market</span></div>
+                <Link href="/litvm-market" className="p-3 rounded-lg flex items-center justify-between transition-all hover:opacity-80" style={{ background: "rgba(6,13,26,0.8)", border: "1px solid rgba(139,92,246,0.15)" }}>
+                  <div className="flex items-center gap-2"><BarChart3 className="w-4 h-4" style={{ color: "#8B5CF6" }} /><span className="text-xs" style={{ color: "var(--text-secondary)" }}>Prediction Market</span></div>
                   <span className="text-[9px] font-mono" style={{ color: "var(--text-quaternary)" }}>Predict →</span>
                 </Link>
                 <Link href="/tasks" className="p-3 rounded-lg flex items-center justify-between transition-all hover:opacity-80" style={{ background: "rgba(6,13,26,0.8)", border: "1px solid rgba(0,212,255,0.15)" }}>
@@ -566,8 +566,8 @@ export default function LitevmPage() {
       {tab === "tasks" && (
         <div className="space-y-3">
           {[
-            { icon: "🎮", title: "Play 2048", desc: "Earn points by playing 2048 on LiteVM", href: "/2048", pts: "+50 per game", color: "#FFD700" },
-            { icon: "🎲", title: "Make a Prediction", desc: "Predict BTC/ETH price on GenLayer Market", href: "/genlayer-market", pts: "+20 each", color: "#F59E0B" },
+            { icon: "🎮", title: "Play 2048", desc: "Earn points by playing 2048 on LITVM", href: "/2048", pts: "+50 per game", color: "#FFD700" },
+            { icon: "🎲", title: "Make a Prediction", desc: "Predict outcomes on LITVM Prediction Market", href: "/litvm-market", pts: "+20 each", color: "#8B5CF6" },
             { icon: "✅", title: "Complete Daily Tasks", desc: "Check in and do daily actions on NikBase", href: "/tasks", pts: "+10 each", color: "#00d4ff" },
             { icon: "🏆", title: "Join a Tournament", desc: "Compete in 2048 tournaments for top prizes", href: "/litevm", pts: "+50 win bonus", color: "#ffaa00" },
             { icon: "🔒", title: "Create an Escrow", desc: "Use GenLayer AI Escrow for secure deals", href: "/genlayer-escrow", pts: "+30 each", color: "#8B5CF6" },
@@ -589,7 +589,7 @@ export default function LitevmPage() {
   );
 
   return (
-    <DashboardLayout title="LiteVM Hub" subtitle="// points, tournaments & tasks">
+    <DashboardLayout title="LITVM Hub" subtitle="// points, tournaments & tasks">
       <div className="max-w-5xl mx-auto px-4 py-8">
         {tabContent}
       </div>
