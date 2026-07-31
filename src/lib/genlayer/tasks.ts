@@ -3,7 +3,7 @@
 import { TransactionStatus, type Hash } from "genlayer-js/types";
 import { getGenLayerReadClient, getGenLayerWriteClient, GENLAYER_CHAIN_ID } from "./client";
 
-export const GENLAYER_CONTRACT = "0x85DB92903dD51Ff1D5E0F21e620D1825e73E59dc" as const;
+export const GENLAYER_CONTRACT = "0x7cEb5303F2367608B533dB1E2616948ac98D024b" as const;
 
 export type GenLayerTaskAction =
   | "dailyCheckIn"
