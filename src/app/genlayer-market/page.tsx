@@ -152,10 +152,18 @@ export default function GenLayerMarketPage() {
     await requireGenLayer();
     if (chainId !== 4221) { setActionMsg("Switch to GenLayer first"); return; }
     setActionMsg(null);
+    const m = markets.find(mi => mi.id === marketId);
+    const parsed = m ? parseQuestion(m.question) : null;
     try {
-      const tx = await marketResolve(address, marketId);
-      addLog(`resolve #${marketId} tx: ${tx}`);
-      const m = markets.find(mi => mi.id === marketId);
+      let tx: string;
+      if (m && parsed && parsed.asset) {
+        const symbol = parsed.asset.toUpperCase();
+        tx = await marketResolveWithOracle(address, marketId, symbol);
+        addLog(`resolve #${marketId} via oracle (${symbol}) tx: ${tx}`);
+      } else {
+        tx = await marketResolve(address, marketId);
+        addLog(`resolve #${marketId} tx: ${tx}`);
+      }
       logPredictionActivity({ walletAddress: address, action: "resolve_market", question: m?.question || `Market #${marketId}`, marketId: String(marketId), chain: "genlayer", txHash: tx });
       await new Promise((r) => setTimeout(r, 3000));
       syncPredictionActivity(address, "resolve");

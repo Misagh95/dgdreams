@@ -55,7 +55,7 @@ class PredictionMarket(gl.Contract):
             "no_pool": 0,
             "predictions": {},
             "creator": gl.message.sender(),
-            "created_at": resolves_at,
+            "created_at": self._now(),
         }
         data[mid] = market
         self.store = json.dumps(data, sort_keys=True)
