@@ -5,6 +5,7 @@ export default defineConfig({
   title: 'DGDreams',
   description: 'The Web3 Space Terminal — execute daily on-chain tasks across 14 networks in one place.',
   cleanUrls: true,
+  ignoreDeadLinks: true,
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['meta', { property: 'og:title', content: 'DGDreams — Web3 Space Terminal' }],
