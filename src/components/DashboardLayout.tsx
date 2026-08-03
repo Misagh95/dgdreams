@@ -6,6 +6,7 @@ import Sidebar from "./Sidebar";
 import UserPanel from "./UserPanel";
 import TopBar from "./TopBar";
 import MobileNav from "./MobileNav";
+import SiteFooter from "./SiteFooter";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -44,6 +45,9 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
         <div className="flex-1 p-4 lg:p-6 overflow-auto">
           {children}
         </div>
+
+        {/* Site footer */}
+        <SiteFooter />
       </main>
     </div>
   );
