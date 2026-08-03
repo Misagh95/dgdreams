@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="dgGrad" x1="0" y1="0" x2="32" y2="32">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#00ff88"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="30" height="30" rx="8" stroke="url(#dgGrad)" stroke-width="1.5" fill="rgba(0,212,255,0.06)"/>
+  <text x="16" y="22" text-anchor="middle" fill="url(#dgGrad)" font-family="system-ui" font-weight="900" font-size="20" letter-spacing="-1">DG</text>
+</svg>
