@@ -22,7 +22,7 @@ import {
   Target,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { useAccount, useBalance, useEnsName } from "wagmi";
+import { useAccount, useBalance, useEnsName, useSignMessage } from "wagmi";
 import { mainnet } from "viem/chains";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const { address, isConnected, chainId } = useAccount();
   const { data: balance } = useBalance({ address, chainId: chainId || mainnet.id });
   const { data: ensName } = useEnsName({ address });
+  const { signMessageAsync } = useSignMessage();
   const [copied, setCopied] = useState(false);
   const [socials, setSocials] = useState<Record<string, string>>({});
   const [socialsLoading, setSocialsLoading] = useState(false);
@@ -93,9 +94,26 @@ export default function ProfilePage() {
     setSocialsSaving(true);
     setSocialSaved(false);
     try {
+      const nonceResponse = await fetch(
+        `/api/auth/nonce?address=${encodeURIComponent(address)}`
+      );
+      if (!nonceResponse.ok) throw new Error("Failed to create sign-in message");
+      const { message } = await nonceResponse.json() as { message: string };
+      const signature = await signMessageAsync({ message });
+      const verifyResponse = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, message, signature }),
+      });
+      if (!verifyResponse.ok) throw new Error("Signature verification failed");
+      const { token } = await verifyResponse.json() as { token: string };
+
       const res = await fetch("/api/profile/socials", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ address, socials }),
       });
       if (res.ok) {

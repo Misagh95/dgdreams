@@ -17,7 +17,7 @@ import {
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAccount, useSwitchChain, useWriteContract, useConfig } from "wagmi";
 import { getPublicClient } from "@wagmi/core";
-import { GAME2048_CONTRACTS } from "@/config/chains";
+import { GAME2048_CONTRACTS, getNetworkConfig } from "@/config/chains";
 
 type Board = (number | null)[][];
 
@@ -219,31 +219,6 @@ export default function Game2048Page() {
   const [lastMilestone, setLastMilestone] = useState(0);
   const [tournamentStatus, setTournamentStatus] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!gameOver || !address || score === 0) return;
-    (async () => {
-      try {
-        const res = await fetch("/api/tournaments?status=active");
-        const data = await res.json();
-        const active = (data.tournaments || []) as any[];
-        for (const t of active) {
-          const now = Date.now();
-          const start = new Date(t.startsAt).getTime();
-          const end = new Date(t.endsAt).getTime();
-          if (now >= start && now <= end) {
-            await fetch(`/api/tournaments/${t.id}/entries`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ walletAddress: address, score, bestTile: getBestTile(board) }),
-            });
-            setTournamentStatus(`Submitted to "${t.name}"`);
-          }
-        }
-        if (!tournamentStatus) setTournamentStatus("");
-      } catch { setTournamentStatus(""); }
-    })();
-  }, [gameOver]);
-
   const scoreRef = useRef(0);
   const movesRef = useRef(0);
   const wonRef = useRef(false);
@@ -266,6 +241,47 @@ export default function Game2048Page() {
     : undefined;
   const contractAddr =
     chainId && GAME2048_CONTRACTS[chainId] ? GAME2048_CONTRACTS[chainId] : null;
+
+  useEffect(() => {
+    if (!gameOver || !address || score === 0) return;
+    (async () => {
+      try {
+        // Save the final score with the current network name so the
+        // leaderboard can filter the 2048 category by network. Use the
+        // canonical config name (e.g. "LITVM Liteforge") so it matches
+        // the leaderboard's network dropdown exactly.
+        const chainName = chainId ? getNetworkConfig(chainId)?.name || null : null;
+        await fetch("/api/scores", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            walletAddress: address,
+            score,
+            bestTile: getBestTile(board),
+            chain: chainName,
+          }),
+        });
+
+        const res = await fetch("/api/tournaments?status=active");
+        const data = await res.json();
+        const active = (data.tournaments || []) as any[];
+        for (const t of active) {
+          const now = Date.now();
+          const start = new Date(t.startsAt).getTime();
+          const end = new Date(t.endsAt).getTime();
+          if (now >= start && now <= end) {
+            await fetch(`/api/tournaments/${t.id}/entries`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ walletAddress: address, score, bestTile: getBestTile(board) }),
+            });
+            setTournamentStatus(`Submitted to "${t.name}"`);
+          }
+        }
+        if (!tournamentStatus) setTournamentStatus("");
+      } catch { setTournamentStatus(""); }
+    })();
+  }, [gameOver]);
 
   const sendTx = useCallback(
     async (s: number, m: number) => {

@@ -255,7 +255,7 @@ export default function LitevmPage() {
       try {
         await fetch("/api/litevm/stats", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ walletAddress: address, playCount, highScore, streak, totalCi: totalCI, totalAct, totalPred, totalPoints: points.total }),
+          body: JSON.stringify({ walletAddress: address, playCount, highScore, streak, totalCi: totalCI, totalAct, totalPred, totalPoints: points.total, chain: "LITVM Liteforge" }),
         });
       } catch {}
     }, 2000);

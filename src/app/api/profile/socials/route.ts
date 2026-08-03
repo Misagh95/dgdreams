@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { walletSocials } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getAddressFromToken } from "@/lib/session";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -28,6 +30,18 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  if (!rateLimit(clientIp(request), 20, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const sessionAddress = getAddressFromToken(request);
+  if (!sessionAddress) {
+    return NextResponse.json(
+      { error: "Signed-in session is required" },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = await request.json() as {
       address?: string;
@@ -39,16 +53,31 @@ export async function PUT(request: Request) {
     }
 
     const addr = body.address.toLowerCase();
+    if (sessionAddress.toLowerCase() !== addr) {
+      return NextResponse.json(
+        { error: "Address does not match the signed-in session" },
+        { status: 403 }
+      );
+    }
+
     const upserted: { platform: string; handle: string }[] = [];
 
     for (const [platform, handle] of Object.entries(body.socials)) {
-      if (!handle || typeof handle !== "string") continue;
-
       const existing = await db
         .select()
         .from(walletSocials)
         .where(and(eq(walletSocials.walletAddress, addr), eq(walletSocials.platform, platform)))
         .limit(1);
+
+      // Empty handle deletes the link
+      if (!handle || typeof handle !== "string") {
+        if (existing.length > 0) {
+          await db
+            .delete(walletSocials)
+            .where(eq(walletSocials.id, existing[0].id));
+        }
+        continue;
+      }
 
       if (existing.length > 0) {
         const [updated] = await db

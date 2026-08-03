@@ -28,6 +28,7 @@ const navItems = [
   { href: "/tasks", icon: Zap, label: "Daily Tasks" },
   { href: "/litevm", icon: Star, label: "LITVM Hub" },
   { href: "/genlayer", icon: Globe, label: "GenLayer Hub" },
+  { href: "/leaderboard", icon: Trophy, label: "Leaderboard" },
   { href: "/activity", icon: Activity, label: "Activity" },
   { href: "/profile", icon: User, label: "Profile" },
   { href: "/2048", icon: Gamepad2, label: "2048 Game" },

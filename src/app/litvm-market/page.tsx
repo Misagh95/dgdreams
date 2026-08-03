@@ -168,7 +168,7 @@ export default function LitVMMarketPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" style={{ color: "#10B981" }} />
-                <span className="text-xs font-mono font-semibold" style={{ color: "var(--text-primary)" }}>Today's Predictions</span>
+                 <span className="text-xs font-mono font-semibold" style={{ color: "var(--text-primary)" }}>Today&apos;s Predictions</span>
                 <span className="text-[8px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: "color-mix(in srgb, #10B981 15%, transparent)", color: "#10B981" }}>CoinGecko</span>
               </div>
               <p className="text-[9px] font-mono" style={{ color: "var(--text-quaternary)" }}>{suggestions.length} questions</p>

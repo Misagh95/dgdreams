@@ -9,6 +9,7 @@ export async function syncPredictionActivity(walletAddress: string, action: "cre
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         walletAddress,
+        chain: "LITVM Liteforge",
         totalAct: (cur?.totalAct || 0) + 1,
         totalPred: (cur?.totalPred || 0) + 1,
         totalPoints: (cur?.totalPoints || 0) + gain,

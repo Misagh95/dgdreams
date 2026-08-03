@@ -186,7 +186,7 @@ export default function GenLayerOraclePage() {
           <div className="space-y-3 text-xs" style={{ color: "var(--text-tertiary)" }}>
             <div className="flex gap-3">
               <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}>1</span>
-              <div><strong style={{ color: "var(--text-secondary)" }}>Submit Transaction</strong> — Click "Fetch" to submit a price request to the GenLayer oracle contract. The price is fetched from Binance and shown immediately.</div>
+              <div><strong style={{ color: "var(--text-secondary)" }}>Submit Transaction</strong> — Click &quot;Fetch&quot; to submit a price request to the GenLayer oracle contract. The price is fetched from Binance and shown immediately.</div>
             </div>
             <div className="flex gap-3">
               <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}>2</span>

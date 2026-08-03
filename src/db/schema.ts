@@ -80,6 +80,7 @@ export const gameScores = pgTable("game_scores", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   walletAddress: text("wallet_address"),
+  chain: text("chain"),
   score: integer("score").notNull(),
   bestTile: integer("best_tile").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -100,6 +101,7 @@ export const dailyTasks = pgTable("daily_tasks", {
 export const litevmStats = pgTable("litevm_stats", {
   id: serial("id").primaryKey(),
   walletAddress: text("wallet_address").notNull(),
+  chain: text("chain"),
   playCount: integer("play_count").default(0),
   highScore: integer("high_score").default(0),
   streak: integer("streak").default(0),

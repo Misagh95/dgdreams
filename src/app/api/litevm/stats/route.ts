@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { litevmStats } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { ensureTables } from "@/lib/init-db";
 
 export async function GET(request: NextRequest) {
+  await ensureTables();
   const { searchParams } = new URL(request.url);
   const wallet = searchParams.get("wallet");
   if (!wallet) {
@@ -24,9 +26,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  await ensureTables();
   try {
     const body = await request.json();
-    const { walletAddress, playCount, highScore, streak, totalCi, totalAct, totalPred, totalPoints } = body;
+    const { walletAddress, playCount, highScore, streak, totalCi, totalAct, totalPred, totalPoints, chain } = body;
     if (!walletAddress) {
       return NextResponse.json({ error: "walletAddress required" }, { status: 400 });
     }
@@ -42,6 +45,7 @@ export async function POST(request: NextRequest) {
       await db
         .update(litevmStats)
         .set({
+          chain: chain ?? existing[0].chain,
           playCount: playCount ?? existing[0].playCount,
           highScore: highScore ?? existing[0].highScore,
           streak: streak ?? existing[0].streak,
@@ -55,6 +59,7 @@ export async function POST(request: NextRequest) {
     } else {
       await db.insert(litevmStats).values({
         walletAddress: addr,
+        chain: chain ?? null,
         playCount: playCount ?? 0,
         highScore: highScore ?? 0,
         streak: streak ?? 0,
