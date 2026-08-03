@@ -5,7 +5,7 @@
     Multi-chain daily task dashboard with <strong>14 networks</strong> • GenLayer AI contracts • NFT soulbound streaks
   </p>
   <p align="center">
-    <a href="https://dgdreamss95.online" target="_blank"><strong>🌐 Live Site</strong></a>
+    <a href="https://dgdreams.space" target="_blank"><strong>🌐 Live Site</strong></a>
     ·
     <a href="#features"><strong>Features</strong></a>
     ·
@@ -262,7 +262,7 @@ class PriceOracle(gl.Contract):
 4. Agreed price + `updated_at` timestamp is stored on-chain
 5. `isFresh(symbol, max_age_seconds)` view method checks whether stored data is still fresh
 
-**Page**: [`/genlayer-oracle`](https://dgdreamss95.online/genlayer-oracle) — switch to GenLayer, select a symbol, and fetch
+**Page**: [`/genlayer-oracle`](https://dgdreams.space/genlayer-oracle) — switch to GenLayer, select a symbol, and fetch
 
 ### Prediction Market
 
@@ -328,7 +328,7 @@ This project is licensed under the MIT License.
   <p>
     Built by <a href="https://github.com/Misagh95">@Misagh95</a>
     ·
-    <a href="https://dgdreamss95.online">dgdreamss95.online</a>
+    <a href="https://dgdreams.space">dgdreams.space</a>
   </p>
   <p>
     <img src="https://img.shields.io/badge/GenLayer-Bradbury-00D4FF?style=social&logo=python" />
