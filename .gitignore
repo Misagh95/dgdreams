@@ -6,3 +6,5 @@ node_modules/
 out/
 dist/
 *.log
+__pycache__/
+*.pyc

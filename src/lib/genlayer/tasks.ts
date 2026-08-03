@@ -1,6 +1,6 @@
 "use client";
 
-import { TransactionStatus, type Hash } from "genlayer-js/types";
+import type { Hash } from "genlayer-js/types";
 import { getGenLayerReadClient, getGenLayerWriteClient, GENLAYER_CHAIN_ID } from "./client";
 
 export const GENLAYER_CONTRACT = "0x7cEb5303F2367608B533dB1E2616948ac98D024b" as const;
@@ -31,14 +31,7 @@ export async function genLayerWriteTask(
     value: BigInt(0),
   })) as unknown as Hash;
 
-  const receipt = await client.waitForTransactionReceipt({
-    hash,
-    status: TransactionStatus.ACCEPTED,
-    retries: 60,
-    interval: 3000,
-  });
-
-  return { hash: hash as unknown as string, receipt };
+  return { hash: hash as unknown as string, receipt: null };
 }
 
 export async function genLayerReadContract(
@@ -56,4 +49,31 @@ export async function genLayerReadContract(
 
 export function isGenLayer(chainId: number) {
   return chainId === GENLAYER_CHAIN_ID;
+}
+
+export async function genLayerTxStatus(hash: string, pollMs: number = 5000, timeoutMs: number = 120000): Promise<string> {
+  const client = getGenLayerReadClient();
+  const start = Date.now();
+  let last = "PENDING";
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const tx = (await (client as any).getTransaction({ hash })) as any;
+      last = String(tx?.statusName || tx?.status || "PENDING");
+      if (["ACCEPTED", "UNDETERMINED", "CANCELED", "FINALIZED", "LEADER_TIMEOUT", "VALIDATORS_TIMEOUT"].includes(last)) {
+        return last;
+      }
+    } catch {}
+    await new Promise((r) => setTimeout(r, pollMs));
+  }
+  return last;
+}
+
+export async function genLayerGetTxReceipt(hash: string): Promise<any> {
+  const client = getGenLayerReadClient();
+  try {
+    const tx = await (client as any).getTransaction({ hash });
+    return tx;
+  } catch {
+    return null;
+  }
 }

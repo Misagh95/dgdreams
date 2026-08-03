@@ -18,7 +18,10 @@ class NikBase(gl.Contract):
                 return str(round(int(j["unixtime"]) / 60) * 60)
             except Exception:
                 return "0"
-        return int(gl.eq_principle.strict_eq(fetch_time))
+        return int(gl.eq_principle.prompt_comparative(
+            fetch_time,
+            "Two timestamps are equivalent if they refer to the same UTC minute (differ by less than 60 seconds)."
+        ))
 
     def _today(self) -> int:
         return self._now() // 86400
