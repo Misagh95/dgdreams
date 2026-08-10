@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useAccount, useSwitchChain, useSignMessage } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import DashboardLayout from "@/components/DashboardLayout";
 import { isGenLayerChain } from "@/lib/genlayer/client";
+import { useSessionToken } from "@/lib/useSessionToken";
 import { syncPredictionActivity } from "@/lib/litevm-sync";
 import {
   marketGetMarkets,
@@ -59,6 +60,7 @@ export default function GenLayerMarketPage() {
   const { address, isConnected, chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { openConnectModal } = useConnectModal();
+  const getSessionToken = useSessionToken();
   const onGenLayer = isGenLayerChain(chainId ?? 0);
 
   const [markets, setMarkets] = useState<Market[]>([]);
@@ -114,9 +116,10 @@ export default function GenLayerMarketPage() {
     try {
       const tx = await marketCreate(address, question, ASSET_MAP[parsed.asset].url, parsed.targetValue, parsed.condition, resolvesAt);
       addLog(`createMarket tx: ${tx}`);
-      logPredictionActivity({ walletAddress: address, action: "create_market", question, chain: "genlayer", txHash: tx });
+      const tok1 = await getSessionToken(address);
+      logPredictionActivity({ walletAddress: address, action: "create_market", question, chain: "genlayer", txHash: tx }, tok1);
       await new Promise((r) => setTimeout(r, 3000));
-      syncPredictionActivity(address, "create");
+      syncPredictionActivity(address, "create", tok1);
       setActionMsg("Market created!");
       setShowCreate(false);
       setQuestion("");
@@ -136,9 +139,10 @@ export default function GenLayerMarketPage() {
       const tx = await marketPredict(address, marketId, outcome, 1);
       addLog(`predict #${marketId} ${outcome ? "YES" : "NO"} tx: ${tx}`);
       const market = markets.find(m => m.id === marketId);
-      logPredictionActivity({ walletAddress: address, action: outcome ? "predict_yes" : "predict_no", question: market?.question || `Market #${marketId}`, marketId: String(marketId), chain: "genlayer", txHash: tx });
+      const tok2 = await getSessionToken(address);
+      logPredictionActivity({ walletAddress: address, action: outcome ? "predict_yes" : "predict_no", question: market?.question || `Market #${marketId}`, marketId: String(marketId), chain: "genlayer", txHash: tx }, tok2);
       await new Promise((r) => setTimeout(r, 3000));
-      syncPredictionActivity(address, "predict");
+      syncPredictionActivity(address, "predict", tok2);
       setActionMsg("Prediction submitted!");
       fetchMarkets();
     } catch (e: any) {
@@ -164,9 +168,10 @@ export default function GenLayerMarketPage() {
         tx = await marketResolve(address, marketId);
         addLog(`resolve #${marketId} tx: ${tx}`);
       }
-      logPredictionActivity({ walletAddress: address, action: "resolve_market", question: m?.question || `Market #${marketId}`, marketId: String(marketId), chain: "genlayer", txHash: tx });
+      const tok3 = await getSessionToken(address);
+      logPredictionActivity({ walletAddress: address, action: "resolve_market", question: m?.question || `Market #${marketId}`, marketId: String(marketId), chain: "genlayer", txHash: tx }, tok3);
       await new Promise((r) => setTimeout(r, 3000));
-      syncPredictionActivity(address, "resolve");
+      syncPredictionActivity(address, "resolve", tok3);
       setActionMsg("Resolved by AI validators!");
       fetchMarkets();
     } catch (e: any) {

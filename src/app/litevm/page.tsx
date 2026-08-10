@@ -5,10 +5,11 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Zap, Trophy, Star, Shield, Users, Flame, Target, Activity, BarChart3, Gamepad2, ListChecks, Timer } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { useAccount, useReadContract, useReadContracts, useSwitchChain, useWriteContract, useConfig } from "wagmi";
+import { useAccount, useReadContract, useReadContracts, useSwitchChain, useWriteContract, useConfig, useSignMessage } from "wagmi";
 import { getPublicClient } from "@wagmi/core";
 import { LITE_PREDICTION_ADDR, LITE_PREDICTION_ABI } from "@/lib/litevm-prediction";
 import { liteforgeChain } from "@/config/chains";
+import { useSessionToken, clearCachedSessionToken } from "@/lib/useSessionToken";
 import { shortenAddress } from "@/lib/utils";
 
 const LITVM_CHAIN_ID = 4441;
@@ -204,6 +205,7 @@ export default function LitevmPage() {
   const { address, isConnected, chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const [switching, setSwitching] = useState(false);
+  const getSessionToken = useSessionToken();
   const [totalPred, setTotalPred] = useState(0);
   const [tab, setTab] = useState("points");
 
@@ -253,10 +255,22 @@ export default function LitevmPage() {
     if (!address || !isConnected || !onLiteVM || isLoading) return;
     const timeout = setTimeout(async () => {
       try {
-        await fetch("/api/litevm/stats", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+        // Use the cached token (if any) for stats sync — never prompt.
+        const cachedToken = (() => {
+          try {
+            const raw = localStorage.getItem("dgdreams-session-token");
+            if (!raw) return null;
+            const p = JSON.parse(raw);
+            return p.address?.toLowerCase() === address?.toLowerCase() && p.token ? p.token : null;
+          } catch { return null; }
+        })();
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (cachedToken) headers.Authorization = `Bearer ${cachedToken}`;
+        const statsRes = await fetch("/api/litevm/stats", {
+          method: "POST", headers,
           body: JSON.stringify({ walletAddress: address, playCount, highScore, streak, totalCi: totalCI, totalAct, totalPred, totalPoints: points.total, chain: "LITVM Liteforge" }),
         });
+        if (statsRes.status === 401) clearCachedSessionToken();
       } catch {}
     }, 2000);
     return () => clearTimeout(timeout);
@@ -289,8 +303,13 @@ export default function LitevmPage() {
     setTournMsg(null);
     const endsAt = new Date(Date.now() + parseInt(tournForm.durationHours) * 3600000);
     try {
+      const sessionToken = await getSessionToken(address);
       const r = await fetch("/api/tournaments", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
+        },
         body: JSON.stringify({ name: tournForm.name, entryFee: parseInt(tournForm.entryFee) || 0, maxPlayers: parseInt(tournForm.maxPlayers) || 100, startsAt: new Date().toISOString(), endsAt: endsAt.toISOString(), createdBy: address }),
       });
       const d = await r.json();

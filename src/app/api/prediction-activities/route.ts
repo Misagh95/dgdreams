@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { predictionActivities } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
+import { getAddressFromToken } from "@/lib/session";
 
 const POINTS: Record<string, number> = {
   create_market: 30,
@@ -31,6 +33,16 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!rateLimit(clientIp(request), 20, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+  const address = getAddressFromToken(request);
+  if (!address) {
+    return NextResponse.json(
+      { error: "Authentication required" },
+      { status: 401 }
+    );
+  }
   try {
     const body = await request.json() as {
       walletAddress: string;
@@ -44,13 +56,16 @@ export async function POST(request: Request) {
     if (!body.walletAddress || !body.action || !body.question) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+    if (body.walletAddress.toLowerCase() !== address.toLowerCase()) {
+      return NextResponse.json({ error: "Address mismatch" }, { status: 401 });
+    }
 
     const points = POINTS[body.action] || 0;
 
     const [inserted] = await db
       .insert(predictionActivities)
       .values({
-        walletAddress: body.walletAddress.toLowerCase(),
+        walletAddress: address.toLowerCase(),
         action: body.action,
         question: body.question,
         marketId: body.marketId ?? null,

@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { litevmStats } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { ensureTables } from "@/lib/init-db";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
+import { getAddressFromToken } from "@/lib/session";
 
 export async function GET(request: NextRequest) {
   await ensureTables();
@@ -27,13 +29,26 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   await ensureTables();
+  if (!rateLimit(clientIp(request), 10, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+  const address = getAddressFromToken(request);
+  if (!address) {
+    return NextResponse.json(
+      { error: "Authentication required. Connect your wallet and sign in." },
+      { status: 401 }
+    );
+  }
   try {
     const body = await request.json();
     const { walletAddress, playCount, highScore, streak, totalCi, totalAct, totalPred, totalPoints, chain } = body;
     if (!walletAddress) {
       return NextResponse.json({ error: "walletAddress required" }, { status: 400 });
     }
-    const addr = walletAddress.toLowerCase();
+    if (walletAddress.toLowerCase() !== address.toLowerCase()) {
+      return NextResponse.json({ error: "Address mismatch" }, { status: 401 });
+    }
+    const addr = address.toLowerCase();
     const now = new Date();
     const existing = await db
       .select()

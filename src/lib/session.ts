@@ -1,7 +1,18 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
-const SECRET =
-  process.env.SESSION_SECRET || "dgdreams-dev-secret-change-in-production";
+function getSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "SESSION_SECRET is not set. Refusing to start with an insecure fallback secret in production."
+    );
+  }
+  // Dev-only fallback: never used when NODE_ENV === "production".
+  return "dgdreams-dev-secret-change-in-production";
+}
+
+const SECRET = getSecret();
 
 export interface SessionPayload {
   address: string;

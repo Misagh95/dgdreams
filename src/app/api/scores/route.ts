@@ -4,7 +4,7 @@ import { gameScores } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { ensureTables } from "@/lib/init-db";
-import { isAddress } from "viem";
+import { getAddressFromToken } from "@/lib/session";
 
 export async function GET() {
   await ensureTables();
@@ -25,6 +25,14 @@ export async function POST(request: Request) {
   await ensureTables();
   if (!rateLimit(clientIp(request), 20, 60_000)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const address = getAddressFromToken(request);
+  if (!address) {
+    return NextResponse.json(
+      { error: "Authentication required. Connect your wallet and sign in." },
+      { status: 401 }
+    );
   }
 
   try {
@@ -49,14 +57,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    if (!walletAddress || !isAddress(walletAddress)) {
-      return NextResponse.json({ error: "Missing walletAddress" }, { status: 400 });
+    // Never trust the body: attribute the score to the authenticated wallet.
+    if (
+      walletAddress &&
+      walletAddress.toLowerCase() !== address.toLowerCase()
+    ) {
+      return NextResponse.json({ error: "Address mismatch" }, { status: 401 });
     }
 
     const [inserted] = await db
       .insert(gameScores)
       .values({
-        walletAddress: walletAddress.toLowerCase(),
+        walletAddress: address.toLowerCase(),
         score,
         bestTile,
         chain: chain || null,

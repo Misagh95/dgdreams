@@ -15,9 +15,10 @@ import {
   Wallet,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { useAccount, useSwitchChain, useWriteContract, useConfig } from "wagmi";
+import { useAccount, useSwitchChain, useWriteContract, useConfig, useSignMessage } from "wagmi";
 import { getPublicClient } from "@wagmi/core";
 import { GAME2048_CONTRACTS, getNetworkConfig } from "@/config/chains";
+import { useSessionToken, clearCachedSessionToken } from "@/lib/useSessionToken";
 
 type Board = (number | null)[][];
 
@@ -206,7 +207,10 @@ function CheckCircle({
 }
 
 export default function Game2048Page() {
-  const [board, setBoard] = useState<Board>(() => initBoard());
+  // Deterministic initial state so the server-rendered HTML matches the
+  // client's first render (a random board here would cause a hydration
+  // mismatch / React error #418). Random tiles are seeded after mount.
+  const [board, setBoard] = useState<Board>(createEmptyBoard);
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
@@ -229,7 +233,16 @@ export default function Game2048Page() {
   const { address, isConnected, chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
+  const getSessionToken = useSessionToken();
   const wagmiConfig = useConfig();
+
+  useEffect(() => {
+    // Seed the starting tiles on the client only, after hydration.
+    let b = createEmptyBoard();
+    b = addRandomTile(b);
+    b = addRandomTile(b);
+    setBoard(b);
+  }, []);
 
   const onWrongChain =
     isConnected && chainId && !SUPPORTED_IDS.includes(chainId);
@@ -251,16 +264,33 @@ export default function Game2048Page() {
         // canonical config name (e.g. "LITVM Liteforge") so it matches
         // the leaderboard's network dropdown exactly.
         const chainName = chainId ? getNetworkConfig(chainId)?.name || null : null;
-        await fetch("/api/scores", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            walletAddress: address,
-            score,
-            bestTile: getBestTile(board),
-            chain: chainName,
-          }),
-        });
+
+        // Authenticate the submission with a session token so scores cannot
+        // be forged for other wallets or spammed anonymously.
+        let token = await getSessionToken(address);
+        if (token) {
+          const submit = (tok: string) =>
+            fetch("/api/scores", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${tok}`,
+              },
+              body: JSON.stringify({
+                walletAddress: address,
+                score,
+                bestTile: getBestTile(board),
+                chain: chainName,
+              }),
+            });
+          let res = await submit(token);
+          if (res.status === 401) {
+            // Cached token expired or was minted for another wallet: re-sign.
+            clearCachedSessionToken();
+            token = await getSessionToken(address);
+            if (token) await submit(token);
+          }
+        }
 
         const res = await fetch("/api/tournaments?status=active");
         const data = await res.json();
@@ -272,7 +302,10 @@ export default function Game2048Page() {
           if (now >= start && now <= end) {
             await fetch(`/api/tournaments/${t.id}/entries`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: token ? `Bearer ${token}` : "",
+              },
               body: JSON.stringify({ walletAddress: address, score, bestTile: getBestTile(board) }),
             });
             setTournamentStatus(`Submitted to "${t.name}"`);

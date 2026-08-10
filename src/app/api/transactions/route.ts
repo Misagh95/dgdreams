@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { transactions } from "@/db/schema";
 import { desc } from "drizzle-orm";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
+import { getAddressFromToken } from "@/lib/session";
 
 export async function GET() {
   try {
@@ -18,6 +20,16 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!rateLimit(clientIp(request), 10, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+  const address = getAddressFromToken(request);
+  if (!address) {
+    return NextResponse.json(
+      { error: "Authentication required. Connect your wallet and sign in." },
+      { status: 401 }
+    );
+  }
   try {
     const body = await request.json() as {
       userId?: number;
