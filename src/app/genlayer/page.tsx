@@ -25,7 +25,7 @@ export default function GenLayerHubPage() {
   const { switchChain, isPending: isSwitching } = useSwitchChain();
   const [tab, setTab] = useState("oracle");
   const onGenLayer = isGenLayerChain(chainId ?? 0);
-  const waitingForGenLayer = isConnected && !onGenLayer;
+  const waitingForGenLayer = !onGenLayer;
 
   return (
     <DashboardLayout title="GenLayer Hub">
@@ -34,11 +34,11 @@ export default function GenLayerHubPage() {
           <GenLayerSpinner
             size={20}
             animated={waitingForGenLayer || isSwitching}
-            color={isConnected ? (onGenLayer ? "#00D4FF" : "#6D6AFF") : "var(--text-quaternary)"}
+            color={onGenLayer ? "#00D4FF" : "#6D6AFF"}
             label={waitingForGenLayer ? "Waiting for GenLayer network" : "GenLayer"}
           />
           <h1 className="text-lg font-mono font-semibold" style={{ color: "var(--text-primary)" }}>GenLayer Hub</h1>
-          {waitingForGenLayer ? (
+          {waitingForGenLayer && isConnected ? (
             <button
               type="button"
               onClick={() => switchChain({ chainId: 4221 })}
@@ -50,7 +50,7 @@ export default function GenLayerHubPage() {
             </button>
           ) : (
             <span className="text-[9px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: `color-mix(in srgb, ${onGenLayer ? "#00D4FF" : "var(--text-quaternary)"} 15%, transparent)`, color: onGenLayer ? "#00D4FF" : "var(--text-quaternary)" }}>
-              {onGenLayer ? "Bradbury connected" : "Wallet disconnected"}
+              {onGenLayer ? "Bradbury connected" : "Awaiting wallet"}
             </span>
           )}
         </div>
