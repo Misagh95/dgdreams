@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/logo.svg" alt="DGDreams Logo" width="80" />
+  <img src="public/genlayer-spinner-readme.svg" alt="GenLayer Spinner" width="80" />
   <h1 align="center">DGDreams — Web3 Space Terminal</h1>
   <p align="center">
     Multi-chain daily task dashboard with <strong>14 networks</strong> • <img src="public/genlayer-spinner-readme.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
