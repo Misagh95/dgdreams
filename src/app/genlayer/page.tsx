@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
+import GenLayerSpinner from "@/components/GenLayerSpinner";
+import { isGenLayerChain } from "@/lib/genlayer/client";
 import { Globe, Shield, BarChart3, ExternalLink } from "lucide-react";
 
 const TABS = [
@@ -19,16 +21,38 @@ const TAB_CONTENT: Record<string, { href: string; desc: string; badge: string }>
 };
 
 export default function GenLayerHubPage() {
-  const { address, isConnected } = useAccount();
+  const { chainId, isConnected } = useAccount();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
   const [tab, setTab] = useState("oracle");
+  const onGenLayer = isGenLayerChain(chainId ?? 0);
+  const waitingForGenLayer = isConnected && !onGenLayer;
 
   return (
     <DashboardLayout title="GenLayer Hub">
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-3 h-3 rounded-full" style={{ background: "#00D4FF" }} />
+          <GenLayerSpinner
+            size={20}
+            animated={waitingForGenLayer || isSwitching}
+            color={isConnected ? (onGenLayer ? "#00D4FF" : "#6D6AFF") : "var(--text-quaternary)"}
+            label={waitingForGenLayer ? "Waiting for GenLayer network" : "GenLayer"}
+          />
           <h1 className="text-lg font-mono font-semibold" style={{ color: "var(--text-primary)" }}>GenLayer Hub</h1>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: "color-mix(in srgb, #00D4FF 15%, transparent)", color: "#00D4FF" }}>Bradbury</span>
+          {waitingForGenLayer ? (
+            <button
+              type="button"
+              onClick={() => switchChain({ chainId: 4221 })}
+              disabled={isSwitching}
+              className="text-[9px] px-1.5 py-0.5 rounded-full font-mono transition-opacity hover:opacity-80 disabled:opacity-60"
+              style={{ background: "color-mix(in srgb, #6D6AFF 15%, transparent)", color: "#8B89FF", border: "1px solid color-mix(in srgb, #6D6AFF 24%, transparent)" }}
+            >
+              {isSwitching ? "Switching..." : "Switch to Bradbury"}
+            </button>
+          ) : (
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: `color-mix(in srgb, ${onGenLayer ? "#00D4FF" : "var(--text-quaternary)"} 15%, transparent)`, color: onGenLayer ? "#00D4FF" : "var(--text-quaternary)" }}>
+              {onGenLayer ? "Bradbury connected" : "Wallet disconnected"}
+            </span>
+          )}
         </div>
 
         {/* Tabs */}

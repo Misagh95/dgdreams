@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import DashboardLayout from "@/components/DashboardLayout";
+import GenLayerSpinner from "@/components/GenLayerSpinner";
 import { isGenLayerChain } from "@/lib/genlayer/client";
 import {
   escrowGetByParty,
@@ -187,7 +188,7 @@ export default function GenLayerEscrowPage() {
         {tab === "my" && (
           <div>
             {loading ? (
-              <p className="text-xs font-mono" style={{ color: "var(--text-secondary)" }}>Loading escrows...</p>
+              <div className="flex items-center gap-3"><GenLayerSpinner size={24} /><p className="text-xs font-mono" style={{ color: "var(--text-secondary)" }}>Loading escrows...</p></div>
             ) : escrows.length === 0 ? (
               <p className="text-xs font-mono" style={{ color: "var(--text-quaternary)" }}>No escrows found for this wallet.</p>
             ) : (

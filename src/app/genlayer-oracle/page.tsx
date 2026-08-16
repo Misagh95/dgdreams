@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import DashboardLayout from "@/components/DashboardLayout";
+import GenLayerSpinner from "@/components/GenLayerSpinner";
 import { isGenLayerChain } from "@/lib/genlayer/client";
 import { oracleGetPrice, oracleFetchPrice, getTxStatus } from "@/lib/genlayer/oracle";
 import { cn } from "@/lib/utils";
@@ -144,7 +145,7 @@ export default function GenLayerOraclePage() {
                 </p>
                 {priceStatus === "pending" && (
                   <p className="text-[10px] font-mono mt-2" style={{ color: "var(--text-tertiary)" }}>
-                    <span className="inline-block w-2 h-2 rounded-full mr-1 animate-pulse" style={{ background: "var(--accent)" }} />
+                    <GenLayerSpinner size={12} className="mr-1 align-middle" />
                     Waiting for {txHash ? "AI consensus" : "transaction..."}
                   </p>
                 )}
@@ -161,7 +162,7 @@ export default function GenLayerOraclePage() {
                 className="w-full py-3 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-40"
                 style={{ background: "var(--accent)", color: "white" }}
               >
-                {fetching ? "Submitting transaction..." : `Fetch ${symbol}/USDT via GenLayer`}
+                {fetching ? <><GenLayerSpinner size={14} className="mr-2 align-middle" />Submitting transaction...</> : `Fetch ${symbol}/USDT via GenLayer`}
               </button>
 
               {txHash && priceStatus !== "pending" && priceStatus !== "verified" && (

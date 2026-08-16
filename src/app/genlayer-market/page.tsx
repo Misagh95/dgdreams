@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAccount, useSwitchChain, useSignMessage } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import DashboardLayout from "@/components/DashboardLayout";
+import GenLayerSpinner from "@/components/GenLayerSpinner";
 import { isGenLayerChain } from "@/lib/genlayer/client";
 import { useSessionToken } from "@/lib/useSessionToken";
 import { syncPredictionActivity } from "@/lib/litevm-sync";
@@ -280,7 +281,7 @@ export default function GenLayerMarketPage() {
 
         {/* Markets */}
         {loading ? (
-          <p className="text-xs font-mono py-8 text-center" style={{ color: "var(--text-quaternary)" }}>Loading...</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-8"><GenLayerSpinner size={28} /><p className="text-xs font-mono" style={{ color: "var(--text-quaternary)" }}>Loading markets...</p></div>
         ) : markets.length === 0 ? (
           <p className="text-xs font-mono py-8 text-center" style={{ color: "var(--text-quaternary)" }}>No markets yet — create one!</p>
         ) : (

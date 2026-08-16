@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-9 -9 116 110" role="img" aria-labelledby="title description">
+  <title id="title">GenLayer loading</title>
+  <desc id="description">The three parts of the GenLayer mark converge while the mark rotates.</desc>
+  <style>
+    :root { color: #110fff; }
+    @media (prefers-color-scheme: dark) { :root { color: #7774ff; } }
+    .mark {
+      filter: drop-shadow(0 0 4px rgb(75 72 255 / 35%));
+      transform-origin: 49px 46px;
+      animation: orbit 1.8s linear infinite;
+    }
+    .piece {
+      fill: currentColor;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .left { animation: left 1.8s ease-in-out infinite; }
+    .right { animation: right 1.8s ease-in-out infinite; }
+    .core { animation: core 1.8s ease-in-out infinite; }
+    @keyframes orbit { to { transform: rotate(360deg); } }
+    @keyframes left {
+      0%, 100% { opacity: .64; transform: translateX(-1px); }
+      50% { opacity: 1; transform: translateX(1px); }
+    }
+    @keyframes right {
+      0%, 100% { opacity: 1; transform: translateX(1px); }
+      50% { opacity: .64; transform: translateX(-1px); }
+    }
+    @keyframes core {
+      0%, 100% { opacity: .76; transform: scale(.9); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .mark, .piece { animation: none; }
+    }
+  </style>
+  <g class="mark">
+    <polygon class="piece left" points="44.26 32.35 27.72 67.12 43.29 74.9 0 91.93 44.26 0"/>
+    <polygon class="piece right" points="53.5 32.35 70.04 67.12 54.47 74.9 97.76 91.93 53.5 0"/>
+    <polygon class="piece core" points="48.64 43.78 58.33 62.94 48.64 67.69 39.47 62.92"/>
+  </g>
+</svg>
