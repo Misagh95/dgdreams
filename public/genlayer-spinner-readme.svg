@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="title">
+  <title id="title">GenLayer</title>
+  <defs>
+    <linearGradient id="arc" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="100">
+      <stop offset="0" stop-color="#E37DF7"/>
+      <stop offset=".45" stop-color="#9B6AF6"/>
+      <stop offset="1" stop-color="#110FFF"/>
+    </linearGradient>
+    <radialGradient id="bloom" cx="50" cy="50" r="50">
+      <stop offset="0" stop-color="#9B6AF6" stop-opacity=".42"/>
+      <stop offset=".55" stop-color="#9B6AF6" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#9B6AF6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <style>
+    .bloom { fill: #110fff; opacity: .07; animation: breathe 2.6s ease-in-out infinite; }
+    .track { fill: none; stroke: #000; stroke-opacity: .1; stroke-width: 1.5; }
+    .arc { fill: none; stroke: #110fff; stroke-width: 5.5; stroke-linecap: round; stroke-dasharray: 58 205.89; transform-origin: 50px 50px; animation: spin 1.2s linear infinite; }
+    .mark { fill: #000; transform-origin: 50px 50px; animation: reverse 6s linear infinite; }
+    @media (prefers-color-scheme: dark) {
+      .bloom { fill: url(#bloom); opacity: .7; }
+      .track { stroke: #fff; stroke-opacity: .14; }
+      .arc { stroke: url(#arc); }
+      .mark { fill: #fff; }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes reverse { to { transform: rotate(-360deg); } }
+    @keyframes breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .bloom, .arc, .mark { animation: none; } }
+  </style>
+  <circle class="bloom" cx="50" cy="50" r="46"/>
+  <circle class="track" cx="50" cy="50" r="42"/>
+  <circle class="arc" cx="50" cy="50" r="42"/>
+  <g class="mark">
+    <g transform="translate(17.74 19.66) scale(.66)">
+      <polygon points="44.26 32.35 27.72 67.12 43.29 74.9 0 91.93 44.26 0 44.26 32.35"/>
+      <polygon points="53.5 32.35 70.04 67.12 54.47 74.9 97.76 91.93 53.5 0 53.5 32.35"/>
+      <polygon points="48.64 43.78 58.33 62.94 48.64 67.69 39.47 62.92 48.64 43.78"/>
+    </g>
+  </g>
+</svg>

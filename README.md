@@ -2,7 +2,7 @@
   <img src="public/logo.svg" alt="DGDreams Logo" width="80" />
   <h1 align="center">DGDreams — Web3 Space Terminal</h1>
   <p align="center">
-    Multi-chain daily task dashboard with <strong>14 networks</strong> • GenLayer AI contracts • NFT soulbound streaks
+    Multi-chain daily task dashboard with <strong>14 networks</strong> • <img src="public/genlayer-spinner-readme.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
   </p>
   <p align="center">
     <a href="https://dgdreams.space" target="_blank"><strong>🌐 Live Site</strong></a>
@@ -33,7 +33,7 @@
 |---|---|
 | 🔁 **One wallet, many chains** | Connect with RainbowKit, switch networks seamlessly |
 | ✅ **9 daily tasks per network** | Check-in, GM, GN, Dose, Mood, Spin, Counter, Sanitize, Reception |
-| 🧠 **GenLayer AI contracts** | Python-based Intelligent Contract using `genlayer-js` SDK |
+| <img src="public/genlayer-spinner-readme.svg" alt="" width="18" /> **GenLayer AI contracts** | Python-based Intelligent Contract using `genlayer-js` SDK |
 | 🏆 **Soulbound NFT streaks** | Mint tiered NFTs (Bronze → Legend) for 7+ day streaks |
 | 📊 **Real-time stats** | Per-network action counts, streak tracking, history |
 
@@ -57,7 +57,7 @@ Users can run the same 9 daily tasks on any supported network:
 
 Each task writes to an on-chain contract that tracks streaks, action counts, and daily resets.
 
-### 🧠 GenLayer Integration
+### <img src="public/genlayer-spinner-readme.svg" alt="" width="22" align="center" /> GenLayer Integration
 
 GenLayer is a non-EVM chain using Python-based Intelligent Contracts with AI-validator consensus. This project integrates GenLayer as a first-class network:
 
@@ -153,7 +153,7 @@ User clicks "Start" → DailyTaskPanel opens
 | Base Sepolia | 84532 | ETH |
 | GIWA Sepolia | 91342 | ETH |
 | LitVM Liteforge | 4441 | zkLTC |
-| **GenLayer Bradbury** | **4221** | **GEN** |
+| <img src="public/genlayer-spinner-readme.svg" alt="" width="18" /> **GenLayer Bradbury** | **4221** | **GEN** |
 | ARC Testnet | 5042002 | ARC |
 | SimpleChain | 1913 | SIM |
 
@@ -186,7 +186,7 @@ npm run dev
 
 ---
 
-## GenLayer Contracts
+## <img src="public/genlayer-spinner-readme.svg" alt="" width="26" align="center" /> GenLayer Contracts
 
 Intelligent Contracts written in Python and deployed on GenLayer Bradbury testnet. All contracts use real UTC time fetched via `gl.nondet.web.render("https://worldtimeapi.org/api/timezone/Etc/UTC")` with `gl.eq_principle.strict_eq` consensus.
 
@@ -300,7 +300,7 @@ Two resolution modes:
 
 ---
 
-> ⚠️ GenLayer uses **Python** (not Solidity) and a non-EVM runtime. Contract interactions go through `genlayer-js`, not wagmi/viem.
+> <img src="public/genlayer-spinner-readme.svg" alt="" width="18" align="center" /> GenLayer uses **Python** (not Solidity) and a non-EVM runtime. Contract interactions go through `genlayer-js`, not wagmi/viem.
 
 ## Tech Stack
 
@@ -309,12 +309,12 @@ Two resolution modes:
 | **Framework** | [Next.js 16](https://nextjs.org/) (App Router, Turbopack) |
 | **Language** | [TypeScript](https://www.typescriptlang.org/) |
 | **Wallet** | [RainbowKit](https://www.rainbowkit.com/) + [Wagmi 2.x](https://wagmi.sh/) + [Viem](https://viem.sh/) |
-| **GenLayer SDK** | [genlayer-js](https://www.npmjs.com/package/genlayer-js) |
+| <img src="public/genlayer-spinner-readme.svg" alt="" width="18" /> **GenLayer SDK** | [genlayer-js](https://www.npmjs.com/package/genlayer-js) |
 | **Database** | PostgreSQL + [Drizzle ORM](https://orm.drizzle.team/) |
 | **Styling** | CSS Variables + Tailwind-like utility classes |
 | **Deployment** | [Vercel](https://vercel.com) |
 | **Contracts (EVM)** | Solidity (Hardhat) |
-| **Contracts (GenLayer)** | Python (GenLayer Studio) |
+| <img src="public/genlayer-spinner-readme.svg" alt="" width="18" /> **Contracts (GenLayer)** | Python (GenLayer Studio) |
 
 ---
 
@@ -331,6 +331,7 @@ This project is licensed under the MIT License.
     <a href="https://dgdreams.space">dgdreams.space</a>
   </p>
   <p>
+    <img src="public/genlayer-spinner-readme.svg" alt="GenLayer" width="24" align="center" />
     <img src="https://img.shields.io/badge/GenLayer-Bradbury-00D4FF?style=social&logo=python" />
   </p>
 </div>
