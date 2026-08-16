@@ -1,12 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 120 120" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="title">
   <title id="title">GenLayer</title>
-  <style>
-    .g { transform-origin: 50px 50px; animation: gl-spin 3s linear infinite; }
-    .g > * { transform-origin: 50px 50px; }
-    @keyframes gl-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) { .g { animation: none; } }
-  </style>
-  <g class="g">
+  <g>
+    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="3s" repeatCount="indefinite"/>
     <polygon fill="#000000" points="44.26 0 53.5 0 53.5 32.35 70.04 67.12 54.47 74.9 97.76 91.93 48.64 43.78 0 91.93 43.29 74.9 27.72 67.12"/>
   </g>
 </svg>
