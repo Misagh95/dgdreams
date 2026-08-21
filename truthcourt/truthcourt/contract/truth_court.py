@@ -17,6 +17,7 @@ from genlayer import *
 from genlayer import allow_storage
 from dataclasses import dataclass
 import json
+import re
 import typing
 
 
@@ -257,11 +258,30 @@ class TruthCourt(gl.Contract):
             try:
                 resp = gl.nondet.web.get(url)
                 body = resp.body.decode("utf-8", "ignore")
-                evidence.append({"url": url, "body": body[:MAX_BODY_CHARS]})
+                # Spend the LLM's attention budget on content, not markup.
+                text = self._html_to_text(body)[:MAX_BODY_CHARS]
+                evidence.append({"url": url, "body": text})
             except Exception:
                 # Unreachable source: skip rather than fail the whole resolution.
                 continue
         return evidence
+
+    @staticmethod
+    def _html_to_text(raw: str) -> str:
+        """Crude HTML -> plain text. Deterministic and defensive: on any
+        failure the raw body is returned so resolution never breaks."""
+        try:
+            t = re.sub(r"(?is)<(script|style|noscript)\b[^>]*>.*?</\1\s*>", " ", raw)
+            t = re.sub(r"(?s)<[^>]+>", " ", t)
+            try:
+                import html as _html
+
+                t = _html.unescape(t)
+            except Exception:
+                pass
+            return re.sub(r"\s+", " ", t).strip()
+        except Exception:
+            return raw
 
     def _build_prompt(self, text: str, evidence: typing.List[dict]) -> str:
         sources = "\n\n".join(
