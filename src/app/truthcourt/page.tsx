@@ -106,6 +106,10 @@ export default function TruthCourtPage() {
 
   const addLog = useCallback((msg: string) => setLog((p) => [msg, ...p.slice(0, 49)]), []);
 
+  // Accept URLs pasted as lines, spaces, or comma-separated lists.
+  const parseUrls = (raw: string): string[] =>
+    raw.split(/[\s,]+/).map((u) => u.trim()).filter(Boolean);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -137,7 +141,7 @@ export default function TruthCourtPage() {
     if (!address || !text.trim()) return;
     await requireGenLayer();
     if (chainId !== 4221) { setActionMsg("Switch to GenLayer (Bradbury) first"); return; }
-    const urlList = urls.split("\n").map((u) => u.trim()).filter(Boolean);
+    const urlList = parseUrls(urls);
     if (urlList.length === 0) { setActionMsg("Add at least one evidence URL"); return; }
     const value = genToWei(bond);
     if (value <= 0n) { setActionMsg("Bond must be positive"); return; }
@@ -161,7 +165,7 @@ export default function TruthCourtPage() {
     if (!address) return;
     await requireGenLayer();
     if (chainId !== 4221) { setActionMsg("Switch to GenLayer (Bradbury) first"); return; }
-    const urls = (challengeUrls[claim.id] || "").split("\n").map((u) => u.trim()).filter(Boolean);
+    const urls = parseUrls(challengeUrls[claim.id] || "");
     if (urls.length === 0) { setActionMsg("Add challenger evidence URLs"); return; }
     setBusy(`challenge-${claim.id}`);
     setActionMsg(null);
