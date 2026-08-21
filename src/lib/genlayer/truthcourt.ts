@@ -112,6 +112,16 @@ export async function truthCourtCancelClaim(
   })) as string;
 }
 
+export async function truthCourtGetPayout(address: Address): Promise<string> {
+  const client = getGenLayerReadClient();
+  const r = await client.readContract({
+    address: TRUTHCOURT_CONTRACT,
+    functionName: "get_payout",
+    args: [address],
+  });
+  return String(r);
+}
+
 export async function truthCourtWithdraw(
   wallet: Address
 ): Promise<string> {

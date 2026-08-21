@@ -11,6 +11,7 @@ import {
   truthCourtCancelClaim,
   truthCourtChallengeClaim,
   truthCourtGetClaims,
+  truthCourtGetPayout,
   truthCourtGetConfig,
   truthCourtResolveClaim,
   truthCourtSubmitClaim,
@@ -98,6 +99,7 @@ export default function TruthCourtPage() {
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [challengeUrls, setChallengeUrls] = useState<Record<number, string>>({});
+  const [payout, setPayout] = useState("0");
 
   // submit form
   const [text, setText] = useState("");
@@ -126,6 +128,21 @@ export default function TruthCourtPage() {
     if (isConnected) fetchData();
     else setClaims([]);
   }, [isConnected, fetchData]);
+
+  // Winnings refresh whenever the wallet changes or claims move (resolutions
+  // credit payouts, so claims updating implies payout may have changed).
+  const fetchPayout = useCallback(async () => {
+    if (!address) { setPayout("0"); return; }
+    try {
+      setPayout(await truthCourtGetPayout(address));
+    } catch {
+      /* keep last known value */
+    }
+  }, [address]);
+
+  useEffect(() => {
+    fetchPayout();
+  }, [fetchPayout, claims]);
 
   const requireGenLayer = async () => {
     if (!onGenLayer) {
@@ -352,10 +369,17 @@ export default function TruthCourtPage() {
             <span className="text-xs font-mono font-semibold" style={{ color: "var(--text-primary)" }}>Claims</span>
             <span className="text-[9px] font-mono" style={{ color: "var(--text-quaternary)" }}>{claims.length}</span>
           </div>
-          <button onClick={handleWithdraw} disabled={busy !== null} className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80 disabled:opacity-40"
-            style={{ background: "var(--bg-strong)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
-            Withdraw winnings
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono" style={{ color: ACCENT }}>
+              Your winnings: {weiToGen(payout)} GEN
+            </span>
+            <button onClick={handleWithdraw} disabled={busy !== null || BigInt(payout) <= 0n}
+              title={BigInt(payout) <= 0n ? "Nothing to withdraw yet — win a resolution first" : "Withdraw your winnings"}
+              className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: "var(--bg-strong)", color: BigInt(payout) > 0n ? "var(--text-secondary)" : "var(--text-quaternary)", border: "1px solid var(--border)" }}>
+              Withdraw winnings
+            </button>
+          </div>
         </div>
 
         {loading ? (
