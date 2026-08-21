@@ -302,23 +302,40 @@ class TruthCourt(gl.Contract):
             "explanation citing the sources\"}"
         )
 
-    def _parse_verdict(self, raw: str) -> dict:
-        # Robust parse: the LLM is asked for strict JSON, but tolerate minor noise.
-        try:
-            data = json.loads(raw)
-            verdict = str(data.get("verdict", "")).strip().lower()
-            reasoning = str(data.get("reasoning", "")).strip()
-        except Exception:
+    @staticmethod
+    def _strip_code_fences(raw: str) -> str:
+        """LLMs often wrap their JSON answer in markdown fences; unwrap."""
+        t = (raw or "").strip()
+        if t.startswith("```"):
+            t = re.sub(r"^```[A-Za-z0-9_-]*[ \t]*\r?\n?", "", t)
+            t = re.sub(r"```[\s]*$", "", t)
+        return t.strip()
+
+    def _parse_verdict(self, raw) -> dict:
+        # Robust parse: tolerate markdown fences, prose noise, or an
+        # already-parsed dict handed back by the runtime.
+        if isinstance(raw, dict):
+            parsed = raw
+        else:
+            try:
+                parsed = json.loads(self._strip_code_fences(str(raw)))
+            except Exception:
+                parsed = None
+
+        if isinstance(parsed, dict):
+            verdict = str(parsed.get("verdict", "")).strip().lower()
+            reasoning = str(parsed.get("reasoning", "")).strip()
+        else:
             # Fallback: scan for an explicit verdict word.
-            lowered = (raw or "").lower()
+            lowered = str(raw or "").lower()
             if f'"{VERDICT_TRUE}"' in lowered or f'"{VERDICT_FALSE}"' in lowered \
                     or f'"{VERDICT_UNVERIFIABLE}"' in lowered:
                 for v in (VERDICT_TRUE, VERDICT_FALSE, VERDICT_UNVERIFIABLE):
                     if f'"{v}"' in lowered:
-                        verdict, reasoning = v, raw.strip()
+                        verdict, reasoning = v, str(raw).strip()
                         break
             else:
-                verdict, reasoning = VERDICT_UNVERIFIABLE, raw.strip()
+                verdict, reasoning = VERDICT_UNVERIFIABLE, str(raw or "").strip()
 
         if verdict not in (VERDICT_TRUE, VERDICT_FALSE, VERDICT_UNVERIFIABLE):
             verdict = VERDICT_UNVERIFIABLE
