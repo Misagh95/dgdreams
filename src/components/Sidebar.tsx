@@ -28,6 +28,7 @@ const navItems = [
   { href: "/tasks", icon: Zap, label: "Daily Tasks", badge: "14" },
   { href: "/litevm", icon: Star, label: "LITVM Hub", badge: null },
   { href: "/genlayer", icon: Globe, label: "GenLayer Hub", badge: "AI" },
+  { href: "/truthcourt", icon: Scale, label: "TruthCourt", badge: "AI" },
   { href: "/leaderboard", icon: Trophy, label: "Leaderboard", badge: null },
   { href: "/activity", icon: Activity, label: "Activity", badge: null },
   { href: "/profile", icon: User, label: "Profile", badge: null },

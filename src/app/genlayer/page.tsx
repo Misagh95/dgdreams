@@ -6,18 +6,20 @@ import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import GenLayerSpinner from "@/components/GenLayerSpinner";
 import { isGenLayerChain } from "@/lib/genlayer/client";
-import { Globe, Shield, BarChart3, ExternalLink } from "lucide-react";
+import { Globe, Shield, BarChart3, Scale, ExternalLink } from "lucide-react";
 
 const TABS = [
   { id: "oracle", label: "Oracle", icon: Globe, color: "#00D4FF" },
   { id: "escrow", label: "Escrow", icon: Shield, color: "#8B5CF6" },
   { id: "markets", label: "Markets", icon: BarChart3, color: "#F59E0B" },
+  { id: "truth", label: "TruthCourt", icon: Scale, color: "#22C58B" },
 ];
 
 const TAB_CONTENT: Record<string, { href: string; desc: string; badge: string }> = {
   oracle: { href: "/genlayer-oracle", desc: "AI-powered price oracle that fetches live asset prices from Binance via GenLayer validators", badge: "AI" },
   escrow: { href: "/genlayer-escrow", desc: "Secure AI escrow for freelance, NFT, DAO, and domain deals with dispute resolution", badge: "AI" },
   markets: { href: "/genlayer-market", desc: "Just a question + YES/NO — resolved by AI validators with live price data", badge: "AI" },
+  truth: { href: "/truthcourt", desc: "Post a claim, stake GEN, and let AI validators settle the truth with live web evidence", badge: "AI" },
 };
 
 export default function GenLayerHubPage() {

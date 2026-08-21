@@ -28,6 +28,7 @@ const navItems = [
   { href: "/tasks", icon: Zap, label: "Daily Tasks" },
   { href: "/litevm", icon: Star, label: "LITVM Hub" },
   { href: "/genlayer", icon: Globe, label: "GenLayer Hub" },
+  { href: "/truthcourt", icon: Scale, label: "TruthCourt" },
   { href: "/leaderboard", icon: Trophy, label: "Leaderboard" },
   { href: "/activity", icon: Activity, label: "Activity" },
   { href: "/profile", icon: User, label: "Profile" },
