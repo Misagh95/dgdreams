@@ -4,7 +4,7 @@ import { getGenLayerReadClient, getGenLayerWriteClient } from "./client";
 import type { Address } from "viem";
 
 export const TRUTHCOURT_CONTRACT =
-  "0x43330f8F9d1f9B531C88C5BaC3C5918cb6DD1cd6" as const;
+  "0xa1C2d3E19B013EBcA5A74C5C8499f89768a73477" as const;
 
 export interface TruthCourtClaim {
   id: number;
