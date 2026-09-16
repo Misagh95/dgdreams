@@ -49,7 +49,8 @@ const NETWORK_LIST: { id: number; name: string }[] = [
   { id: 57073, name: "Ink" },
   { id: 91342, name: "GIWA Sepolia" },
   { id: 4441, name: "Liteforge" },
-  { id: 5042002, name: "ARC" },
+  { id: 5042, name: "Arc" },
+  { id: 5042002, name: "ARC Testnet" },
   { id: 1913, name: "SimpleChain" },
 ];
 

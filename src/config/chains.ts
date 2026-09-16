@@ -30,6 +30,19 @@ export const liteforgeChain = /*#__PURE__*/ defineChain({
   },
 });
 
+export const arcMainnetChain = /*#__PURE__*/ defineChain({
+  id: 5042,
+  name: "Arc",
+  nativeCurrency: { decimals: 18, name: "USDC", symbol: "USDC" },
+  rpcUrls: {
+    default: { http: ["https://rpc.arc-scan.org"] },
+    public: { http: ["https://rpc.arc-scan.org"] },
+  },
+  blockExplorers: {
+    default: { name: "ArcScan", url: "https://arc-scan.org" },
+  },
+});
+
 export const arcTestChain = /*#__PURE__*/ defineChain({
   id: 5042002,
   name: "ARC Testnet",
@@ -185,7 +198,8 @@ export const GAME2048_CONTRACTS: Record<number, `0x${string}`> = {
   130: "0xdbeE9eA39FedD197D224EA7520A20b4434635A6a",
   4217: "0xC288b68022e752d97E4395ECbA61C2079CE692Ad",
   4663: "0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff",
-  57073: "0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0",
+   57073: "0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0",
+   5042: "0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0",
   91342: "0xC288b68022e752d97E4395ECbA61C2079CE692Ad",
   4441: "0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff",
   5042002: "0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff",
@@ -205,7 +219,8 @@ export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
   91342: "0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff",
   4441: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
   5042002: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
-  1913: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
+   1913: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
+   5042: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
 };
 
 function makeNetworkConfig(
@@ -273,6 +288,11 @@ export const mainnetNetworks: NetworkConfig[] = [
     color: "#0052FF",
     logo: "/logos/ink.svg",
   }),
+  makeNetworkConfig(arcMainnetChain, {
+    shortName: "ARC",
+    color: "#00D4AA",
+    logo: "/logos/arc.png",
+  }),
 ];
 
 export const testnetNetworks: NetworkConfig[] = [
@@ -335,6 +355,7 @@ export const allChains = [
   tempoChain,
   robinhoodChain,
   inkChain,
+  arcMainnetChain,
   sepolia,
   baseSepolia,
   giwaSepoliaChain,

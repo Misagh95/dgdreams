@@ -34,6 +34,7 @@ const networks = [
   { name: "Tempo", short: "TMP", color: "#00D4AA", logo: "/logos/tempo.png", status: "operational" },
   { name: "Ink", short: "INK", color: "#0052ff", logo: "/logos/ink.svg", status: "maintenance" },
   { name: "Robinhood", short: "RH", color: "#00C805", logo: "/logos/robinhood.png", status: "coming-soon" },
+  { name: "Arc", short: "ARC", color: "#00D4AA", logo: "/logos/arc.png", status: "operational" },
   { name: "GenLayer", short: "GEN", color: "#110FFF", logo: "/logos/genlayer.svg", status: "operational" },
 ];
 
