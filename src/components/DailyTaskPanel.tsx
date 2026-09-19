@@ -65,6 +65,8 @@ interface DailyTaskPanelProps {
   onComplete: () => void;
   onTaskComplete?: (taskId: string) => void;
   autoStart?: boolean;
+  /** Run only this single task instead of the full 3-task sequence */
+  only?: ActionId;
 }
 
 export default function DailyTaskPanel({
@@ -75,9 +77,13 @@ export default function DailyTaskPanel({
   onComplete,
   onTaskComplete,
   autoStart,
+  only,
 }: DailyTaskPanelProps) {
+  const taskList = only
+    ? DAILY_TASKS.filter((t) => t.id === only)
+    : DAILY_TASKS;
   const [tasks, setTasks] = useState<TaskProgress[]>(() =>
-    DAILY_TASKS.map(() => ({ status: "pending" }))
+    taskList.map(() => ({ status: "pending" }))
   );
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -101,7 +107,7 @@ export default function DailyTaskPanel({
 
     const onGenLayer = isGenLayer(network.id);
 
-    for (let i = startIdx; i < DAILY_TASKS.length; i++) {
+    for (let i = startIdx; i < taskList.length; i++) {
       if (isCancelled.current) break;
 
       setCurrentIndex(i);
@@ -111,7 +117,7 @@ export default function DailyTaskPanel({
         )
       );
 
-      const step = DAILY_TASKS[i];
+      const step = taskList[i];
       const actualArgs = step.args;
       try {
         if (onGenLayer) {
@@ -175,7 +181,7 @@ export default function DailyTaskPanel({
             idx === i ? { ...t, status: "confirmed" as TaskStatus } : t
           )
         );
-        onTaskComplete?.(DAILY_TASKS[i].id);
+        onTaskComplete?.(taskList[i].id);
       } catch (err: any) {
         const msg = parseTxError(err);
         if (msg.toLowerCase().includes("rejected")) {
@@ -267,7 +273,7 @@ export default function DailyTaskPanel({
                 </h2>
               </div>
               <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
-                Daily Tasks &middot; {completedCount}/3
+                {only ? only.toUpperCase() : "Daily Tasks"} &middot; {completedCount}/{taskList.length}
               </p>
               <a
                 href={getExplorerUrl(network, contractAddress, "address")}
@@ -313,7 +319,7 @@ export default function DailyTaskPanel({
           </div>
 
           <div className="flex-1 overflow-y-auto p-1">
-            {DAILY_TASKS.map((step, i) => {
+            {taskList.map((step, i) => {
               const p = tasks[i];
               const isActive = i === currentIndex;
               return (
@@ -385,7 +391,7 @@ export default function DailyTaskPanel({
             })}
           </div>
 
-          {completedCount === DAILY_TASKS.length && (
+          {completedCount === taskList.length && (
             <div
               className="p-5 pt-3"
               style={{ borderTop: "1px solid var(--border-subtle)" }}

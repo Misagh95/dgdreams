@@ -215,6 +215,7 @@ export default function TasksPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [panelAutoStart, setPanelAutoStart] = useState(false);
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
+  const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
   const [executingNetworkId, setExecutingNetworkId] = useState<number | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [historyEvents, setHistoryEvents] = useState<
@@ -378,6 +379,7 @@ export default function TasksPage() {
     setSelectedNetwork(null);
     setPanelAutoStart(false);
     setExecutingNetworkId(null);
+    setSelectedMissionId(null);
   }, []);
 
   const knownProgress = selectedNetwork && onRightChain ? actionCount : 0;
@@ -390,16 +392,21 @@ export default function TasksPage() {
   const heroActionCount = connectedNetwork && onRightChain ? actionCount : 0;
   const heroStreak = connectedNetwork ? streak : 0;
 
-  // Clicking any mission card → open preview for the wallet's current network
-  const handleMissionClick = useCallback(() => {
-    if (!isConnected) {
-      openConnectModal?.();
-      return;
-    }
-    const net = chainId ? getNetworkConfig(chainId) : undefined;
-    if (!net) return;
-    handleOpenNetwork(net);
-  }, [isConnected, chainId, openConnectModal, handleOpenNetwork]);
+  // Clicking a mission card → open preview for the wallet's current network
+  // and remember which single task the user wants to run
+  const handleMissionClick = useCallback(
+    (missionId: string) => {
+      if (!isConnected) {
+        openConnectModal?.();
+        return;
+      }
+      const net = chainId ? getNetworkConfig(chainId) : undefined;
+      if (!net) return;
+      setSelectedMissionId(missionId);
+      handleOpenNetwork(net);
+    },
+    [isConnected, chainId, openConnectModal, handleOpenNetwork]
+  );
 
 
   return (
@@ -448,8 +455,12 @@ export default function TasksPage() {
 
             <div className="rounded-lg p-3 mb-4 text-xs space-y-1.5" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)" }}>
               <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
-                <span>Transactions</span>
-                <span style={{ color: "var(--text-bright)" }}>3 (Daily Check Â· GM Â· GN)</span>
+                <span>Transaction</span>
+                <span style={{ color: "var(--text-bright)" }}>
+                  {selectedMissionId
+                    ? ({ gm: "GM (+25 pts)", checkIn: "Daily Check (+15 pts)", gn: "GN (+25 pts)" } as Record<string, string>)[selectedMissionId] || selectedMissionId
+                    : "3 tasks"}
+                </span>
               </div>
               <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
                 <span>Frequency</span>
@@ -496,6 +507,7 @@ export default function TasksPage() {
           contractAddress={validatedContract}
           onClose={handleClosePanel}
           onTaskComplete={handleSingleTaskComplete}
+          only={(selectedMissionId as "gm" | "checkIn" | "gn" | undefined) ?? undefined}
           onComplete={handleTaskComplete}
           autoStart={panelAutoStart}
         />
