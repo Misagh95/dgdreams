@@ -414,8 +414,8 @@ export default function TasksPage() {
           />
 
           {/* big cube centered */}
-          <div className="relative flex justify-center mb-10">
-            <div style={{ transform: "scale(1.6)", transformOrigin: "top center" }}>
+          <div className="relative flex justify-center mb-6">
+            <div style={{ transform: "scale(1.45)", transformOrigin: "top center", marginTop: 24 }}>
               <NetworkCube logo={heroLogo} color={heroColor} name={heroName} />
             </div>
           </div>
