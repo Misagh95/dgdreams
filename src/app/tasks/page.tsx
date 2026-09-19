@@ -8,6 +8,8 @@ import Image from "next/image";
 import DashboardLayout from "@/components/DashboardLayout";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import DailyTaskPanel, { CONTRACTS } from "@/components/DailyTaskPanel";
+import { NetworkCube } from "@/components/NetworkCube";
+import { TaskCard3D, DAILY_MISSIONS } from "@/components/TaskCard3D";
 import { mainnetNetworks, testnetNetworks, type NetworkConfig, getNetworkConfig } from "@/config/chains";
 import { cn } from "@/utils/cn";
 import { getNativeSymbol, shortenHash, getExplorerUrl } from "@/utils/transactions";
@@ -209,6 +211,7 @@ export default function TasksPage() {
 
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkConfig | null>(null);
   const [showTaskPanel, setShowTaskPanel] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [panelAutoStart, setPanelAutoStart] = useState(false);
   const [executingNetworkId, setExecutingNetworkId] = useState<number | null>(null);
   const [netFilter, setNetFilter] = useState<"all" | "selected">("all");
@@ -346,21 +349,25 @@ export default function TasksPage() {
       }
 
       setSelectedNetwork(network);
-
-      if (chainId !== network.id) {
-        try {
-          await switchChainAsync({ chainId: network.id });
-        } catch {
-          return;
-        }
-      }
-
-      setShowTaskPanel(true);
-      setPanelAutoStart(true);
-      setExecutingNetworkId(network.id);
+      setShowPreview(true);
     },
-    [isConnected, chainId, switchChainAsync, openConnectModal]
+    [isConnected, chainId, openConnectModal]
   );
+
+  const handleStartExecution = useCallback(async () => {
+    if (!selectedNetwork) return;
+    setShowPreview(false);
+    if (chainId !== selectedNetwork.id) {
+      try {
+        await switchChainAsync({ chainId: selectedNetwork.id });
+      } catch {
+        return;
+      }
+    }
+    setShowTaskPanel(true);
+    setPanelAutoStart(true);
+    setExecutingNetworkId(selectedNetwork.id);
+  }, [selectedNetwork, chainId, switchChainAsync]);
 
   const handleTaskComplete = useCallback(() => {
     refetchCounts();
@@ -370,6 +377,7 @@ export default function TasksPage() {
 
   const handleClosePanel = useCallback(() => {
     setShowTaskPanel(false);
+    setShowPreview(false);
     setSelectedNetwork(null);
     setPanelAutoStart(false);
     setExecutingNetworkId(null);
