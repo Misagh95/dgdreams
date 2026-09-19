@@ -453,3 +453,33 @@
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100%); }
 }
+
+/* ─────── 3D Network Cube ─────── */
+
+@keyframes dg-cube-spin {
+  from { transform: rotateX(-18deg) rotateY(0deg); }
+  to   { transform: rotateX(-18deg) rotateY(360deg); }
+}
+
+@keyframes dg-cube-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+.dg-cube-spin {
+  animation: dg-cube-spin 18s linear infinite;
+}
+
+.dg-cube-float {
+  animation: dg-cube-float 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dg-cube-spin,
+  .dg-cube-float {
+    animation: none;
+  }
+  .dg-cube-spin {
+    transform: rotateX(-18deg) rotateY(35deg);
+  }
+}

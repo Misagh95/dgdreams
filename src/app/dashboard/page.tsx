@@ -17,8 +17,13 @@ import {
   Award,
   Swords,
   Medal,
+  CheckCircle2,
+  ArrowUpRight,
+  Sunrise,
+  MoonStar,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { getNetworkConfig } from "@/config/chains";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -77,9 +82,167 @@ function ChainCard({ chain }: { chain: (typeof networks)[number] }) {
   );
 }
 
+/* ─────── 3D NETWORK CUBE ─────── */
+
+const CUBE_SIZE = 120;
+const CUBE_HALF = CUBE_SIZE / 2;
+
+const CUBE_FACES = [
+  `rotateY(0deg) translateZ(${CUBE_HALF}px)`,
+  `rotateY(90deg) translateZ(${CUBE_HALF}px)`,
+  `rotateY(180deg) translateZ(${CUBE_HALF}px)`,
+  `rotateY(-90deg) translateZ(${CUBE_HALF}px)`,
+  `rotateX(90deg) translateZ(${CUBE_HALF}px)`,
+  `rotateX(-90deg) translateZ(${CUBE_HALF}px)`,
+];
+
+function NetworkCube({ logo, color, name }: { logo: string; color: string; name: string }) {
+  return (
+    <div className="flex flex-col items-center gap-4 select-none">
+      <div className="dg-cube-float" style={{ perspective: "900px" }}>
+        <div
+          className="dg-cube-spin"
+          style={{
+            width: CUBE_SIZE,
+            height: CUBE_SIZE,
+            position: "relative",
+            transformStyle: "preserve-3d",
+          }}
+        >
+          {CUBE_FACES.map((transform, i) => (
+            <div
+              key={i}
+              className="absolute inset-0 rounded-xl flex items-center justify-center"
+              style={{
+                transform,
+                background: `color-mix(in srgb, ${color} 10%, var(--bg-card))`,
+                border: `1px solid color-mix(in srgb, ${color} 40%, transparent)`,
+                boxShadow: `inset 0 0 30px color-mix(in srgb, ${color} 15%, transparent)`,
+              }}
+            >
+              <Image
+                src={logo}
+                alt={name}
+                width={48}
+                height={48}
+                style={{ filter: `drop-shadow(0 0 8px color-mix(in srgb, ${color} 60%, transparent))` }}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div
+        className="rounded-full"
+        style={{
+          width: 90,
+          height: 14,
+          background: `radial-gradient(ellipse, color-mix(in srgb, ${color} 45%, transparent), transparent 70%)`,
+          filter: "blur(4px)",
+          marginTop: -6,
+        }}
+      />
+      <div className="flex items-center gap-2">
+        <div
+          className="w-1.5 h-1.5 rounded-full"
+          style={{ background: color, boxShadow: `0 0 6px ${color}` }}
+        />
+        <span className="text-[10px] font-mono font-semibold" style={{ color: "var(--text-tertiary)" }}>
+          {name}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ─────── 3D TASK CARDS ─────── */
+
+const DAILY_MISSIONS = [
+  { title: "Daily Check", desc: "Start the day & build your streak", icon: CheckCircle2, color: "#00FF88" },
+  { title: "GM", desc: "Say good morning on-chain", icon: Sunrise, color: "#FFAA00" },
+  { title: "GN", desc: "Sign off for the night on-chain", icon: MoonStar, color: "#818CF8" },
+];
+
+function TaskCard3D({
+  title,
+  desc,
+  icon: Icon,
+  color,
+}: {
+  title: string;
+  desc: string;
+  icon: typeof CheckCircle2;
+  color: string;
+}) {
+  const [tilt, setTilt] = useState({ x: 0, y: 0, active: false });
+
+  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    setTilt({ x: -py * 12, y: px * 12, active: true });
+  };
+
+  return (
+    <Link href="/tasks" className="block">
+      <div style={{ perspective: "700px" }}>
+        <div
+          onMouseMove={handleMove}
+          onMouseLeave={() => setTilt({ x: 0, y: 0, active: false })}
+          className="rounded-xl p-4 flex flex-col gap-3 h-full"
+          style={{
+            background: "var(--bg-subtle)",
+            border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+            transformStyle: "preserve-3d",
+            transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) ${tilt.active ? "scale(1.02)" : "scale(1)"}`,
+            transition: tilt.active ? "transform 0.12s ease-out" : "transform 0.6s ease",
+            boxShadow: tilt.active
+              ? `0 18px 40px -12px color-mix(in srgb, ${color} 35%, transparent), inset 0 0 20px color-mix(in srgb, ${color} 6%, transparent)`
+              : `0 8px 24px -12px rgba(0,0,0,0.4), inset 0 0 12px color-mix(in srgb, ${color} 4%, transparent)`,
+          }}
+        >
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{
+              transform: "translateZ(30px)",
+              background: `color-mix(in srgb, ${color} 12%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${color} 35%, transparent)`,
+              boxShadow: `0 0 16px color-mix(in srgb, ${color} 20%, transparent)`,
+            }}
+          >
+            <Icon className="w-5 h-5" style={{ color }} />
+          </div>
+          <div style={{ transform: "translateZ(20px)" }}>
+            <h3 className="text-sm font-semibold" style={{ color: "var(--text-bright)" }}>
+              {title}
+            </h3>
+            <p className="text-[11px] mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+              {desc}
+            </p>
+          </div>
+          <div className="flex items-center justify-between mt-auto" style={{ transform: "translateZ(15px)" }}>
+            <span
+              className="text-[9px] font-mono px-2 py-0.5 rounded-md"
+              style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}
+            >
+              1 tx / day
+            </span>
+            <ArrowUpRight className="w-3.5 h-3.5" style={{ color: "var(--text-quaternary)" }} />
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default function DashboardPage() {
   const { address, isConnected, chainId } = useAccount();
   const [mounted, setMounted] = useState(false);
+
+  const connectedNetwork = chainId ? getNetworkConfig(chainId) : undefined;
+  const cubeLogo = connectedNetwork?.logo || "/logo.svg";
+  const cubeColor = connectedNetwork?.color || "#00F2FE";
+  const cubeName = connectedNetwork?.name || (isConnected ? `Chain #${chainId}` : "DGDreams");
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -334,7 +497,7 @@ export default function DashboardPage() {
 
         {/* ─────── BOTTOM ROW: Daily Missions + 2048 Game + Alpha Feed ─────── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* ─────── DAILY MISSIONS ─────── */}
+          {/* ─────── DAILY MISSIONS — 3D network cube + 3D task cards ─────── */}
           <motion.div {...fadeUp} transition={{ delay: 0.24 }} className="lg:col-span-1">
             <div className="glass-panel rounded-2xl overflow-hidden h-full">
               <div className="flex items-center justify-between p-4 sm:p-5"
@@ -345,28 +508,18 @@ export default function DashboardPage() {
                   <span className="badge-cyan text-[9px]">0/3</span>
                 </div>
               </div>
-              <div className="p-5 flex flex-col items-center justify-center py-10 sm:py-12">
-                <motion.div
-                  animate={{ y: [0, -4, 0] }}
-                  transition={{ duration: 3, repeat: 999999, ease: "easeInOut" }}
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-                  style={{ background: "var(--bg-glow)", border: "1px solid var(--border-default)" }}>
-                  <Swords className="w-7 h-7" style={{ color: "var(--accent)", opacity: 0.3 }} />
-                </motion.div>
-                <p className="text-sm font-mono" style={{ color: "var(--text-tertiary)" }}>No missions available</p>
-                <p className="text-xs font-mono mt-1.5" style={{ color: "var(--text-quaternary)" }}>
-                  Connect wallet to enable daily tasks
-                </p>
-                <Link href="/tasks">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="btn-primary mt-5 text-xs py-2.5 px-6 flex items-center gap-2"
-                  >
-                    <span>Go to Tasks</span>
-                    <ChevronRight className="w-3 h-3" />
-                  </motion.button>
-                </Link>
+              <div className="p-5 flex flex-col items-center gap-5">
+                {/* 3D cube — logo follows the connected wallet network */}
+                <div className="py-2">
+                  <NetworkCube logo={cubeLogo} color={cubeColor} name={cubeName} />
+                </div>
+
+                {/* 3D task cards */}
+                <div className="w-full space-y-3">
+                  {DAILY_MISSIONS.map((m) => (
+                    <TaskCard3D key={m.title} title={m.title} desc={m.desc} icon={m.icon} color={m.color} />
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>
