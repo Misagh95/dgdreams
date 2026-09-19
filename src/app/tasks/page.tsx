@@ -75,7 +75,7 @@ function NetworkBlock({
 }) {
   const contractAddr = CONTRACTS[network.id];
   const hasContract = !!contractAddr;
-  const completed = actionCount >= 9;
+  const completed = actionCount >= 3;
   const canInteract = hasContract && !completed && !isDisabled && isEnabled;
 
   return (
@@ -147,7 +147,7 @@ function NetworkBlock({
               : { background: "var(--bg-subtle)", color: "var(--text-secondary)" }),
           }}
         >
-          {completed ? "9/9 ✓" : `${actionCount}/9`}
+          {completed ? "3/3 ✓" : `${actionCount}/3`}
         </span>
       </div>
 
@@ -636,7 +636,7 @@ export default function TasksPage() {
               <div className="flex justify-between">
                 <span>Daily progress</span>
                 <span className="font-medium" style={{ color: "var(--text-bright)" }}>
-                  {actionCount}/9
+                  {actionCount}/3
                 </span>
               </div>
               {onRightChain && validatedContract && (

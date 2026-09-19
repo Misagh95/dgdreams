@@ -42,9 +42,9 @@ const faqs = [
     icon: Zap,
     color: "#8b5cf6",
     items: [
-      { q: "What are daily tasks?", a: "Daily tasks are on-chain actions you perform on supported networks. Each network has 9 tasks per day. Complete all 9 to mark the day as done. Tasks include check-ins, actions, and interactions with NikBase contracts." },
+      { q: "What are daily tasks?", a: "Daily tasks are on-chain actions you perform on supported networks. Each network has 3 tasks per day: Daily Check-In, GM and GN. Complete all 3 to mark the day as done. Tasks are interactions with NikBase contracts." },
       { q: "How do I start a task?", a: "Go to /tasks, select a network, and click 'Start Daily Tasks'. The task panel will guide you through each action. You must be connected to the correct network." },
-      { q: "What happens if I switch networks?", a: "You can switch networks at any time. Your progress is saved per network. Each network has its own 9-task counter and streak." },
+      { q: "What happens if I switch networks?", a: "You can switch networks at any time. Your progress is saved per network. Each network has its own 3-task counter and streak." },
     ],
   },
   {

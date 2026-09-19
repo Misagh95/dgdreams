@@ -7,14 +7,8 @@ export const GENLAYER_CONTRACT = "0x7cEb5303F2367608B533dB1E2616948ac98D024b" as
 
 export type GenLayerTaskAction =
   | "dailyCheckIn"
-  | "reception"
   | "gm"
-  | "gn"
-  | "takeDose"
-  | "moodCheck"
-  | "sanitizeWallet"
-  | "incrementCounter"
-  | "luckySpin";
+  | "gn";
 
 export async function genLayerWriteTask(
   address: `0x${string}`,

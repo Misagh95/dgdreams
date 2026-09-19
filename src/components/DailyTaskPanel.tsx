@@ -11,14 +11,8 @@ import { genLayerWriteTask, isGenLayer, GENLAYER_CONTRACT } from "@/lib/genlayer
 
 const NIKBASE_ABI = [
   { inputs: [], name: "dailyCheckIn", outputs: [{ name: "newStreak", type: "uint256" }], stateMutability: "nonpayable", type: "function" },
-  { inputs: [], name: "reception", outputs: [], stateMutability: "nonpayable", type: "function" },
   { inputs: [], name: "gm", outputs: [], stateMutability: "nonpayable", type: "function" },
   { inputs: [], name: "gn", outputs: [], stateMutability: "nonpayable", type: "function" },
-  { inputs: [], name: "takeDose", outputs: [], stateMutability: "nonpayable", type: "function" },
-  { inputs: [{ name: "_mood", type: "string" }], name: "moodCheck", outputs: [], stateMutability: "nonpayable", type: "function" },
-  { inputs: [], name: "sanitizeWallet", outputs: [], stateMutability: "nonpayable", type: "function" },
-  { inputs: [], name: "incrementCounter", outputs: [], stateMutability: "nonpayable", type: "function" },
-  { inputs: [], name: "luckySpin", outputs: [{ name: "result", type: "uint256" }], stateMutability: "nonpayable", type: "function" },
 ] as const;
 
 export const CONTRACTS: Record<number, `0x${string}` | ""> = {
@@ -38,9 +32,9 @@ export const CONTRACTS: Record<number, `0x${string}` | ""> = {
    5042: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
 };
 
-type ActionId = "checkIn" | "reception" | "gm" | "gn" | "dose" | "mood" | "sanitize" | "counter" | "spin";
+type ActionId = "checkIn" | "gm" | "gn";
 
-type NikBaseFunction = "dailyCheckIn" | "reception" | "gm" | "gn" | "takeDose" | "moodCheck" | "sanitizeWallet" | "incrementCounter" | "luckySpin";
+type NikBaseFunction = "dailyCheckIn" | "gm" | "gn";
 
 interface TaskStep {
   id: ActionId;
@@ -51,14 +45,8 @@ interface TaskStep {
 
 const DAILY_TASKS: TaskStep[] = [
   { id: "checkIn", label: "Daily Check-In", method: "dailyCheckIn", args: [] },
-  { id: "reception", label: "Reception", method: "reception", args: [] },
   { id: "gm", label: "GM", method: "gm", args: [] },
   { id: "gn", label: "GN", method: "gn", args: [] },
-  { id: "dose", label: "Take Dose", method: "takeDose", args: [] },
-  { id: "mood", label: "Mood Check", method: "moodCheck", args: ["happy"] },
-  { id: "sanitize", label: "Sanitize Wallet", method: "sanitizeWallet", args: [] },
-  { id: "counter", label: "Counter", method: "incrementCounter", args: [] },
-  { id: "spin", label: "Lucky Spin", method: "luckySpin", args: [] },
 ];
 
 type TaskStatus = "pending" | "signing" | "confirmed" | "failed" | "skipped";
@@ -276,7 +264,7 @@ export default function DailyTaskPanel({
                 </h2>
               </div>
               <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
-                Daily Tasks &middot; {completedCount}/9
+                Daily Tasks &middot; {completedCount}/3
               </p>
               <a
                 href={getExplorerUrl(network, contractAddress, "address")}
@@ -406,7 +394,7 @@ export default function DailyTaskPanel({
                   color: "var(--success)",
                 }}
               >
-                All 9 tasks completed
+                All 3 tasks completed
               </div>
             </div>
           )}

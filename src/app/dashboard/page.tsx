@@ -342,7 +342,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4" style={{ color: "var(--accent)" }} />
                   <span className="font-semibold text-sm" style={{ color: "var(--text-bright)" }}>Daily Missions</span>
-                  <span className="badge-cyan text-[9px]">0/9</span>
+                  <span className="badge-cyan text-[9px]">0/3</span>
                 </div>
               </div>
               <div className="p-5 flex flex-col items-center justify-center py-10 sm:py-12">

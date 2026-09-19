@@ -7,7 +7,7 @@ DGDreams is a unified dashboard where you connect your wallet once and execute d
 | Feature | Description |
 |---|---|
 | 🔁 **One wallet, many chains** | Connect with RainbowKit, switch networks seamlessly |
-| ✅ **9 daily tasks per network** | Check-in, GM, GN, Dose, Mood, Spin, Counter, Sanitize, Reception |
+| ✅ **3 daily tasks per network** | Check-in, GM, GN |
 | 🧠 **GenLayer AI contracts** | Python-based Intelligent Contracts using the `genlayer-js` SDK |
 | 🏆 **Soulbound NFT streaks** | Mint tiered NFTs (Bronze → Legend) for 7+ day streaks |
 | 📊 **Real-time stats** | Per-network action counts, streak tracking, full history |

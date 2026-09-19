@@ -32,7 +32,7 @@
 | Feature | Description |
 |---|---|
 | 🔁 **One wallet, many chains** | Connect with RainbowKit, switch networks seamlessly |
-| ✅ **9 daily tasks per network** | Check-in, GM, GN, Dose, Mood, Spin, Counter, Sanitize, Reception |
+| ✅ **3 daily tasks per network** | Check-in, GM, GN |
 | <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" /> **GenLayer AI contracts** | Python-based Intelligent Contract using `genlayer-js` SDK |
 | 🏆 **Soulbound NFT streaks** | Mint tiered NFTs (Bronze → Legend) for 7+ day streaks |
 | 📊 **Real-time stats** | Per-network action counts, streak tracking, history |
@@ -43,17 +43,11 @@
 
 ### ✨ Multi-Chain Task Execution
 
-Users can run the same 9 daily tasks on any supported network:
+Users can run the same 3 daily tasks on any supported network:
 
 1. **Daily Check-In** — Start the day, build your streak
-2. **Reception** — Social onboarding action
-3. **GM** — Morning greeting
-4. **GN** — Night sign-off
-5. **Take Dose** — Daily medication metaphor
-6. **Mood Check** — Log your mood (with message)
-7. **Sanitize Wallet** — Clean up approvals
-8. **Increment Counter** — Simple counter action
-9. **Lucky Spin** — RNG-based reward
+2. **GM** — Morning greeting
+3. **GN** — Night sign-off
 
 Each task writes to an on-chain contract that tracks streaks, action counts, and daily resets.
 
