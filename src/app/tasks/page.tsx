@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { useAccount, useSwitchChain, useReadContract, useWriteContract } from "wagmi";
@@ -47,11 +47,11 @@ const NIKBASE_ABI = [
 ] as const;
 
 const TIER_INFO: Record<number, { label: string; icon: string }> = {
-  1: { label: "Bronze", icon: "🥉" },
-  2: { label: "Silver", icon: "🥈" },
-  3: { label: "Gold", icon: "🥇" },
-  4: { label: "Diamond", icon: "💎" },
-  5: { label: "Legend", icon: "🏆" },
+  1: { label: "Bronze", icon: "ðŸ¥‰" },
+  2: { label: "Silver", icon: "ðŸ¥ˆ" },
+  3: { label: "Gold", icon: "ðŸ¥‡" },
+  4: { label: "Diamond", icon: "ðŸ’Ž" },
+  5: { label: "Legend", icon: "ðŸ†" },
 };
 
 function NetworkBlock({
@@ -149,7 +149,7 @@ function NetworkBlock({
               : { background: "var(--bg-subtle)", color: "var(--text-secondary)" }),
           }}
         >
-          {completed ? "3/3 ✓" : `${actionCount}/3`}
+          {completed ? "3/3 âœ“" : `${actionCount}/3`}
         </span>
       </div>
 
@@ -214,16 +214,6 @@ export default function TasksPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [panelAutoStart, setPanelAutoStart] = useState(false);
   const [executingNetworkId, setExecutingNetworkId] = useState<number | null>(null);
-  const [netFilter, setNetFilter] = useState<"all" | "selected">("all");
-  const [enabledNetworks, setEnabledNetworks] = useState<Set<number>>(() => {
-    if (typeof window === "undefined") return new Set<number>();
-    try {
-      const v = JSON.parse(localStorage.getItem("voidchain-enabled-nets") || "null");
-      return v ? new Set(v) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
   const [showHistory, setShowHistory] = useState(false);
   const [historyEvents, setHistoryEvents] = useState<
     { block: number; streak: number; date: string }[]
@@ -232,8 +222,6 @@ export default function TasksPage() {
 
   const validatedAddr =
     address && isAddress(address) ? (address as `0x${string}`) : undefined;
-
-  const allNetworks = [...mainnetNetworks, ...testnetNetworks];
 
   const targetContract = selectedNetwork
     ? (CONTRACTS[selectedNetwork.id] || undefined)
@@ -383,194 +371,113 @@ export default function TasksPage() {
     setExecutingNetworkId(null);
   }, []);
 
-  const handleToggleNetwork = useCallback((id: number) => {
-    setEnabledNetworks((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      localStorage.setItem(
-        "voidchain-enabled-nets",
-        JSON.stringify([...next])
-      );
-      return next;
-    });
-  }, []);
-
   const knownProgress = selectedNetwork && onRightChain ? actionCount : 0;
 
+  // Hero values — follow the wallet's currently connected network
+  const connectedNetwork = chainId ? getNetworkConfig(chainId) : undefined;
+  const heroLogo = connectedNetwork?.logo || "/logo.svg";
+  const heroColor = connectedNetwork?.color || "#00F2FE";
+  const heroName = connectedNetwork?.name || (isConnected ? `Chain #${chainId}` : "DGDreams");
+  const heroActionCount = connectedNetwork && onRightChain ? actionCount : 0;
+  const heroStreak = connectedNetwork ? streak : 0;
+
+  // Clicking any mission card → open preview for the wallet's current network
+  const handleMissionClick = useCallback(() => {
+    if (!isConnected) {
+      openConnectModal?.();
+      return;
+    }
+    const net = chainId ? getNetworkConfig(chainId) : undefined;
+    if (!net) return;
+    handleOpenNetwork(net);
+  }, [isConnected, chainId, openConnectModal, handleOpenNetwork]);
+
+
   return (
-    <DashboardLayout title="Daily Tasks" subtitle="// execute on-chain actions across 14 networks">
-      <div className="space-y-6">
-        {/* Security Notice */}
+    <DashboardLayout title="Daily Tasks" subtitle="// your daily on-chain ritual">
+      <div className="space-y-8">
+        {/* â”€â”€â”€â”€â”€â”€â”€ HERO: 3D cube + 3 task cards â”€â”€â”€â”€â”€â”€â”€ */}
         <div
-          className="px-4 py-2 rounded-lg text-xs flex items-center gap-2"
+          className="rounded-2xl relative overflow-hidden px-6 py-10 sm:py-14"
           style={{
-            background: "var(--bg-subtle)",
-            border: "1px solid var(--border-subtle)",
-            color: "var(--text-tertiary)",
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-default)",
           }}
         >
-          <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-          </svg>
-          <span>
-            Always verify the network and contract address before signing. Transactions are irreversible.
-          </span>
-        </div>
-
-        {/* Network Filter Bar */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setNetFilter((n) => (n === "all" ? "selected" : "all"))}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border",
-                netFilter === "all"
-                  ? "border-[var(--accent)]"
-                  : "border-[var(--border-strong)]"
-              )}
-              style={{
-                ...(netFilter === "all"
-                  ? { background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent)" }
-                  : { background: "var(--bg-strong)", color: "var(--text-secondary)" }),
-              }}
-            >
-              {netFilter === "all" ? "All Networks" : "Selected Only"}
-            </button>
-            {enabledNetworks.size > 0 && (
-              <button
-                onClick={() => {
-                  setEnabledNetworks(new Set());
-                  localStorage.removeItem("voidchain-enabled-nets");
-                }}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200"
-                style={{
-                  background: "var(--bg-strong)",
-                  color: "var(--text-quaternary)",
-                  borderColor: "var(--border-strong)",
-                }}
-              >
-                Clear
-              </button>
-            )}
-            <button
-              onClick={() => {
-                const all = [...mainnetNetworks, ...testnetNetworks].map((n) => n.id);
-                setEnabledNetworks(new Set(all));
-                localStorage.setItem(
-                  "voidchain-enabled-nets",
-                  JSON.stringify(all)
-                );
-              }}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200"
-              style={{
-                background: "var(--bg-strong)",
-                color: "var(--text-quaternary)",
-                borderColor: "var(--border-strong)",
-              }}
-            >
-              Select All
-            </button>
-          </div>
-          <span className="text-xs" style={{ color: "var(--text-quaternary)" }}>
-            {enabledNetworks.size || "no"}/{allNetworks.length} selected
-          </span>
-        </div>
-
-        {/* Mainnet */}
-        <div>
-          <h2
-            className="text-sm font-semibold mb-4 uppercase tracking-wider"
-            style={{ color: "var(--text-bright)" }}
-          >
-            Mainnet
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mainnetNetworks
-              .filter((n) => netFilter === "all" || enabledNetworks.has(n.id))
-              .map((net) => {
-                const p =
-                  selectedNetwork?.id === net.id && onRightChain
-                    ? actionCount
-                    : 0;
-                return (
-                  <NetworkBlock
-                    key={net.id}
-                    network={net}
-                    isConnected={isConnected}
-                    chainId={chainId}
-                    actionCount={p}
-                    onStart={() => handleOpenNetwork(net)}
-                    isSelected={selectedNetwork?.id === net.id}
-                    isDisabled={
-                      executingNetworkId !== null &&
-                      executingNetworkId !== net.id
-                    }
-                    isEnabled={enabledNetworks.has(net.id)}
-                    onToggle={handleToggleNetwork}
-                  />
-                );
-              })}
-          </div>
-        </div>
-
-        {/* Testnet */}
-        <div>
-          <h2
-            className="text-sm font-semibold mb-4 uppercase tracking-wider"
-            style={{ color: "var(--accent)" }}
-          >
-            Testnet
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {testnetNetworks
-              .filter((n) => netFilter === "all" || enabledNetworks.has(n.id))
-              .map((net) => {
-                const p =
-                  selectedNetwork?.id === net.id && onRightChain
-                    ? actionCount
-                    : 0;
-                return (
-                  <NetworkBlock
-                    key={net.id}
-                    network={net}
-                    isConnected={isConnected}
-                    chainId={chainId}
-                    actionCount={p}
-                    onStart={() => handleOpenNetwork(net)}
-                    isSelected={selectedNetwork?.id === net.id}
-                    isDisabled={
-                      executingNetworkId !== null &&
-                      executingNetworkId !== net.id
-                    }
-                    isEnabled={enabledNetworks.has(net.id)}
-                    onToggle={handleToggleNetwork}
-                  />
-                );
-              })}
-          </div>
-        </div>
-
-        {/* Side Panel - selected network details */}
-        {selectedNetwork && (
+          {/* ambient glow in network color */}
           <div
-            className="p-5 rounded-xl sticky top-8"
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-[420px] h-[420px] pointer-events-none"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border-default)",
+              background: `radial-gradient(circle, color-mix(in srgb, ${heroColor} 18%, transparent), transparent 70%)`,
+              filter: "blur(60px)",
             }}
+          />
+
+          {/* big cube centered */}
+          <div className="relative flex justify-center mb-10">
+            <div style={{ transform: "scale(1.6)", transformOrigin: "top center" }}>
+              <NetworkCube logo={heroLogo} color={heroColor} name={heroName} />
+            </div>
+          </div>
+
+          {/* 3 task cards below the cube */}
+          <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            {DAILY_MISSIONS.map((m) => (
+              <TaskCard3D
+                key={m.id}
+                title={m.title}
+                desc={m.desc}
+                icon={m.icon}
+                color={m.color}
+                onClick={handleMissionClick}
+              />
+            ))}
+          </div>
+
+          <p className="relative text-center text-[11px] mt-6 font-mono" style={{ color: "var(--text-quaternary)" }}>
+            {isConnected
+              ? `Connected: ${heroName} â€” click a card to execute its transaction`
+              : "Connect your wallet to start â€” the cube shows your active network"}
+          </p>
+        </div>
+
+        {/* Streak / progress strip */}
+        {isConnected && (
+          <div className="flex items-center justify-center gap-6 flex-wrap">
+            <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
+              <span>Today's progress</span>
+              <span className="font-mono font-semibold" style={{ color: "var(--text-bright)" }}>
+                {heroActionCount}/3
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
+              <span>Streak</span>
+              <span className="font-mono font-semibold" style={{ color: "var(--warning)" }}>
+                {heroStreak}d
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Preview Modal â€” network selection before executing */}
+      {showPreview && selectedNetwork && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+          onClick={() => setShowPreview(false)}
+        >
+          <div
+            className="rounded-2xl p-6 max-w-sm w-full"
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)" }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2.5 mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden"
-                style={{
-                  background: `color-mix(in srgb, ${selectedNetwork.color} 20%, transparent)`,
-                }}
+                className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
+                style={{ background: `color-mix(in srgb, ${selectedNetwork.color} 20%, transparent)` }}
               >
-                <Image src={selectedNetwork.logo} alt={selectedNetwork.name} width={22} height={22}
+                <Image src={selectedNetwork.logo} alt={selectedNetwork.name} width={26} height={26}
                   style={{ objectFit: "contain" }}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
               </div>
@@ -579,108 +486,52 @@ export default function TasksPage() {
                   {selectedNetwork.name}
                 </h3>
                 <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                  {streak > 0 ? `Streak: ${streak}` : "No streak"}
+                  {CONTRACTS[selectedNetwork.id] ? "NikBase contract ready" : "Not deployed"}
                 </p>
               </div>
             </div>
 
-            {streak >= 7 && validatedNft && (
-              <div
-                className="mb-4 p-3 rounded-lg"
-                style={{
-                  background: "var(--bg-subtle)",
-                  border: "1px solid var(--border-subtle)",
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">
-                    {hasNft ? TIER_INFO[nftTier]?.icon : "🎫"}
-                  </span>
-                  <div className="text-xs">
-                    {hasNft ? (
-                      <p style={{ color: "var(--text-secondary)" }}>
-                        {TIER_INFO[nftTier]?.label} &middot; {nftStreak}d
-                      </p>
-                    ) : (
-                      <p style={{ color: "var(--text-secondary)" }}>
-                        Mint available
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {!hasNft && streak >= 7 && (
-                  <button
-                    onClick={handleMint}
-                    disabled={mintPending}
-                    className="mt-2 w-full py-1.5 rounded-lg text-xs font-medium transition-all duration-200 disabled:opacity-40"
-                    style={{
-                      background: "var(--bg-strong)",
-                      color: "var(--text-bright)",
-                    }}
-                  >
-                    {mintPending ? "Minting..." : "Mint NFT"}
-                  </button>
-                )}
-                {hasNft && streak > nftStreak && (
-                  <button
-                    onClick={handleUpgrade}
-                    disabled={upgradePending}
-                    className="mt-2 w-full py-1.5 rounded-lg text-xs font-medium transition-all duration-200 disabled:opacity-40"
-                    style={{
-                      background: "var(--bg-strong)",
-                      color: "var(--text-bright)",
-                    }}
-                  >
-                    {upgradePending ? "Upgrading..." : "Upgrade"}
-                  </button>
-                )}
+            <div className="rounded-lg p-3 mb-4 text-xs space-y-1.5" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)" }}>
+              <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
+                <span>Transactions</span>
+                <span style={{ color: "var(--text-bright)" }}>3 (Daily Check Â· GM Â· GN)</span>
               </div>
+              <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
+                <span>Frequency</span>
+                <span style={{ color: "var(--text-bright)" }}>Once per UTC day</span>
+              </div>
+            </div>
+
+            {!CONTRACTS[selectedNetwork.id] ? (
+              <p className="text-xs mb-3" style={{ color: "var(--danger)" }}>
+                No contract deployed on this network yet.
+              </p>
+            ) : (
+              <p className="text-xs mb-3" style={{ color: "var(--text-quaternary)" }}>
+                You'll sign each transaction in your wallet after switching to this network.
+              </p>
             )}
 
-            <div
-              className="text-xs space-y-1.5"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              <div className="flex justify-between">
-                <span>Daily progress</span>
-                <span className="font-medium" style={{ color: "var(--text-bright)" }}>
-                  {actionCount}/3
-                </span>
-              </div>
-              {onRightChain && validatedContract && (
-                <div className="flex justify-between">
-                  <span>Contract</span>
-                  <a
-                    href={getExplorerUrl(selectedNetwork, validatedContract, "address")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 transition-colors"
-                    style={{ color: "var(--text-quaternary)" }}
-                  >
-                    <svg
-                      className="w-3 h-3"
-                      style={{ color: "var(--success)" }}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"
-                      />
-                    </svg>
-                    <span className="font-mono" style={{ color: "var(--text-secondary)" }}>
-                      {shortenHash(validatedContract)}
-                    </span>
-                  </a>
-                </div>
-              )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowPreview(false)}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+                style={{ background: "var(--bg-strong)", border: "1px solid var(--border-strong)", color: "var(--text-bright)" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStartExecution}
+                disabled={!CONTRACTS[selectedNetwork.id]}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 disabled:opacity-40"
+                style={{ background: "var(--accent)", color: "#000" }}
+              >
+                Start Tasks
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Task Panel Modal */}
       {showTaskPanel && selectedNetwork && validatedAddr && validatedContract && (
@@ -696,3 +547,4 @@ export default function TasksPage() {
     </DashboardLayout>
   );
 }
+
