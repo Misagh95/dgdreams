@@ -63,6 +63,7 @@ interface DailyTaskPanelProps {
   contractAddress: `0x${string}`;
   onClose: () => void;
   onComplete: () => void;
+  onTaskComplete?: (taskId: string) => void;
   autoStart?: boolean;
 }
 
@@ -72,6 +73,7 @@ export default function DailyTaskPanel({
   contractAddress,
   onClose,
   onComplete,
+  onTaskComplete,
   autoStart,
 }: DailyTaskPanelProps) {
   const [tasks, setTasks] = useState<TaskProgress[]>(() =>
@@ -173,6 +175,7 @@ export default function DailyTaskPanel({
             idx === i ? { ...t, status: "confirmed" as TaskStatus } : t
           )
         );
+        onTaskComplete?.(DAILY_TASKS[i].id);
       } catch (err: any) {
         const msg = parseTxError(err);
         if (msg.toLowerCase().includes("rejected")) {

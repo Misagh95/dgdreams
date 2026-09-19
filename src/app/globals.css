@@ -467,19 +467,66 @@
 }
 
 .dg-cube-spin {
-  animation: dg-cube-spin 18s linear infinite;
+  animation: dg-cube-spin 20s linear infinite;
 }
 
 .dg-cube-float {
   animation: dg-cube-float 5s ease-in-out infinite;
 }
 
+/* orbital rings */
+.dg-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  pointer-events: none;
+}
+.dg-ring-a {
+  width: 300px;
+  height: 92px;
+  animation: dg-ring-a 38s linear infinite;
+}
+.dg-ring-b {
+  width: 250px;
+  height: 70px;
+  animation: dg-ring-b 52s linear infinite reverse;
+}
+@keyframes dg-ring-a {
+  from { transform: rotateX(74deg) rotateZ(0deg); }
+  to   { transform: rotateX(74deg) rotateZ(360deg); }
+}
+@keyframes dg-ring-b {
+  from { transform: rotateX(66deg) rotateY(24deg) rotateZ(360deg); }
+  to   { transform: rotateX(66deg) rotateY(24deg) rotateZ(0deg); }
+}
+
+/* skeleton shimmer */
+.dg-shimmer {
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.05) 30%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.05) 70%
+  );
+  background-size: 200% 100%;
+  animation: dg-shimmer 1.8s ease-in-out infinite;
+}
+@keyframes dg-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dg-cube-spin,
-  .dg-cube-float {
+  .dg-cube-float,
+  .dg-ring,
+  .dg-shimmer {
     animation: none;
   }
   .dg-cube-spin {
     transform: rotateX(-18deg) rotateY(35deg);
+  }
+  .dg-ring {
+    transform: rotateX(70deg);
   }
 }

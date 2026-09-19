@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { useAccount, useSwitchChain, useReadContract, useWriteContract } from "wagmi";
@@ -10,6 +10,7 @@ import ThemeSwitcher from "@/components/ThemeSwitcher";
 import DailyTaskPanel, { CONTRACTS } from "@/components/DailyTaskPanel";
 import { NetworkCube } from "@/components/NetworkCube";
 import { TaskCard3D, DAILY_MISSIONS } from "@/components/TaskCard3D";
+import DailyMissionDeck from "@/components/DailyMissionDeck";
 import { mainnetNetworks, testnetNetworks, type NetworkConfig, getNetworkConfig } from "@/config/chains";
 import { cn } from "@/utils/cn";
 import { getNativeSymbol, shortenHash, getExplorerUrl } from "@/utils/transactions";
@@ -213,6 +214,7 @@ export default function TasksPage() {
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [panelAutoStart, setPanelAutoStart] = useState(false);
+  const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
   const [executingNetworkId, setExecutingNetworkId] = useState<number | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [historyEvents, setHistoryEvents] = useState<
@@ -363,6 +365,13 @@ export default function TasksPage() {
     setExecutingNetworkId(null);
   }, [refetchCounts, refetchUser]);
 
+  const handleSingleTaskComplete = useCallback(
+    (taskId: string) => {
+      setCompletedTasks((prev) => new Set(prev).add(taskId));
+    },
+    []
+  );
+
   const handleClosePanel = useCallback(() => {
     setShowTaskPanel(false);
     setShowPreview(false);
@@ -395,70 +404,16 @@ export default function TasksPage() {
 
   return (
     <DashboardLayout title="Daily Tasks" subtitle="// your daily on-chain ritual">
-      <div className="space-y-8">
-        {/* â”€â”€â”€â”€â”€â”€â”€ HERO: 3D cube + 3 task cards â”€â”€â”€â”€â”€â”€â”€ */}
-        <div
-          className="rounded-2xl relative overflow-hidden px-6 py-10 sm:py-14"
-          style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border-default)",
-          }}
-        >
-          {/* ambient glow in network color */}
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-[420px] h-[420px] pointer-events-none"
-            style={{
-              background: `radial-gradient(circle, color-mix(in srgb, ${heroColor} 18%, transparent), transparent 70%)`,
-              filter: "blur(60px)",
-            }}
-          />
-
-          {/* big cube centered */}
-          <div className="relative flex justify-center mb-6">
-            <div style={{ transform: "scale(1.45)", transformOrigin: "top center", marginTop: 24 }}>
-              <NetworkCube logo={heroLogo} color={heroColor} name={heroName} />
-            </div>
-          </div>
-
-          {/* 3 task cards below the cube */}
-          <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-            {DAILY_MISSIONS.map((m) => (
-              <TaskCard3D
-                key={m.id}
-                title={m.title}
-                desc={m.desc}
-                icon={m.icon}
-                color={m.color}
-                onClick={handleMissionClick}
-              />
-            ))}
-          </div>
-
-          <p className="relative text-center text-[11px] mt-6 font-mono" style={{ color: "var(--text-quaternary)" }}>
-            {isConnected
-              ? `Connected: ${heroName} â€” click a card to execute its transaction`
-              : "Connect your wallet to start â€” the cube shows your active network"}
-          </p>
-        </div>
-
-        {/* Streak / progress strip */}
-        {isConnected && (
-          <div className="flex items-center justify-center gap-6 flex-wrap">
-            <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
-              <span>Today's progress</span>
-              <span className="font-mono font-semibold" style={{ color: "var(--text-bright)" }}>
-                {heroActionCount}/3
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
-              <span>Streak</span>
-              <span className="font-mono font-semibold" style={{ color: "var(--warning)" }}>
-                {heroStreak}d
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
+      <DailyMissionDeck
+        network={connectedNetwork}
+        isConnected={isConnected}
+        loading={isConnected && countsData === undefined && !isGen}
+        completedCount={heroActionCount}
+        completedTaskIds={completedTasks}
+        onConnect={() => openConnectModal?.()}
+        onMission={handleMissionClick}
+        contextText={`Execute GM, CHECK and GN on ${heroName} — one transaction each, once per day.`}
+      />
 
       {/* Preview Modal â€” network selection before executing */}
       {showPreview && selectedNetwork && (
@@ -540,6 +495,7 @@ export default function TasksPage() {
           address={validatedAddr}
           contractAddress={validatedContract}
           onClose={handleClosePanel}
+          onTaskComplete={handleSingleTaskComplete}
           onComplete={handleTaskComplete}
           autoStart={panelAutoStart}
         />
