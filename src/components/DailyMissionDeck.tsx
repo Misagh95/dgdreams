@@ -42,7 +42,7 @@ export const MISSIONS: Mission[] = [
     title: "Check the network",
     desc: "Confirm your wallet is active and ready.",
     reward: "+15 pts",
-    action: "Send Check",
+    action: "Execute Check",
     color: LAVENDER,
   },
   {
@@ -51,7 +51,7 @@ export const MISSIONS: Mission[] = [
     title: "Say GN on-chain",
     desc: "Close the day with one final on-chain action.",
     reward: "+25 pts",
-    action: "Send GN",
+    action: "Execute GN",
     color: ROSE,
   },
 ];
