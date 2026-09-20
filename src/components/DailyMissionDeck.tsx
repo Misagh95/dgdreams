@@ -300,10 +300,10 @@ function MissionCard({
               className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-115 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               style={
                 completed
-                  ? { background: "rgba(255,255,255,0.08)", color: "#A29CB2", border: "1px solid rgba(160,155,190,0.5)" }
+                  ? { background: "rgba(255,255,255,0.12)", color: "#A29CB2", border: "1px solid rgba(160,155,190,0.6)" }
                   : disabled
-                  ? { background: "rgba(255,255,255,0.12)", color: IVORY, border: "1px solid rgba(160,155,190,0.6)" }
-                  : { background: `color-mix(in srgb, ${c} 50%, transparent)`, color: c, border: `1px solid ${c}`, boxShadow: `0 4px 14px -6px ${c}` }
+                  ? { background: "rgba(255,255,255,0.16)", color: IVORY, border: "1px solid rgba(160,155,190,0.7)" }
+                  : { background: `color-mix(in srgb, ${c} 75%, transparent)`, color: "#0f172a", border: `1px solid ${c}`, boxShadow: `0 6px 18px -8px ${c}` }
               }
             >
               <Zap className="w-3.5 h-3.5" />

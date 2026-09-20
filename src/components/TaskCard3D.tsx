@@ -45,10 +45,10 @@ export function TaskCard3D({
 
   const ctaLabel = cta || "Run task";
   const ctaStyle: React.CSSProperties = {
-    background: `color-mix(in srgb, ${color} 80%, white)`,
+    background: `${color}`,
     border: `1px solid ${color}`,
     color: '#FFFFFF',
-    boxShadow: `0 4px 14px -6px color-mix(in srgb, ${color} 80%, transparent)`,
+    boxShadow: `0 6px 18px -8px color-mix(in srgb, ${color} 90%, transparent)`,
     cursor: 'pointer',
   };
 
