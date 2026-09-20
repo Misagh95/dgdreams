@@ -15,6 +15,7 @@ import {
   Wallet,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import NetworkSelect from "@/components/NetworkSelect";
 import { useAccount, useSwitchChain, useWriteContract, useConfig, useSignMessage } from "wagmi";
 import { getPublicClient } from "@wagmi/core";
 import { GAME2048_CONTRACTS, getNetworkConfig } from "@/config/chains";
@@ -488,25 +489,15 @@ export default function Game2048Page() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <select
-                  value={selectedNetId || ""}
-                  onChange={(e) => {
-                    const id = Number(e.target.value);
+                <NetworkSelect
+                  networks={NETWORK_LIST}
+                  value={selectedNetId}
+                  onChange={(id) => {
                     setSelectedNetId(id);
                     if (isConnected) switchToNet(id);
                   }}
-                  className="px-2 py-1.5 rounded-lg text-xs font-mono bg-[rgba(6,13,26,0.8)] border border-[rgba(26,58,92,0.5)] text-[#94a3b8] outline-none"
-                  style={{ minWidth: 120 }}
-                >
-                  <option value="">
-                    {isConnected ? "Select net" : "Network"}
-                  </option>
-                  {NETWORK_LIST.map((n) => (
-                    <option key={n.id} value={n.id}>
-                      {n.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={isConnected ? "Select net" : "Network"}
+                />
                 {txCount > 0 && (
                   <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[rgba(0,212,255,0.1)] border border-[rgba(0,212,255,0.2)]">
                     <Zap className="w-3 h-3 text-[#00d4ff]" />
