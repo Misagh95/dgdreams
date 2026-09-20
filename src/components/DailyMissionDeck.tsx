@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Image from "next/image";
+import { Zap } from "lucide-react";
 import type { NetworkConfig } from "@/config/chains";
 
 /* ─────────────────────────────────────────────
@@ -32,7 +33,7 @@ export const MISSIONS: Mission[] = [
     title: "Say GM on-chain",
     desc: "Make your first move on the active network.",
     reward: "+25 pts",
-    action: "Check in",
+    action: "Send GM",
     color: MINT,
   },
   {
@@ -41,7 +42,7 @@ export const MISSIONS: Mission[] = [
     title: "Check the network",
     desc: "Confirm your wallet is active and ready.",
     reward: "+15 pts",
-    action: "Check now",
+    action: "Send Check",
     color: LAVENDER,
   },
   {
@@ -50,7 +51,7 @@ export const MISSIONS: Mission[] = [
     title: "Say GN on-chain",
     desc: "Close the day with one final on-chain action.",
     reward: "+25 pts",
-    action: "Check in",
+    action: "Send GN",
     color: ROSE,
   },
 ];
@@ -209,7 +210,13 @@ function MissionCard({
       className="h-full"
     >
       <div
-        className="rounded-2xl h-full flex flex-col p-5 relative overflow-hidden"
+        onClick={completed ? undefined : onAction}
+        role="button"
+        tabIndex={completed ? -1 : 0}
+        onKeyDown={(e) => {
+          if (!completed && e.key === "Enter") onAction();
+        }}
+        className={`rounded-2xl h-full flex flex-col p-5 relative overflow-hidden ${completed ? "" : "cursor-pointer"}`}
         style={{
           background:
             "linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015) 55%, rgba(255,255,255,0.035))",
@@ -280,22 +287,27 @@ function MissionCard({
           </span>
 
           {loading ? (
-            <div className="dg-shimmer h-8 w-24 rounded-lg" role="status" aria-label="loading" />
+            <div className="dg-shimmer h-8 w-28 rounded-lg" role="status" aria-label="loading" />
           ) : (
             <button
-              onClick={onAction}
-              disabled={disabled || completed}
-              aria-label={`${mission.action} — ${mission.title}`}
-              className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!completed) onAction();
+              }}
+              disabled={completed}
+              aria-label={completed ? `${mission.title} — completed` : `${mission.action} — ${mission.title}`}
+              className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-110 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed"
               style={
                 completed
                   ? { background: "rgba(255,255,255,0.04)", color: "#A29CB2", border: "1px solid rgba(160,155,190,0.15)" }
                   : disabled
-                  ? { background: "rgba(255,255,255,0.04)", color: "rgba(242,237,228,0.35)", border: "1px solid rgba(160,155,190,0.12)" }
-                  : { background: `${c}14`, color: c, border: `1px solid ${c}3d` }
+                  ? { background: "rgba(255,255,255,0.07)", color: IVORY, border: "1px solid rgba(160,155,190,0.4)" }
+                  : { background: `${c}22`, color: c, border: `1px solid ${c}55`, boxShadow: `0 8px 22px -12px ${c}` }
               }
             >
-              {completed ? "Completed" : mission.action}
+              <Zap className="w-3.5 h-3.5" />
+              {completed ? "Completed" : disabled ? "Connect wallet" : mission.action}
             </button>
           )}
         </div>
@@ -316,6 +328,7 @@ function MissionCard({
 
 export default function DailyMissionDeck({
   network,
+  chainId,
   isConnected,
   loading,
   completedCount,
@@ -323,8 +336,11 @@ export default function DailyMissionDeck({
   onConnect,
   onMission,
   contextText,
+  notice,
 }: {
   network?: NetworkConfig;
+  /** Wallet chain id — used when the chain isn't in the supported list */
+  chainId?: number;
   isConnected: boolean;
   loading: boolean;
   completedCount: number;
@@ -332,6 +348,8 @@ export default function DailyMissionDeck({
   onConnect: () => void;
   onMission: (id: MissionId) => void;
   contextText: string;
+  /** Optional warning line, e.g. wallet sitting on an unsupported chain */
+  notice?: string;
 }) {
   const allDone = completedCount >= 3;
   const isDone = (id: MissionId) => allDone || completedTaskIds.has(id);
@@ -371,11 +389,17 @@ export default function DailyMissionDeck({
                   aria-hidden
                 />
                 <span className="text-base font-semibold" style={{ color: IVORY }}>
-                  {isConnected ? network?.name || `Chain #${network?.id}` : "No network"}
+                  {isConnected
+                    ? network?.name || `Chain #${chainId ?? "?"}`
+                    : "No network"}
                 </span>
               </div>
               <p className="text-xs mt-1 font-mono" style={{ color: "#A29CB2" }}>
-                {isConnected ? `Connected · Chain ${network?.id}` : "Wallet not connected"}
+                {isConnected
+                  ? network
+                    ? `Connected · Chain ${network.id}`
+                    : `Connected · unsupported chain ${chainId ?? "?"}`
+                  : "Wallet not connected"}
               </p>
               {!isConnected && (
                 <button
@@ -424,6 +448,19 @@ export default function DailyMissionDeck({
               transition={{ duration: 0.6, ease: "easeOut" }}
             />
           </div>
+
+          {notice && (
+            <p
+              className="text-[11px] leading-relaxed mb-4 px-3 py-2 rounded-xl"
+              style={{
+                background: "rgba(255,170,0,0.10)",
+                border: "1px solid rgba(255,170,0,0.28)",
+                color: "#FFC24B",
+              }}
+            >
+              {notice}
+            </p>
+          )}
 
           <div className="flex flex-col gap-4">
             {MISSIONS.map((m) => (

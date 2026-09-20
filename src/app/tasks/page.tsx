@@ -223,6 +223,16 @@ export default function TasksPage() {
   >([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // Deep links from the dashboard mission cards: /tasks?mission=gm|checkIn|gn
+  const [pendingMission, setPendingMission] = useState<"gm" | "checkIn" | "gn" | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mission = new URLSearchParams(window.location.search).get("mission");
+    if (mission === "gm" || mission === "checkIn" || mission === "gn") {
+      setPendingMission(mission);
+    }
+  }, []);
+
   const validatedAddr =
     address && isAddress(address) ? (address as `0x${string}`) : undefined;
 
@@ -342,8 +352,24 @@ export default function TasksPage() {
       setSelectedNetwork(network);
       setShowPreview(true);
     },
-    [isConnected, chainId, openConnectModal]
+    [isConnected, openConnectModal]
   );
+
+  // Deep-linked mission: open the preview as soon as a supported chain is active
+  useEffect(() => {
+    if (!pendingMission) return;
+    const net = chainId ? getNetworkConfig(chainId) : undefined;
+    if (!isConnected || !net) return;
+    setSelectedMissionId(pendingMission);
+    setPendingMission(null);
+    handleOpenNetwork(net);
+  }, [pendingMission, isConnected, chainId, handleOpenNetwork]);
+
+  const unsupportedChainId =
+    isConnected && chainId && !getNetworkConfig(chainId) ? chainId : undefined;
+  const deckNotice = unsupportedChainId
+    ? `Your wallet is on Chain #${unsupportedChainId}, which isn't supported yet. Switch to one of the 15 supported networks in your wallet, then press the mission button again.`
+    : undefined;
 
   const handleStartExecution = useCallback(async () => {
     if (!selectedNetwork) return;
@@ -413,6 +439,7 @@ export default function TasksPage() {
     <DashboardLayout title="Daily Tasks" subtitle="// your daily on-chain ritual">
       <DailyMissionDeck
         network={connectedNetwork}
+        chainId={chainId}
         isConnected={isConnected}
         loading={isConnected && countsData === undefined && !isGen}
         completedCount={heroActionCount}
@@ -420,6 +447,7 @@ export default function TasksPage() {
         onConnect={() => openConnectModal?.()}
         onMission={handleMissionClick}
         contextText={`Execute GM, CHECK and GN on ${heroName} — one transaction each, once per day.`}
+        notice={deckNotice}
       />
 
       {/* Preview Modal â€” network selection before executing */}
@@ -474,7 +502,7 @@ export default function TasksPage() {
               </p>
             ) : (
               <p className="text-xs mb-3" style={{ color: "var(--text-quaternary)" }}>
-                You'll sign each transaction in your wallet after switching to this network.
+                You&apos;ll sign each transaction in your wallet after switching to this network.
               </p>
             )}
 

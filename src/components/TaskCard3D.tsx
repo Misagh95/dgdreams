@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ArrowUpRight, Sunrise, MoonStar } from "lucide-react";
+import { CheckCircle2, ArrowUpRight, Sunrise, MoonStar, Zap } from "lucide-react";
 
 /* ─────── 3D TASK CARDS ─────── */
 
@@ -18,12 +18,21 @@ export function TaskCard3D({
   icon: Icon,
   color,
   onClick,
+  href = "/tasks",
+  cta,
+  disabled = false,
 }: {
   title: string;
   desc: string;
   icon: typeof CheckCircle2;
   color: string;
+  /** Runs the mission directly (preferred — the card then owns a real action button) */
   onClick?: () => void;
+  /** Destination used when no onClick is supplied */
+  href?: string;
+  /** Label of the action button, e.g. "Run GM" */
+  cta?: string;
+  disabled?: boolean;
 }) {
   const [tilt, setTilt] = useState({ x: 0, y: 0, active: false });
 
@@ -32,6 +41,14 @@ export function TaskCard3D({
     const px = (e.clientX - rect.left) / rect.width - 0.5;
     const py = (e.clientY - rect.top) / rect.height - 0.5;
     setTilt({ x: -py * 12, y: px * 12, active: true });
+  };
+
+  const ctaLabel = cta || "Run task";
+  const ctaStyle: React.CSSProperties = {
+    background: `color-mix(in srgb, ${color} 16%, transparent)`,
+    border: `1px solid color-mix(in srgb, ${color} 42%, transparent)`,
+    color,
+    boxShadow: `0 6px 18px -10px color-mix(in srgb, ${color} 60%, transparent)`,
   };
 
   const card = (
@@ -70,14 +87,42 @@ export function TaskCard3D({
             {desc}
           </p>
         </div>
-        <div className="flex items-center justify-between mt-auto" style={{ transform: "translateZ(15px)" }}>
-          <span
-            className="text-[9px] font-mono px-2 py-0.5 rounded-md"
-            style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}
-          >
-            1 tx / day
-          </span>
-          <ArrowUpRight className="w-3.5 h-3.5" style={{ color: "var(--text-quaternary)" }} />
+        <div className="flex flex-col gap-2 mt-auto" style={{ transform: "translateZ(15px)" }}>
+          <div className="flex items-center justify-between">
+            <span
+              className="text-[9px] font-mono px-2 py-0.5 rounded-md"
+              style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}
+            >
+              1 tx / day
+            </span>
+            <ArrowUpRight className="w-3.5 h-3.5" style={{ color: "var(--text-quaternary)" }} />
+          </div>
+
+          {/* Action button — this is what triggers the transaction */}
+          {onClick ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!disabled) onClick();
+              }}
+              disabled={disabled}
+              aria-label={`${ctaLabel} — ${title}`}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold transition-all duration-200 hover:brightness-110 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+              style={ctaStyle}
+            >
+              <Zap className="w-3.5 h-3.5" />
+              {ctaLabel}
+            </button>
+          ) : (
+            <span
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold"
+              style={ctaStyle}
+            >
+              <Zap className="w-3.5 h-3.5" />
+              {ctaLabel}
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -91,7 +136,7 @@ export function TaskCard3D({
     );
   }
   return (
-    <Link href="/tasks" className="block">
+    <Link href={href} className="block">
       {card}
     </Link>
   );
