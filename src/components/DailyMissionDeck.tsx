@@ -297,13 +297,13 @@ function MissionCard({
               }}
               disabled={completed}
               aria-label={completed ? `${mission.title} — completed` : `${mission.action} — ${mission.title}`}
-              className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-110 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-115 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               style={
                 completed
-                  ? { background: "rgba(255,255,255,0.04)", color: "#A29CB2", border: "1px solid rgba(160,155,190,0.15)" }
+                  ? { background: "rgba(255,255,255,0.08)", color: "#A29CB2", border: "1px solid rgba(160,155,190,0.5)" }
                   : disabled
-                  ? { background: "rgba(255,255,255,0.07)", color: IVORY, border: "1px solid rgba(160,155,190,0.4)" }
-                  : { background: `${c}22`, color: c, border: `1px solid ${c}55`, boxShadow: `0 8px 22px -12px ${c}` }
+                  ? { background: "rgba(255,255,255,0.12)", color: IVORY, border: "1px solid rgba(160,155,190,0.6)" }
+                  : { background: `color-mix(in srgb, ${c} 50%, transparent)`, color: c, border: `1px solid ${c}`, boxShadow: `0 4px 14px -6px ${c}` }
               }
             >
               <Zap className="w-3.5 h-3.5" />
