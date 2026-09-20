@@ -33,7 +33,7 @@ export const MISSIONS: Mission[] = [
     title: "Say GM on-chain",
     desc: "Make your first move on the active network.",
     reward: "+25 pts",
-    action: "Send GM",
+    action: "Execute GM",
     color: MINT,
   },
   {

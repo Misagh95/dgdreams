@@ -100,6 +100,7 @@ export function TaskCard3D({
 
           {/* Action button — this is what triggers the transaction */}
           {onClick ? (
+            /* review-open-new-only */
             <button
               type="button"
               onClick={(e) => {
@@ -108,7 +109,7 @@ export function TaskCard3D({
               }}
               disabled={disabled}
               aria-label={`${ctaLabel} — ${title}`}
-              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold transition-all duration-200 hover:brightness-110 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold transition-all duration-200 hover:brightness-110 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               style={ctaStyle}
             >
               <Zap className="w-3.5 h-3.5" />
@@ -116,7 +117,7 @@ export function TaskCard3D({
             </button>
           ) : (
             <span
-              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold transition-all duration-200 hover:brightness-110 cursor-pointer"
               style={ctaStyle}
             >
               <Zap className="w-3.5 h-3.5" />
