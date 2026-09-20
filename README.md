@@ -2,7 +2,7 @@
   <img src="https://dgdreams.space/genlayer-spinner.svg" alt="GenLayer Spinner" width="80" />
   <h1 align="center">DGDreams — Web3 Space Terminal</h1>
   <p align="center">
-    Multi-chain daily task dashboard with <strong>14 networks</strong> • <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
+    Multi-chain daily task dashboard with <strong>15 networks</strong> • <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
   </p>
   <p align="center">
     <a href="https://dgdreams.space" target="_blank"><strong>🌐 Live Site</strong></a>
@@ -27,7 +27,7 @@
 
 ## Overview
 
-**DGDreams** is a unified dashboard where users connect their wallet once and execute daily on-chain tasks across **14 blockchain networks** — Ethereum, Base, HyperEVM, Unichain, Tempo, Robinhood, Ink, and testnets including **GenLayer Bradbury**, LitVM, GIWA, ARC, and SimpleChain.
+**DGDreams** is a unified dashboard where users connect their wallet once and execute daily on-chain tasks across **15 blockchain networks** — Ethereum, Base, HyperEVM, Unichain, Tempo, Robinhood, Ink and Arc on mainnet, plus testnets including **GenLayer Bradbury**, LitVM, GIWA, ARC, and SimpleChain.
 
 | Feature | Description |
 |---|---|
@@ -90,7 +90,7 @@ src/
 │   ├── DashboardLayout  # Shared layout wrapper
 │   └── ...
 ├── config/
-│   └── chains.ts        # All 14 chain definitions & NetworkConfig
+│   └── chains.ts        # All 15 chain definitions & NetworkConfig
 ├── lib/
 │   ├── genlayer/
 │   │   ├── client.ts    # genlayer-js client factory
@@ -139,6 +139,7 @@ User clicks "Start" → DailyTaskPanel opens
 | Tempo | 4217 | USD |
 | Robinhood | 4663 | ETH |
 | Ink | 57073 | ETH |
+| Arc | 5042 | USDC |
 
 ### Testnet
 | Network | Chain ID | Currency |

@@ -22,9 +22,9 @@ const faqs = [
     icon: Wallet,
     color: "#00d4ff",
     items: [
-      { q: "What is DGDreams?", a: "DGDreams is a cross-chain on-chain operations dashboard that gamifies daily Web3 activity. It tracks your streaks, points, and transactions across 13 EVM networks through a unified mission-control interface." },
+      { q: "What is DGDreams?", a: "DGDreams is a cross-chain on-chain operations dashboard that gamifies daily Web3 activity. It tracks your streaks, points, and transactions across 15 networks (14 EVM chains plus GenLayer) through a unified mission-control interface." },
       { q: "How do I connect my wallet?", a: "Click the 'Connect Wallet' button in the top bar or profile page. DGDreams supports any wallet through RainbowKit — MetaMask, WalletConnect, Rainbow, Ledger, and more." },
-      { q: "Which networks are supported?", a: "We support 7 mainnets (Base, HyperEVM, Unichain, Tempo, Robinhood Chain, Ethereum, Ink) and 6 testnets (Sepolia, Base Sepolia, GIWA Sepolia, LITVM Liteforge, ARC Testnet, SimpleChain)." },
+      { q: "Which networks are supported?", a: "We support 8 mainnets (Base, HyperEVM, Unichain, Tempo, Robinhood Chain, Ethereum, Ink, Arc) and 7 testnets (Sepolia, Base Sepolia, GIWA Sepolia, LITVM Liteforge, ARC Testnet, SimpleChain, GenLayer Bradbury)." },
     ],
   },
   {
@@ -73,7 +73,7 @@ const faqs = [
     color: "#627eea",
     items: [
       { q: "How do I add a custom network?", a: "You can configure custom RPC URLs and chain IDs through your wallet provider. Popular EVM networks are supported out of the box." },
-      { q: "Which network has the lowest gas?", a: "Base and most L2s (HyperEVM, Unichain, Tempo) have sub-cent gas fees. Ethereum mainnet gas varies based on network congestion." },
+      { q: "Which network has the lowest gas?", a: "Base and most L2s (HyperEVM, Unichain, Tempo) have sub-cent gas fees. Arc mainnet settles gas in USDC, so fees stay dollar-denominated. Ethereum mainnet gas varies based on network congestion." },
     ],
   },
 ];

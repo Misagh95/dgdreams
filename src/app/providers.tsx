@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { WagmiProvider, http, createConfig } from "wagmi";
+import { WagmiProvider, http, fallback, createConfig, type Transport } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
@@ -23,12 +23,18 @@ function createWagmiConfig() {
     { appName: "DGDreams", projectId }
   );
 
-  const transports: Record<number, ReturnType<typeof http>> = {};
+  const transports: Record<number, Transport> = {};
   for (const chain of allChains) {
-    const url = chain.rpcUrls.default?.http?.[0];
-    if (url) {
-      transports[chain.id] = http(url);
-    }
+    const urls: readonly string[] = chain.rpcUrls.default?.http ?? [];
+    const primary = urls[0];
+    if (!primary) continue;
+    // Chains with more than one RPC (e.g. Arc mainnet: Circle's official node
+    // plus the Arcscan public node) get a fallback transport, so a single
+    // unresponsive/blocked endpoint never takes the network down.
+    transports[chain.id] =
+      urls.length === 1
+        ? http(primary)
+        : fallback(urls.map((url) => http(url)));
   }
 
   return createConfig({

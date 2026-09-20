@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "DGDreams"
   text: "Web3 Space Terminal"
-  tagline: One wallet. Fourteen networks. Daily on-chain missions — streaks, AI contracts and soulbound NFTs.
+  tagline: One wallet. Fifteen networks. Daily on-chain missions — streaks, AI contracts and soulbound NFTs.
   image:
     src: /logo.svg
     alt: DGDreams
@@ -22,7 +22,7 @@ hero:
 features:
   - icon: 🔁
     title: One wallet, many chains
-    details: Connect once with RainbowKit and switch across 14 EVM and GenLayer networks without ever leaving the dashboard.
+    details: Connect once with RainbowKit and switch across 15 networks — 14 EVM chains plus GenLayer — without ever leaving the dashboard.
   - icon: ✅
     title: 3 daily tasks per network
     details: Check-in, GM and GN — each action enforced once per UTC day on-chain.

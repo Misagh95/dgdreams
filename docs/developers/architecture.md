@@ -22,7 +22,7 @@ src/
 │   ├── DashboardLayout  # Shared layout wrapper
 │   └── ...
 ├── config/
-│   └── chains.ts        # All 14 chain definitions & NetworkConfig
+│   └── chains.ts        # All 15 chain definitions & NetworkConfig
 ├── lib/
 │   ├── genlayer/
 │   │   ├── client.ts    # genlayer-js client factory

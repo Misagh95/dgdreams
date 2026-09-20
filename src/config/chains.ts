@@ -35,11 +35,18 @@ export const arcMainnetChain = /*#__PURE__*/ defineChain({
   name: "Arc",
   nativeCurrency: { decimals: 18, name: "USDC", symbol: "USDC" },
   rpcUrls: {
-    default: { http: ["https://rpc.arc-scan.org"] },
-    public: { http: ["https://rpc.arc-scan.org"] },
+    // Circle's official endpoint first, Arcscan's public node as fallback
+    // (arc.io is DNS-filtered on some ISPs, arc-scan.org is reachable).
+    default: {
+      http: ["https://rpc.mainnet.arc.io", "https://rpc.arc-scan.org"],
+    },
+    public: {
+      http: ["https://rpc.mainnet.arc.io", "https://rpc.arc-scan.org"],
+    },
   },
   blockExplorers: {
-    default: { name: "ArcScan", url: "https://arc-scan.org" },
+    default: { name: "Arc Explorer", url: "https://explorer.arc.io" },
+    arcscan: { name: "ArcScan", url: "https://arc-scan.org" },
   },
 });
 
