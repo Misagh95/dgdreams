@@ -14,6 +14,7 @@ import {
   Check,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import Image from "next/image";
 import { useAccount } from "wagmi";
 import { mainnetNetworks, testnetNetworks } from "@/config/chains";
 import { shortenAddress } from "@/lib/utils";
@@ -50,11 +51,12 @@ const CATEGORIES: {
 const ALL_NETWORKS = "All Networks";
 
 const NETWORKS = [
-  { name: ALL_NETWORKS, shortName: "ALL", color: "#00d4ff" },
+  { name: ALL_NETWORKS, shortName: "ALL", color: "#00d4ff", logo: "" },
   ...[...mainnetNetworks, ...testnetNetworks].map((n) => ({
     name: n.name,
     shortName: n.shortName,
     color: n.color,
+    logo: n.logo,
   })),
 ];
 
@@ -109,7 +111,20 @@ function NetworkFilter({
         className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono transition-all hover:opacity-85"
         style={{ background: "var(--bg-strong)", border: "1px solid var(--border)", color: "var(--text-primary)", minWidth: 150 }}
       >
-        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: selected.color, boxShadow: `0 0 6px ${selected.color}` }} />
+        {selected.logo ? (
+          <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+            <Image
+              src={selected.logo}
+              alt=""
+              width={16}
+              height={16}
+              style={{ objectFit: "contain" }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+          </span>
+        ) : (
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: selected.color, boxShadow: `0 0 6px ${selected.color}` }} />
+        )}
         <span className="flex-1 truncate text-left">{selected.name}</span>
         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} style={{ color: "var(--text-quaternary)" }} />
       </button>
@@ -138,7 +153,20 @@ function NetworkFilter({
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-mono transition-all hover:opacity-80"
                     style={{ color: active ? "var(--text-bright)" : "var(--text-secondary)", background: active ? "var(--bg-strong)" : "transparent" }}
                   >
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: n.color }} />
+                    {n.logo ? (
+                      <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                        <Image
+                          src={n.logo}
+                          alt=""
+                          width={16}
+                          height={16}
+                          style={{ objectFit: "contain" }}
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                      </span>
+                    ) : (
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: n.color }} />
+                    )}
                     <span className="flex-1 truncate text-left">{n.name}</span>
                     <span className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: "var(--bg)", color: "var(--text-quaternary)" }}>
                       {n.shortName}
