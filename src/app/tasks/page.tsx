@@ -59,6 +59,7 @@ function NetworkBlock({
   network,
   isConnected,
   chainId,
+  connectedChain,
   actionCount,
   onStart,
   isSelected,
@@ -69,6 +70,7 @@ function NetworkBlock({
   network: NetworkConfig;
   isConnected: boolean;
   chainId?: number;
+  connectedChain?: NetworkConfig;
   actionCount: number;
   onStart: () => void;
   isSelected: boolean;
@@ -153,6 +155,12 @@ function NetworkBlock({
           {completed ? "3/3 âœ“" : `${actionCount}/3`}
         </span>
       </div>
+
+      {isConnected && connectedChain && (
+        <p className="text-[10px] mt-1 truncate" style={{ color: "var(--text-quaternary)" }}>
+          Wallet: {connectedChain.name} (Chain #{connectedChain.id})
+        </p>
+      )}
 
       {!isConnected ? (
         <button
@@ -412,11 +420,11 @@ export default function TasksPage() {
 
   // Hero values — follow the wallet's currently connected network
   const connectedNetwork = chainId ? getNetworkConfig(chainId) : undefined;
-  const heroLogo = connectedNetwork?.logo || "/logo.svg";
-  const heroColor = connectedNetwork?.color || "#00F2FE";
-  const heroName = connectedNetwork?.name || (isConnected ? `Chain #${chainId}` : "DGDreams");
-  const heroActionCount = connectedNetwork && onRightChain ? actionCount : 0;
-  const heroStreak = connectedNetwork ? streak : 0;
+  const heroNetwork = selectedNetwork ?? connectedNetwork ?? mainnetNetworks[0];
+  const heroLogo = heroNetwork.logo;
+  const heroColor = heroNetwork.color;
+  const heroName = heroNetwork.name;
+  const heroActionCount = (selectedNetwork ?? connectedNetwork) && onRightChain ? actionCount : 0;
 
   // Clicking a mission card → open preview for the wallet's current network
   // and remember which single task the user wants to run
@@ -437,6 +445,18 @@ export default function TasksPage() {
 
   return (
     <DashboardLayout title="Daily Tasks" subtitle="// your daily on-chain ritual">
+      <div className="flex flex-col items-center gap-4 mb-6">
+        <NetworkCube
+          logo={heroNetwork.logo}
+          color={heroNetwork.color}
+          name={heroNetwork.name}
+        />
+        <div className="text-[11px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+          {connectedNetwork && isConnected
+            ? `Connected: ${heroNetwork.name} (Chain #${chainId})`
+            : "Wallet disconnected"}
+        </div>
+      </div>
       <DailyMissionDeck
         network={connectedNetwork}
         chainId={chainId}
