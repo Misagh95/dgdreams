@@ -58,7 +58,7 @@ export const MISSIONS: Mission[] = [
 
 /* ───────── NetworkCrystalCube ───────── */
 
-const CUBE_SIZE = 116;
+const CUBE_SIZE = 84;
 const HALF = CUBE_SIZE / 2;
 
 const FACES = [
@@ -83,11 +83,11 @@ export function NetworkCrystalCube({
   const key = network ? `${network.id}` : "none";
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 280, height: 280 }}>
+    <div className="relative flex items-center justify-center" style={{ width: 210, height: 210 }}>
       <motion.div
         aria-hidden
         className="absolute rounded-full pointer-events-none"
-        style={{ width: 230, height: 230 }}
+        style={{ width: 180, height: 180 }}
         animate={{ background: `radial-gradient(circle, ${color}26, transparent 65%)` }}
         transition={{ duration: 0.5 }}
       />
@@ -100,8 +100,8 @@ export function NetworkCrystalCube({
       )}
 
       <motion.div
-        animate={reduced ? undefined : { y: [-6, 6, -6] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        animate={reduced ? undefined : { y: [-3, 3, -3] }}
+        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         style={{ perspective: 1100 }}
       >
         <div
@@ -140,9 +140,9 @@ export function NetworkCrystalCube({
                   <Image
                     src={logo}
                     alt={network?.name || "network"}
-                    width={64}
-                    height={64}
-                    style={{ filter: `drop-shadow(0 0 18px ${color}88)`, objectFit: "contain" }}
+                    width={48}
+                    height={48}
+                    style={{ filter: `drop-shadow(0 0 14px ${color}88)`, objectFit: "contain" }}
                     onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
                   />
                 </motion.div>
@@ -218,7 +218,7 @@ function MissionCard({
         onKeyDown={(e) => {
           if (!completed && e.key === "Enter") onAction();
         }}
-        className={`rounded-2xl h-full flex flex-col p-4 relative overflow-hidden ${completed ? "" : "cursor-pointer"}`}
+        className={`rounded-xl h-full flex flex-col p-3 relative overflow-hidden ${completed ? "" : "cursor-pointer"}`}
         style={{
           background: "var(--bg-card)",
           border: `1px solid ${completed ? `${c}44` : "var(--border-default)"}`,
@@ -238,7 +238,7 @@ function MissionCard({
 
         <div className="flex items-center justify-between mb-4">
           <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center"
+            className="w-9 h-9 rounded-lg flex items-center justify-center"
             style={{
               background: `linear-gradient(150deg, ${c}26, ${c}0d)`,
               border: `1px solid ${c}33`,
@@ -276,16 +276,16 @@ function MissionCard({
         </div>
 
         <div
-          className="text-2xl font-semibold tracking-[0.18em] mb-1"
+          className="text-base font-semibold tracking-[0.18em] mb-0.5"
           style={{ color: completed ? "var(--text-tertiary)" : "var(--text-bright)", transition: "color 0.3s ease" }}
         >
           {mission.abbr}
         </div>
 
-        <h3 className="text-sm font-semibold mb-1" style={{ color: completed ? "var(--text-tertiary)" : "var(--text-bright)" }}>
+        <h3 className="text-xs font-semibold mb-0.5" style={{ color: completed ? "var(--text-tertiary)" : "var(--text-bright)" }}>
           {mission.title}
         </h3>
-        <p className="text-xs leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
+        <p className="text-[10px] leading-snug mb-3" style={{ color: "var(--text-secondary)" }}>
           {mission.desc}
         </p>
 
@@ -380,9 +380,9 @@ export default function DailyMissionDeck({
         boxShadow: "var(--shadow-md)",
       }}
     >
-      <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-4 p-5 sm:p-7">
-        {/* Left — crystal cube */}
-        <div className="lg:w-[40%] flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center p-4 sm:p-6">
+        {/* Top — small cube + status, centered */}
+        <div className="flex flex-col items-center gap-1">
           <NetworkCrystalCube network={network} isConnected={isConnected} />
 
           {/* ActiveNetworkStatus */}
@@ -436,10 +436,10 @@ export default function DailyMissionDeck({
           </AnimatePresence>
         </div>
 
-        {/* Right — mission cards */}
-        <div className="lg:w-[60%] w-full">
+        {/* Mission cards — 3 small cards side by side under the cube */}
+        <div className="w-full mt-2">
           {/* MissionProgress */}
-          <div className="flex items-center justify-between mb-3 px-1">
+          <div className="flex items-center justify-between mb-2 px-1">
             <span className="text-[10px] font-mono uppercase tracking-[0.2em]" style={{ color: "var(--text-tertiary)" }}>
               Daily missions
             </span>
@@ -454,8 +454,8 @@ export default function DailyMissionDeck({
             </motion.span>
           </div>
           <div
-            className="h-[3px] rounded-full mb-6 overflow-hidden"
-            style={{ background: "rgba(160,155,190,0.12)" }}
+            className="h-[3px] rounded-full mb-3 overflow-hidden"
+            style={{ background: "color-mix(in srgb, var(--text-tertiary) 12%, transparent)" }}
             role="progressbar"
             aria-valuenow={completedCount}
             aria-valuemin={0}
@@ -473,7 +473,7 @@ export default function DailyMissionDeck({
 
           {notice && (
             <p
-              className="text-[11px] leading-relaxed mb-4 px-3 py-2 rounded-xl"
+              className="text-[11px] leading-relaxed mb-3 px-3 py-2 rounded-xl"
               style={{
                 background: "rgba(255,170,0,0.10)",
                 border: "1px solid rgba(255,170,0,0.28)",
@@ -484,7 +484,7 @@ export default function DailyMissionDeck({
             </p>
           )}
 
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {MISSIONS.map((m) => (
               <MissionCard
                 key={m.id}
@@ -499,7 +499,7 @@ export default function DailyMissionDeck({
           </div>
 
           {!isConnected && (
-            <p className="text-center text-xs mt-5" style={{ color: "var(--text-tertiary)" }}>
+            <p className="text-center text-xs mt-3" style={{ color: "var(--text-tertiary)" }}>
               Connect wallet to activate your mission deck
             </p>
           )}

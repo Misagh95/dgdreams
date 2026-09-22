@@ -707,7 +707,7 @@
   .dg-ring-b { width: 250px; height: 250px; animation: dg-spin 26s linear infinite reverse; }
   @keyframes dg-spin { to { transform: rotate(360deg); } }
 
-  .dg-cube-spin { animation: dg-cube 14s linear infinite; }
+  .dg-cube-spin { animation: dg-cube 36s linear infinite; }
   @keyframes dg-cube {
     from { transform: rotateX(-18deg) rotateY(0deg); }
     to   { transform: rotateX(-18deg) rotateY(360deg); }
