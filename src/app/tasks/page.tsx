@@ -15,6 +15,7 @@ import { mainnetNetworks, testnetNetworks, type NetworkConfig, getNetworkConfig 
 import { cn } from "@/utils/cn";
 import { getNativeSymbol, shortenHash, getExplorerUrl } from "@/utils/transactions";
 import { genLayerReadContract, isGenLayer } from "@/lib/genlayer/tasks";
+import { useOptimisticTasks } from "@/hooks/useOptimisticTasks";
 
 const SOULBOUND_ADDR: Record<number, `0x${string}` | ""> = {
   8453: "", 999: "", 130: "", 4217: "", 4663: "", 1: "",
@@ -222,7 +223,6 @@ export default function TasksPage() {
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [panelAutoStart, setPanelAutoStart] = useState(false);
-  const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
   const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
   const [executingNetworkId, setExecutingNetworkId] = useState<number | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -230,6 +230,8 @@ export default function TasksPage() {
     { block: number; streak: number; date: string }[]
   >([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  const optimistic = useOptimisticTasks();
 
   // Deep links from the dashboard mission cards: /tasks?mission=gm|checkIn|gn
   const [pendingMission, setPendingMission] = useState<"gm" | "checkIn" | "gn" | null>(null);
@@ -359,8 +361,9 @@ export default function TasksPage() {
 
       setSelectedNetwork(network);
       setShowPreview(true);
+      optimistic.resetAll();
     },
-    [isConnected, openConnectModal]
+    [isConnected, openConnectModal, optimistic]
   );
 
   // Deep-linked mission: open the preview as soon as a supported chain is active
@@ -402,9 +405,23 @@ export default function TasksPage() {
 
   const handleSingleTaskComplete = useCallback(
     (taskId: string) => {
-      setCompletedTasks((prev) => new Set(prev).add(taskId));
+      optimistic.markTaskConfirmed(taskId as "checkIn" | "gm" | "gn");
     },
-    []
+    [optimistic]
+  );
+
+  const handleSingleTaskStart = useCallback(
+    (taskId: string) => {
+      optimistic.markTaskPending(taskId as "checkIn" | "gm" | "gn");
+    },
+    [optimistic]
+  );
+
+  const handleSingleTaskFailed = useCallback(
+    (taskId: string) => {
+      optimistic.markTaskFailed(taskId as "checkIn" | "gm" | "gn");
+    },
+    [optimistic]
   );
 
   const handleClosePanel = useCallback(() => {
@@ -462,8 +479,8 @@ export default function TasksPage() {
         chainId={chainId}
         isConnected={isConnected}
         loading={isConnected && countsData === undefined && !isGen}
-        completedCount={heroActionCount}
-        completedTaskIds={completedTasks}
+        completedCount={optimistic.optimisticActionCount(heroActionCount)}
+        completedTaskIds={optimistic.getOptimisticCompletedIds(new Set())}
         onConnect={() => openConnectModal?.()}
         onMission={handleMissionClick}
         contextText={`Execute GM, CHECK and GN on ${heroName} — one transaction each, once per day.`}
@@ -555,6 +572,8 @@ export default function TasksPage() {
           contractAddress={validatedContract}
           onClose={handleClosePanel}
           onTaskComplete={handleSingleTaskComplete}
+          onTaskStart={handleSingleTaskStart}
+          onTaskFailed={handleSingleTaskFailed}
           only={(selectedMissionId as "gm" | "checkIn" | "gn" | undefined) ?? undefined}
           onComplete={handleTaskComplete}
           autoStart={panelAutoStart}

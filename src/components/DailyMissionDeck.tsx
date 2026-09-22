@@ -189,12 +189,14 @@ export function NetworkCrystalCube({
 function MissionCard({
   mission,
   completed,
+  pending,
   loading,
   disabled,
   onAction,
 }: {
   mission: Mission;
   completed: boolean;
+  pending?: boolean;
   loading: boolean;
   disabled: boolean;
   onAction: () => void;
@@ -241,13 +243,22 @@ function MissionCard({
             style={{
               background: `linear-gradient(150deg, ${c}26, ${c}0d)`,
               border: `1px solid ${c}33`,
-              boxShadow: completed ? "none" : `0 4px 14px -4px ${c}44`,
+              boxShadow: completed || pending ? "none" : `0 4px 14px -4px ${c}44`,
             }}
           >
             {completed ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.4" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
+            ) : pending ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v4m0 12v4m-8-10H0m24 0h-4m-2.93-5.07l-2.83 2.83m-8.48 8.48l-2.83 2.83m0-14.14l2.83 2.83m8.48 8.48l2.83 2.83" />
+                </svg>
+              </motion.div>
             ) : (
               <span className="text-sm font-semibold tracking-wide" style={{ color: c }} aria-hidden>
                 {mission.abbr.slice(0, 2)}
@@ -255,11 +266,12 @@ function MissionCard({
             )}
           </div>
           <span
-            aria-label={completed ? "completed" : "pending"}
+            aria-label={completed ? "completed" : pending ? "in progress" : "pending"}
             className="w-1.5 h-1.5 rounded-full"
             style={{
-              background: completed ? c : `${c}66`,
-              boxShadow: completed ? `0 0 8px ${c}` : "none",
+              background: completed ? c : pending ? c : `${c}66`,
+              boxShadow: completed ? `0 0 8px ${c}` : pending ? `0 0 8px ${c}` : "none",
+              animation: pending ? "pulse 1.5s ease-in-out infinite" : "none",
             }}
           />
         </div>
@@ -293,21 +305,23 @@ function MissionCard({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                if (!completed) onAction();
+                if (!completed && !pending) onAction();
               }}
-              disabled={completed}
-              aria-label={completed ? `${mission.title} — completed` : `${mission.action} — ${mission.title}`}
+              disabled={completed || pending}
+              aria-label={completed ? `${mission.title} — completed` : pending ? `${mission.title} — processing` : `${mission.action} — ${mission.title}`}
               className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-115 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               style={
                 completed
                   ? { background: "rgba(255,255,255,0.12)", color: "#A29CB2", border: "1px solid rgba(160,155,190,0.6)" }
+                  : pending
+                  ? { background: `color-mix(in srgb, ${c} 30%, transparent)`, color: c, border: `1px solid ${c}44`, animation: "pulse 2s ease-in-out infinite" }
                   : disabled
                   ? { background: "rgba(255,255,255,0.16)", color: IVORY, border: "1px solid rgba(160,155,190,0.7)" }
                   : { background: `color-mix(in srgb, ${c} 75%, transparent)`, color: "#0f172a", border: `1px solid ${c}`, boxShadow: `0 6px 18px -8px ${c}` }
               }
             >
               <Zap className="w-3.5 h-3.5" />
-              {completed ? "Completed" : disabled ? "Connect wallet" : mission.action}
+              {completed ? "Completed" : pending ? "Processing..." : disabled ? "Connect wallet" : mission.action}
             </button>
           )}
         </div>
@@ -333,6 +347,7 @@ export default function DailyMissionDeck({
   loading,
   completedCount,
   completedTaskIds,
+  pendingTaskIds,
   onConnect,
   onMission,
   contextText,
@@ -345,6 +360,7 @@ export default function DailyMissionDeck({
   loading: boolean;
   completedCount: number;
   completedTaskIds: Set<string>;
+  pendingTaskIds?: Set<string>;
   onConnect: () => void;
   onMission: (id: MissionId) => void;
   contextText: string;
@@ -353,6 +369,7 @@ export default function DailyMissionDeck({
 }) {
   const allDone = completedCount >= 3;
   const isDone = (id: MissionId) => allDone || completedTaskIds.has(id);
+  const isPending = (id: MissionId) => pendingTaskIds?.has(id) ?? false;
   const accent = network?.color || "#8B8FA8";
 
   return (
@@ -427,9 +444,15 @@ export default function DailyMissionDeck({
             <span className="text-[10px] font-mono uppercase tracking-[0.2em]" style={{ color: "#A29CB2" }}>
               Daily missions
             </span>
-            <span className="text-[10px] font-mono" style={{ color: allDone ? MINT : "#A29CB2" }}>
+            <motion.span
+              key={completedCount}
+              initial={{ scale: 1.2, color: MINT }}
+              animate={{ scale: 1, color: allDone ? MINT : "#A29CB2" }}
+              transition={{ duration: 0.3 }}
+              className="text-[10px] font-mono"
+            >
               {completedCount}/3{allDone ? " · day complete" : ""}
-            </span>
+            </motion.span>
           </div>
           <div
             className="h-[3px] rounded-full mb-6 overflow-hidden"
@@ -468,6 +491,7 @@ export default function DailyMissionDeck({
                 key={m.id}
                 mission={m}
                 completed={isDone(m.id)}
+                pending={isPending(m.id)}
                 loading={loading}
                 disabled={!isConnected}
                 onAction={() => onMission(m.id)}

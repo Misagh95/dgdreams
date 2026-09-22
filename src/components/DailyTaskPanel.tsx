@@ -5,7 +5,6 @@ import { useWriteContract, useConfig } from "wagmi";
 import { getPublicClient } from "@wagmi/core";
 import { waitForTransactionReceipt } from "wagmi/actions";
 import type { NetworkConfig } from "@/config/chains";
-import { cn } from "@/utils/cn";
 import { parseTxError, getExplorerUrl, getNativeSymbol, shortenHash } from "@/utils/transactions";
 import { genLayerWriteTask, isGenLayer, GENLAYER_CONTRACT } from "@/lib/genlayer/tasks";
 
@@ -64,6 +63,8 @@ interface DailyTaskPanelProps {
   onClose: () => void;
   onComplete: () => void;
   onTaskComplete?: (taskId: string) => void;
+  onTaskStart?: (taskId: string) => void;
+  onTaskFailed?: (taskId: string) => void;
   autoStart?: boolean;
   /** Run only this single task instead of the full 3-task sequence */
   only?: ActionId;
@@ -76,6 +77,8 @@ export default function DailyTaskPanel({
   onClose,
   onComplete,
   onTaskComplete,
+  onTaskStart,
+  onTaskFailed,
   autoStart,
   only,
 }: DailyTaskPanelProps) {
@@ -116,6 +119,7 @@ export default function DailyTaskPanel({
           idx === i ? { ...t, status: "signing" as TaskStatus } : t
         )
       );
+      onTaskStart?.(taskList[i].id);
 
       const step = taskList[i];
       const actualArgs = step.args;
@@ -172,6 +176,7 @@ export default function DailyTaskPanel({
                   : t
               )
             );
+            onTaskFailed?.(taskList[i].id);
             break;
           }
         }
@@ -200,6 +205,7 @@ export default function DailyTaskPanel({
                 : t
             )
           );
+          onTaskFailed?.(taskList[i].id);
         }
         break;
       }
@@ -231,182 +237,132 @@ export default function DailyTaskPanel({
     }
   };
 
-  const StatusIcon = ({ status }: { status: TaskStatus }) => {
-    switch (status) {
-      case "confirmed":
-        return <span style={{ color: "var(--success)" }}>&#10003;</span>;
-      case "failed":
-        return <span style={{ color: "var(--danger)" }}>&#10007;</span>;
-      case "signing":
-        return (
-          <span style={{ color: "var(--accent)" }} className="animate-pulse">
-            &#9670;
-          </span>
-        );
-      default:
-        return <span style={{ color: "var(--text-faint)" }}>&#9675;</span>;
-    }
-  };
+  const progress = taskList.length ? completedCount / taskList.length : 0;
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-40 bg-black/60"
-        onClick={handleCancel}
-      />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div
-          className="w-full max-w-lg rounded-xl shadow-xl max-h-[85vh] flex flex-col"
-          style={{
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--border-default)",
-          }}
-        >
-          <div
-            className="flex items-center justify-between p-5 pb-3"
-            style={{ borderBottom: "1px solid var(--border-subtle)" }}
-          >
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h2 className="text-base font-semibold" style={{ color: "var(--text-bright)" }}>
-                  {network.name}
-                </h2>
+      <div className="cosmos-overlay" onClick={handleCancel} />
+
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div className="launch-console pointer-events-auto max-h-[88vh] flex flex-col">
+
+          {/* ── سرستون ── */}
+          <div className="flex flex-col items-center gap-3 px-6 pt-8 pb-6">
+            <div className="orbit">
+              <div
+                className="w-11 h-11 rounded-full grid place-items-center overflow-hidden"
+                style={{ background: `color-mix(in srgb, ${network.color} 22%, transparent)` }}
+              >
+                <img src={network.logo} alt="" width={26} height={26} style={{ objectFit: "contain" }} />
               </div>
-              <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
-                {only ? only.toUpperCase() : "Daily Tasks"} &middot; {completedCount}/{taskList.length}
+            </div>
+
+            <div className="text-center">
+              <p className="stat-label mb-1">
+                {only ? "single mission" : "launch sequence"}
               </p>
+              <h2 className="text-xl font-semibold tracking-tight" style={{ color: "var(--text-bright)" }}>
+                {network.name}
+              </h2>
               <a
                 href={getExplorerUrl(network, contractAddress, "address")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[10px] hover:underline mt-0.5 font-mono transition-colors"
-                style={{ color: "var(--text-quaternary)" }}
+                className="mt-2 inline-flex items-center gap-1.5 font-mono text-[10px] opacity-60 hover:opacity-100 transition-opacity"
+                style={{ color: "var(--text-tertiary)" }}
               >
-                <svg className="w-3 h-3" style={{ color: "var(--success)" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
-                <span>{shortenHash(contractAddress)}</span>
+                <span className="status-dot" style={{ color: "var(--success)" }} />
+                {shortenHash(contractAddress)}
               </a>
             </div>
-            <div className="flex items-center gap-3">
-              {failedCount > 0 && !isExecuting && (
-                <button
-                  onClick={execute}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-all duration-200"
-                  style={{ background: "var(--accent)" }}
-                >
-                  Resume
-                </button>
-              )}
-              {completedCount === 0 && !isExecuting && tasks[0]?.status === "pending" && (
-                <button
-                  onClick={execute}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-all duration-200"
-                  style={{ background: "var(--accent)" }}
-                >
-                  Start
-                </button>
-              )}
-              <button
-                onClick={handleCancel}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200"
-                style={{
-                  background: "var(--bg-strong)",
-                  color: "var(--text-secondary)",
-                }}
-              >
-                {isExecuting ? "Cancel" : "Close"}
-              </button>
+
+            {/* شمارنده‌ی بزرگ */}
+            <div className="flex items-baseline gap-1 mt-1">
+              <span className="stat-value" style={{ fontSize: "2rem" }}>{completedCount}</span>
+              <span className="text-sm" style={{ color: "var(--text-faint)" }}>/ {taskList.length}</span>
+            </div>
+            <div className="progress-bar w-40">
+              <div className="progress-fill" style={{ width: `${progress * 100}%` }} />
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-1">
-            {taskList.map((step, i) => {
-              const p = tasks[i];
-              const isActive = i === currentIndex;
-              return (
-                <div
-                  key={i}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-2.5 rounded-lg mx-2 my-0.5 transition-all duration-200",
-                    isActive && p.status === "signing"
-                      ? "border"
-                      : "",
-                    p.status === "confirmed" ? "opacity-60" : "",
-                    p.status === "failed" ? "opacity-80" : ""
-                  )}
-                  style={{
-                    ...(isActive && p.status === "signing"
-                      ? {
-                          background: "var(--accent-muted)",
-                          borderColor: "var(--border-default)",
-                        }
-                      : {}),
-                    ...(p.status === "failed"
-                      ? { background: "color-mix(in srgb, var(--danger) 5%, transparent)" }
-                      : {}),
-                  }}
-                >
-                  <div className="w-5 text-center text-sm">
-                    <StatusIcon status={p.status} />
-                  </div>
-                  <span
-                    className={cn(
-                      "flex-1 text-sm",
-                      p.status === "confirmed"
-                        ? "text-[var(--text-tertiary)]"
-                        : isActive
-                        ? "font-medium"
-                        : "text-[var(--text-secondary)]"
-                    )}
-                    style={isActive && p.status === "signing" ? { color: "var(--text-bright)" } : {}}
-                  >
-                    {step.label}
-                  </span>
-                  {p.status === "signing" && (
-                    <span className="text-xs" style={{ color: "var(--accent)" }}>
-                      Waiting for signature...
-                    </span>
-                  )}
-                  {p.status === "confirmed" && p.txHash && (
-                    <a
-                      href={getExplorerUrl(network, p.txHash)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs underline underline-offset-2 transition-colors"
-                      style={{ color: "var(--text-quaternary)" }}
-                    >
-                      {shortenHash(p.txHash)}
-                    </a>
-                  )}
-                  {p.status === "failed" && p.error && (
-                    <span
-                      className="text-xs max-w-[200px] truncate"
-                      style={{ color: "var(--danger)" }}
-                      title={p.error}
-                    >
-                      {p.error}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {completedCount === taskList.length && (
-            <div
-              className="p-5 pt-3"
-              style={{ borderTop: "1px solid var(--border-subtle)" }}
-            >
+          {/* ── مراحل ── */}
+          <div className="px-6 pb-2 overflow-y-auto">
+            <div className="spine">
               <div
-                className="px-4 py-3 rounded-lg text-sm text-center"
-                style={{
-                  background: "color-mix(in srgb, var(--success) 10%, transparent)",
-                  color: "var(--success)",
-                }}
-              >
-                All 3 tasks completed
-              </div>
+                className="spine-fill"
+                style={{ height: `calc(${progress} * (100% - 28px))` }}
+              />
+              {taskList.map((step, i) => {
+                const st = tasks[i];
+                const active = currentIndex === i;
+                return (
+                  <div
+                    key={step.id}
+                    className="relative py-3.5"
+                    style={{ opacity: st.status === "pending" && !active ? 0.45 : 1, transition: "opacity .4s" }}
+                  >
+                    <div className="node" data-state={st.status} style={{ top: "1.15rem" }}>
+                      {st.status === "confirmed" && "✓"}
+                      {st.status === "failed" && "✕"}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                      <span
+                        className="text-sm font-medium tracking-tight"
+                        style={{ color: active ? "var(--accent)" : "var(--text-primary)" }}
+                      >
+                        {step.label}
+                      </span>
+                      <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-faint)" }}>
+                        {st.status === "signing" ? "broadcasting" : st.status}
+                      </span>
+                    </div>
+
+                    {st.txHash && (
+                      <a
+                        href={getExplorerUrl(network, st.txHash, "tx")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1.5 inline-block font-mono text-[10px] hover:underline"
+                        style={{ color: "var(--text-tertiary)" }}
+                      >
+                        {shortenHash(st.txHash)} ↗
+                      </a>
+                    )}
+                    {st.error && (
+                      <p className="mt-1.5 text-[11px] leading-snug" style={{ color: "var(--danger)" }}>
+                        {st.error}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          )}
+          </div>
+
+          {/* ── نوار فرمان ── */}
+          <div
+            className="flex items-center gap-3 px-6 py-5 mt-2"
+            style={{ borderTop: "1px solid var(--border-default)" }}
+          >
+            <button onClick={handleCancel} className="btn-ghost flex-1 justify-center">
+              {isExecuting ? "Abort" : "Close"}
+            </button>
+            <button
+              onClick={execute}
+              disabled={isExecuting || completedCount === taskList.length}
+              className="btn-primary flex-1 justify-center"
+            >
+              {completedCount === taskList.length
+                ? "Sequence complete"
+                : isExecuting
+                ? "Running…"
+                : failedCount > 0
+                ? "Retry"
+                : "Initiate"}
+            </button>
+          </div>
         </div>
       </div>
     </>
