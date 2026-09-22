@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
-  --font-sans: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-mono: "Space Mono", "JetBrains Mono", monospace;
+  --font-sans: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-display: "Syne", "Space Grotesk", sans-serif;
 }
 
 /* ─────────── TOKENS ─────────── */
@@ -135,6 +136,74 @@
   --ambient-2: rgba(0,204,51,.07);
 }
 
+:root[data-theme="web3"] {
+  --bg-base:        #0E1319;
+  --bg-elevated:    #17191F;
+  --bg-card:        #1F2128;
+  --bg-strong:      #252830;
+  --bg-strong-hover:#2E323C;
+  --bg-subtle:      #0A0E13;
+
+  --border-default: rgba(255,255,255,.10);
+  --border-strong:  rgba(255,255,255,.15);
+  --border-hover:   rgba(208,255,148,.30);
+
+  --text-bright:    #FFFFFF;
+  --text-primary:   rgba(255,255,255,.875);
+  --text-secondary: #8A97AD;
+  --text-tertiary:  #677694;
+  --text-faint:     #4A5568;
+
+  --accent:         #D0FF94;
+  --accent-hover:   #E4FFB8;
+  --accent-muted:   rgba(208,255,148,.08);
+  --accent-contrast:#1A1A1A;
+
+  --success: #00B17E;
+  --danger:  #FF6B6B;
+  --warning: #FFB020;
+
+  --theme-gradient: linear-gradient(135deg, #D0FF94 0%, #6F75E5 100%);
+  --ambient-1: rgba(111,117,229,.10);
+  --ambient-2: rgba(208,255,148,.06);
+}
+
+:root[data-theme="web3-light"] {
+  --bg-base:        #F2F5F9;
+  --bg-elevated:    #FFFFFF;
+  --bg-card:        #FFFFFF;
+  --bg-strong:      #EEEEF1;
+  --bg-strong-hover:#E5E5EA;
+  --bg-subtle:      #EDEFF3;
+
+  --border-default: rgba(0,0,0,.10);
+  --border-strong:  rgba(0,0,0,.15);
+  --border-hover:   rgba(111,117,229,.35);
+
+  --text-bright:    #1F2128;
+  --text-primary:   #2A2E38;
+  --text-secondary: #677694;
+  --text-tertiary:  #8A94A8;
+  --text-faint:     #9AA5BC;
+
+  --accent:         #6F75E5;
+  --accent-hover:   #8A8FEE;
+  --accent-muted:   rgba(111,117,229,.07);
+  --accent-contrast:#FFFFFF;
+
+  --success: #00B17E;
+  --danger:  #E05050;
+  --warning: #D97706;
+
+  --theme-gradient: linear-gradient(135deg, #6F75E5 0%, #FF68F0 100%);
+  --ambient-1: rgba(111,117,229,.10);
+  --ambient-2: rgba(255,104,240,.08);
+}
+
+:root {
+  --r-sm: 10px;  --r-md: 14px;  --r-lg: 20px;  --r-xl: 28px;
+}
+
 :root {
   --r-sm: 10px;  --r-md: 14px;  --r-lg: 20px;  --r-xl: 28px;
 
@@ -145,6 +214,16 @@
 
   --ease: cubic-bezier(.4,0,.2,1);
   --ease-out: cubic-bezier(.16,1,.3,1);
+  --text-quaternary: var(--text-faint);
+}
+
+/* Light-theme (web3-light) adjustments */
+[data-theme="web3-light"] {
+  color-scheme: light;
+  --shadow-sm: 0 1px 3px rgba(31,33,40,.08);
+  --shadow-md: 0 2px 6px rgba(31,33,40,.06), 0 12px 32px rgba(111,117,229,.10);
+  --shadow-lg: 0 4px 10px rgba(31,33,40,.08), 0 24px 56px rgba(111,117,229,.14);
+  --shadow-inset: inset 0 1px 0 rgba(255,255,255,.6);
 }
 
 /* ─────────── BASE ─────────── */
@@ -508,6 +587,36 @@
   .node[data-state="failed"] { border-color: var(--danger); }
   @keyframes node-pulse { 50% { transform: scale(1.18) } }
 }
+
+/* ─────────── WEB3-LIGHT OVERRIDES ─────────── */
+[data-theme="web3-light"] body::after { opacity: .015; }
+
+[data-theme="web3-light"] .glass-panel,
+[data-theme="web3-light"] .glass-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.6) 0%, rgba(255,255,255,0) 40%),
+    var(--bg-card);
+}
+
+[data-theme="web3-light"] .btn-ghost:hover {
+  background: rgba(0,0,0,.04);
+  color: var(--text-bright);
+}
+
+[data-theme="web3-light"] .progress-bar { background: rgba(0,0,0,.06); }
+[data-theme="web3-light"] .badge-soon { background: rgba(0,0,0,.04); }
+[data-theme="web3-light"] .skeleton {
+  background: linear-gradient(90deg,
+    rgba(0,0,0,.04) 25%,
+    rgba(0,0,0,.08) 50%,
+    rgba(0,0,0,.04) 75%);
+  background-size: 200% 100%;
+}
+
+/* Starfield/cosmic layers are designed for dark themes — hide on light */
+[data-theme="web3-light"] .space-bg-canvas,
+[data-theme="web3-light"] .cosmic-vignette,
+[data-theme="web3-light"] .cosmic-grain { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

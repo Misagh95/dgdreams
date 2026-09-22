@@ -208,7 +208,7 @@ export default function SpaceBackground() {
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
-      <canvas ref={ref} className="absolute inset-0" />
+      <canvas ref={ref} className="space-bg-canvas absolute inset-0" />
       <div className="cosmic-vignette" />
       <div className="cosmic-grain" />
     </div>

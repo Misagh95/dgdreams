@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 
 const THEMES = [
-  { id: "cyber", label: "Cyber Neon", icon: "⚡", desc: "Default cyan-purple", preview: "#00F2FE" },
+  { id: "web3-light", label: "Web3 Light", icon: "☀️", desc: "Chaingreets default", preview: "#6F75E5" },
+  { id: "web3", label: "Web3 Dark", icon: "🌙", desc: "Lime & indigo glow", preview: "#D0FF94" },
+  { id: "cyber", label: "Cyber Neon", icon: "⚡", desc: "Cyan-purple neon", preview: "#00F2FE" },
   { id: "emerald", label: "Emerald", icon: "👑", desc: "Dark forest luxury", preview: "#50E3C2" },
   { id: "frost", label: "Frost", icon: "❄️", desc: "Obsidian minimal", preview: "#E8E8F0" },
   { id: "matrix", label: "Matrix", icon: "💻", desc: "Hacker terminal", preview: "#00FF41" },
@@ -17,11 +19,11 @@ function getInitialTheme(): ThemeId {
     if (stored === "dark" || stored === "cyber") return "cyber";
     if (stored && THEMES.some((t) => t.id === stored)) return stored as ThemeId;
   }
-  return "cyber";
+  return "web3-light";
 }
 
 export default function ThemeSwitcher() {
-  const [current, setCurrent] = useState<ThemeId>("cyber");
+  const [current, setCurrent] = useState<ThemeId>("web3-light");
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
