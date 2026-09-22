@@ -82,133 +82,57 @@ function NetworkBlock({
   const contractAddr = CONTRACTS[network.id];
   const hasContract = !!contractAddr;
   const completed = actionCount >= 3;
-  const canInteract = hasContract && !completed && !isDisabled && isEnabled;
+  const canInteract = hasContract && !isDisabled && isEnabled;
 
   return (
     <div
       onClick={canInteract ? onStart : undefined}
       className={cn(
-        "p-3.5 rounded-xl transition-all duration-200 relative",
-        isSelected
-          ? "ring-1"
-          : "hover:opacity-80",
+        "p-2.5 rounded-lg transition-all duration-200 relative flex flex-col gap-2",
         !isEnabled ? "opacity-40" : "",
-        canInteract ? "cursor-pointer" : ""
+        canInteract ? "cursor-pointer hover:opacity-85" : "",
+        isSelected ? "ring-1" : ""
       )}
       style={{
         background: "var(--bg-card)",
         border: isSelected
           ? `1px solid var(--accent)`
           : `1px solid var(--border-default)`,
-        ...(isSelected ? { boxShadow: `0 0 12px color-mix(in srgb, var(--accent) 20%, transparent)` } : {}),
+        ...(isSelected ? { boxShadow: `0 0 10px color-mix(in srgb, var(--accent) 18%, transparent)` } : {}),
       }}
     >
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle(network.id);
-        }}
-        className={cn(
-          "absolute top-3 right-3 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-          isEnabled
-            ? "border-transparent"
-            : "border-[var(--border-strong)]"
-        )}
-        style={isEnabled ? { background: "var(--accent)" } : { background: "transparent" }}
-      >
-        {isEnabled && (
-          <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        )}
-      </button>
-
-      <div className="flex items-center gap-2.5 mb-2.5">
+      <div className="flex items-center gap-2">
         <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden"
+          className="w-6 h-6 rounded-md flex items-center justify-center overflow-hidden flex-shrink-0"
           style={{ background: `color-mix(in srgb, ${network.color} 20%, transparent)` }}
         >
-          <Image src={network.logo} alt={network.name} width={18} height={18}
+          <Image src={network.logo} alt={network.name} width={16} height={16}
             style={{ objectFit: "contain" }}
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold truncate" style={{ color: "var(--text-bright)" }}>
+          <h3 className="text-[11px] font-semibold truncate leading-tight" style={{ color: "var(--text-bright)" }}>
             {network.name}
           </h3>
-          <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-            {getNativeSymbol(network)}
-          </p>
         </div>
         <span
-          className={cn(
-            "px-2.5 py-1 rounded-md text-xs font-medium",
+          className="text-[9px] font-mono px-1.5 py-0.5 rounded flex-shrink-0"
+          style={
             completed
-              ? "bg-green/10"
-              : "bg-subtle"
-          )}
-          style={{
-            ...(completed
               ? { background: "color-mix(in srgb, var(--success) 10%, transparent)", color: "var(--success)" }
-              : { background: "var(--bg-subtle)", color: "var(--text-secondary)" }),
-          }}
+              : { background: "var(--bg-subtle)", color: "var(--text-secondary)" }
+          }
         >
-          {completed ? "3/3 âœ“" : `${actionCount}/3`}
+          {completed ? "3/3 ✓" : `${actionCount}/3`}
         </span>
       </div>
 
-      {isConnected && connectedChain && (
-        <p className="text-[10px] mt-1 truncate" style={{ color: "var(--text-quaternary)" }}>
-          Wallet: {connectedChain.name} (Chain #{connectedChain.id})
-        </p>
-      )}
-
-      {!isConnected ? (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onStart();
-          }}
-          className="w-full py-2 rounded-lg text-sm font-medium transition-all duration-200"
-          style={{
-            background: "var(--bg-strong)",
-            border: "1px solid var(--border-strong)",
-            color: "var(--text-bright)",
-          }}
-        >
-          Start Daily Tasks
-        </button>
-      ) : !hasContract ? (
-        <p className="text-xs" style={{ color: "var(--text-quaternary)" }}>
-          Not deployed
-        </p>
+      {!hasContract ? (
+        <p className="text-[9px] font-mono" style={{ color: "var(--text-quaternary)" }}>Not deployed</p>
       ) : completed ? (
-        <p className="text-xs" style={{ color: "var(--success)" }}>
-          Completed today
-        </p>
-      ) : !isEnabled ? (
-        <p className="text-xs" style={{ color: "var(--text-quaternary)" }}>
-          Disabled - toggle to enable
-        </p>
+        <p className="text-[9px] font-mono" style={{ color: "var(--success)" }}>Completed today</p>
       ) : (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onStart();
-          }}
-          disabled={isDisabled}
-          className={cn(
-            "w-full py-2 rounded-lg text-sm font-medium transition-all duration-200",
-            isDisabled ? "opacity-40 cursor-not-allowed" : ""
-          )}
-          style={{
-            background: "var(--bg-strong)",
-            border: "1px solid var(--border-strong)",
-            color: "var(--text-bright)",
-          }}
-        >
-          Start Daily Tasks
-        </button>
+        <p className="text-[9px] font-mono" style={{ color: "var(--text-tertiary)" }}>Click to run GM · Check · GN</p>
       )}
     </div>
   );
@@ -486,6 +410,36 @@ export default function TasksPage() {
         contextText={`Execute GM, CHECK and GN on ${heroName} — one transaction each, once per day.`}
         notice={deckNotice}
       />
+
+      {/* All networks — compact cards grid */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <span className="text-[10px] font-mono uppercase tracking-[0.2em]" style={{ color: "var(--text-tertiary)" }}>
+            Pick a network
+          </span>
+          <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+            {[...mainnetNetworks, ...testnetNetworks].length} networks
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
+          {[...mainnetNetworks, ...testnetNetworks].map((n) => (
+            <NetworkBlock
+              key={n.id}
+              network={n}
+              isConnected={isConnected}
+              actionCount={0}
+              onStart={() => {
+                setSelectedMissionId(null);
+                handleOpenNetwork(n);
+              }}
+              isSelected={selectedNetwork?.id === n.id}
+              isDisabled={executingNetworkId !== null}
+              isEnabled={!!CONTRACTS[n.id]}
+              onToggle={() => {}}
+            />
+          ))}
+        </div>
+      </div>
 
       {/* Preview Modal â€” network selection before executing */}
       {showPreview && selectedNetwork && (
