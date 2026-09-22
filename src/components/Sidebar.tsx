@@ -24,14 +24,14 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", badge: null },
-  { href: "/tasks", icon: Zap, label: "Daily Tasks", badge: "14" },
-  { href: "/litevm", icon: Star, label: "LITVM Hub", badge: null },
-  { href: "/genlayer", icon: Globe, label: "GenLayer Hub", badge: "AI" },
-  { href: "/truthcourt", icon: Scale, label: "TruthCourt", badge: "AI" },
-  { href: "/leaderboard", icon: Trophy, label: "Leaderboard", badge: null },
-  { href: "/activity", icon: Activity, label: "Activity", badge: null },
-  { href: "/profile", icon: User, label: "Profile", badge: null },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", badge: null, color: "#6F75E5" },
+  { href: "/tasks", icon: Zap, label: "Daily Tasks", badge: "14", color: "#F59E0B" },
+  { href: "/litevm", icon: Star, label: "LITVM Hub", badge: null, color: "#00D4FF" },
+  { href: "/genlayer", icon: Globe, label: "GenLayer Hub", badge: "AI", color: "#3B82F6" },
+  { href: "/truthcourt", icon: Scale, label: "TruthCourt", badge: "AI", color: "#A78BFA" },
+  { href: "/leaderboard", icon: Trophy, label: "Leaderboard", badge: null, color: "#FFB020" },
+  { href: "/activity", icon: Activity, label: "Activity", badge: null, color: "#34E39B" },
+  { href: "/profile", icon: User, label: "Profile", badge: null, color: "#FF68F0" },
 ];
 
 const infoLinks = [
@@ -95,7 +95,15 @@ export default function Sidebar() {
                   whileHover={{ x: 2 }}
                   className={cn("nav-item text-sm", active && "active")}
                 >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span
+                    className="nav-icon"
+                    style={{
+                      background: `color-mix(in srgb, ${item.color} ${active ? "16%" : "10%"}, transparent)`,
+                      border: `1px solid color-mix(in srgb, ${item.color} ${active ? "40%" : "22%"}, transparent)`,
+                    }}
+                  >
+                    <Icon className="w-3.5 h-3.5" style={{ color: active ? undefined : item.color }} />
+                  </span>
                   <span className="flex-1">{item.label}</span>
                   {item.badge && (
                     <span className="badge-cyan text-[9px] py-0.5">{item.badge}</span>

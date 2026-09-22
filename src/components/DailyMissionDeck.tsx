@@ -58,7 +58,7 @@ export const MISSIONS: Mission[] = [
 
 /* ───────── NetworkCrystalCube ───────── */
 
-const CUBE_SIZE = 150;
+const CUBE_SIZE = 116;
 const HALF = CUBE_SIZE / 2;
 
 const FACES = [
@@ -83,11 +83,11 @@ export function NetworkCrystalCube({
   const key = network ? `${network.id}` : "none";
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 340, height: 340 }}>
+    <div className="relative flex items-center justify-center" style={{ width: 280, height: 280 }}>
       <motion.div
         aria-hidden
         className="absolute rounded-full pointer-events-none"
-        style={{ width: 300, height: 300 }}
+        style={{ width: 230, height: 230 }}
         animate={{ background: `radial-gradient(circle, ${color}26, transparent 65%)` }}
         transition={{ duration: 0.5 }}
       />
@@ -218,14 +218,13 @@ function MissionCard({
         onKeyDown={(e) => {
           if (!completed && e.key === "Enter") onAction();
         }}
-        className={`rounded-2xl h-full flex flex-col p-5 relative overflow-hidden ${completed ? "" : "cursor-pointer"}`}
+        className={`rounded-2xl h-full flex flex-col p-4 relative overflow-hidden ${completed ? "" : "cursor-pointer"}`}
         style={{
-          background:
-            "linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015) 55%, rgba(255,255,255,0.035))",
-          border: `1px solid ${completed ? `${c}22` : "rgba(160,155,190,0.18)"}`,
+          background: "var(--bg-card)",
+          border: `1px solid ${completed ? `${c}44` : "var(--border-default)"}`,
           boxShadow: completed
-            ? "0 12px 32px -14px rgba(0,0,0,0.55)"
-            : `0 16px 40px -16px rgba(0,0,0,0.6), 0 2px 10px -4px ${c}22`,
+            ? "var(--shadow-sm)"
+            : `var(--shadow-md), 0 2px 10px -4px ${c}22`,
           opacity: completed ? 0.72 : 1,
           transition: "opacity 0.4s ease, border-color 0.3s ease",
         }}
@@ -234,7 +233,7 @@ function MissionCard({
         <div
           aria-hidden
           className="absolute top-0 inset-x-0 h-px"
-          style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)" }}
+          style={{ background: "linear-gradient(90deg, transparent, var(--border-strong), transparent)" }}
         />
 
         <div className="flex items-center justify-between mb-4">
@@ -278,15 +277,15 @@ function MissionCard({
 
         <div
           className="text-2xl font-semibold tracking-[0.18em] mb-1"
-          style={{ color: completed ? "#A29CB2" : IVORY, transition: "color 0.3s ease" }}
+          style={{ color: completed ? "var(--text-tertiary)" : "var(--text-bright)", transition: "color 0.3s ease" }}
         >
           {mission.abbr}
         </div>
 
-        <h3 className="text-sm font-semibold mb-1" style={{ color: completed ? "#A29CB2" : IVORY }}>
+        <h3 className="text-sm font-semibold mb-1" style={{ color: completed ? "var(--text-tertiary)" : "var(--text-bright)" }}>
           {mission.title}
         </h3>
-        <p className="text-xs leading-relaxed mb-4" style={{ color: "#A29CB2" }}>
+        <p className="text-xs leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
           {mission.desc}
         </p>
 
@@ -312,12 +311,12 @@ function MissionCard({
               className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-115 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               style={
                 completed
-                  ? { background: "rgba(255,255,255,0.12)", color: "#A29CB2", border: "1px solid rgba(160,155,190,0.6)" }
+                  ? { background: "var(--bg-subtle)", color: "var(--text-tertiary)", border: "1px solid var(--border-default)" }
                   : pending
                   ? { background: `color-mix(in srgb, ${c} 30%, transparent)`, color: c, border: `1px solid ${c}44`, animation: "pulse 2s ease-in-out infinite" }
                   : disabled
-                  ? { background: "rgba(255,255,255,0.16)", color: IVORY, border: "1px solid rgba(160,155,190,0.7)" }
-                  : { background: `color-mix(in srgb, ${c} 75%, transparent)`, color: "#0f172a", border: `1px solid ${c}`, boxShadow: `0 6px 18px -8px ${c}` }
+                  ? { background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1px solid var(--border-strong)" }
+                  : { background: `color-mix(in srgb, ${c} 75%, transparent)`, color: "var(--accent-contrast)", border: `1px solid ${c}`, boxShadow: `0 6px 18px -8px ${c}` }
               }
             >
               <Zap className="w-3.5 h-3.5" />
@@ -376,12 +375,12 @@ export default function DailyMissionDeck({
     <div
       className="rounded-3xl relative overflow-hidden"
       style={{
-        background: "linear-gradient(180deg, rgba(255,255,255,0.028), rgba(255,255,255,0.008))",
-        border: "1px solid rgba(150,145,180,0.14)",
-        boxShadow: "0 30px 80px -40px rgba(0,0,0,0.8)",
+        background: "var(--bg-card)",
+        border: "1px solid var(--border-default)",
+        boxShadow: "var(--shadow-md)",
       }}
     >
-      <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-6 p-8 sm:p-12">
+      <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-4 p-5 sm:p-7">
         {/* Left — crystal cube */}
         <div className="lg:w-[40%] flex flex-col items-center gap-2">
           <NetworkCrystalCube network={network} isConnected={isConnected} />
@@ -405,13 +404,13 @@ export default function DailyMissionDeck({
                   }}
                   aria-hidden
                 />
-                <span className="text-base font-semibold" style={{ color: IVORY }}>
+                <span className="text-base font-semibold" style={{ color: "var(--text-bright)" }}>
                   {isConnected
                     ? network?.name || `Chain #${chainId ?? "?"}`
                     : "No network"}
                 </span>
               </div>
-              <p className="text-xs mt-1 font-mono" style={{ color: "#A29CB2" }}>
+              <p className="text-xs mt-1 font-mono" style={{ color: "var(--text-tertiary)" }}>
                 {isConnected
                   ? network
                     ? `Connected · Chain ${network.id}`
@@ -429,7 +428,7 @@ export default function DailyMissionDeck({
                 </button>
               )}
               {isConnected && (
-                <p className="text-[11px] mt-2 max-w-[240px] mx-auto" style={{ color: "#A29CB2" }}>
+                <p className="text-[11px] mt-2 max-w-[240px] mx-auto" style={{ color: "var(--text-tertiary)" }}>
                   {contextText}
                 </p>
               )}
@@ -441,13 +440,13 @@ export default function DailyMissionDeck({
         <div className="lg:w-[60%] w-full">
           {/* MissionProgress */}
           <div className="flex items-center justify-between mb-3 px-1">
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em]" style={{ color: "#A29CB2" }}>
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em]" style={{ color: "var(--text-tertiary)" }}>
               Daily missions
             </span>
             <motion.span
               key={completedCount}
               initial={{ scale: 1.2, color: MINT }}
-              animate={{ scale: 1, color: allDone ? MINT : "#A29CB2" }}
+              animate={{ scale: 1, color: allDone ? MINT : "var(--text-tertiary)" }}
               transition={{ duration: 0.3 }}
               className="text-[10px] font-mono"
             >
@@ -500,7 +499,7 @@ export default function DailyMissionDeck({
           </div>
 
           {!isConnected && (
-            <p className="text-center text-xs mt-5" style={{ color: "#A29CB2" }}>
+            <p className="text-center text-xs mt-5" style={{ color: "var(--text-tertiary)" }}>
               Connect wallet to activate your mission deck
             </p>
           )}

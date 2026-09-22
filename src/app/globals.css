@@ -180,11 +180,11 @@
   --border-strong:  rgba(0,0,0,.15);
   --border-hover:   rgba(111,117,229,.35);
 
-  --text-bright:    #1F2128;
-  --text-primary:   #2A2E38;
-  --text-secondary: #677694;
-  --text-tertiary:  #8A94A8;
-  --text-faint:     #9AA5BC;
+  --text-bright:    #17181F;
+  --text-primary:   #21242D;
+  --text-secondary: #565F73;
+  --text-tertiary:  #6B7590;
+  --text-faint:     #7E88A0;
 
   --accent:         #6F75E5;
   --accent-hover:   #8A8FEE;
@@ -215,6 +215,14 @@
   --ease: cubic-bezier(.4,0,.2,1);
   --ease-out: cubic-bezier(.16,1,.3,1);
   --text-quaternary: var(--text-faint);
+
+  /* Aliases — some components use the short names */
+  --bg:      var(--bg-card);
+  --bg2:     var(--bg-elevated);
+  --bg3:     var(--bg-strong);
+  --border:  var(--border-default);
+  --border2: var(--border-strong);
+  --muted:   var(--text-secondary);
 }
 
 /* Light-theme (web3-light) adjustments */
@@ -588,6 +596,139 @@
   @keyframes node-pulse { 50% { transform: scale(1.18) } }
 }
 
+/* ─────────── MISSING COMPONENT CLASSES (used across app) ─────────── */
+@layer components {
+
+  /* Sidebar / MobileNav items — graphical nav */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .55rem .7rem;
+    border-radius: 12px;
+    font-size: .85rem;
+    font-weight: 550;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all .2s var(--ease);
+  }
+  .nav-item:hover {
+    background: var(--bg-strong);
+    color: var(--text-bright);
+  }
+  .nav-item.active {
+    background: var(--accent-muted);
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+  .nav-item.active svg { color: var(--accent); }
+
+  /* Icon chip inside nav items */
+  .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 9px;
+    flex-shrink: 0;
+    transition: all .2s var(--ease);
+  }
+
+  .badge-cyan,
+  .badge-purple {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 7px;
+    border-radius: 99px;
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    font-family: var(--font-mono);
+  }
+  .badge-cyan {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--accent);
+  }
+  .badge-purple {
+    background: rgba(139,92,246,.12);
+    border: 1px solid rgba(139,92,246,.3);
+    color: #A78BFA;
+  }
+
+  .input-terminal {
+    width: 100%;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color .2s var(--ease), background .2s var(--ease);
+  }
+  .input-terminal::placeholder { color: var(--text-faint); }
+  .input-terminal:focus {
+    border-color: var(--border-hover);
+    background: var(--bg-card);
+  }
+
+  .glow-border {
+    position: relative;
+    border-radius: 12px;
+  }
+  .glow-border::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 13px;
+    pointer-events: none;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
+                0 0 16px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+
+  .status-dot-green {
+    color: var(--success);
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent);
+    animation: pulse-dot 2.4s var(--ease) infinite;
+  }
+
+  /* Mission deck cube rings + spin + shimmer */
+  .dg-ring {
+    position: absolute;
+    border-radius: 50%;
+    border-style: solid;
+    border-width: 1.5px;
+    pointer-events: none;
+  }
+  .dg-ring-a { width: 200px; height: 200px; animation: dg-spin 18s linear infinite; }
+  .dg-ring-b { width: 250px; height: 250px; animation: dg-spin 26s linear infinite reverse; }
+  @keyframes dg-spin { to { transform: rotate(360deg); } }
+
+  .dg-cube-spin { animation: dg-cube 14s linear infinite; }
+  @keyframes dg-cube {
+    from { transform: rotateX(-18deg) rotateY(0deg); }
+    to   { transform: rotateX(-18deg) rotateY(360deg); }
+  }
+
+  .dg-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-strong);
+  }
+  .dg-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--text-bright) 10%, transparent), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+
+  @keyframes pulse { 50% { opacity: .55; } }
+}
+
 /* ─────────── WEB3-LIGHT OVERRIDES ─────────── */
 [data-theme="web3-light"] body::after { opacity: .015; }
 
@@ -617,6 +758,12 @@
 [data-theme="web3-light"] .space-bg-canvas,
 [data-theme="web3-light"] .cosmic-vignette,
 [data-theme="web3-light"] .cosmic-grain { display: none; }
+
+/* Readability on light: tone down glows that wash out text */
+[data-theme="web3-light"] .glow-border::after {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+[data-theme="web3-light"] .nav-icon { box-shadow: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

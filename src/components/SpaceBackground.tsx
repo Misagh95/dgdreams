@@ -15,6 +15,7 @@ export default function SpaceBackground() {
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
     let w = 0, h = 0, dpr = 1, raf = 0, t = 0, running = true;
+    let started = false;
     const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
 
     type Layer = { c: HTMLCanvasElement; depth: number; alpha: number; phase: number; drift: number };
@@ -97,7 +98,7 @@ export default function SpaceBackground() {
     }
 
     function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.25);
       w = window.innerWidth;
       h = window.innerHeight;
       if (canvas) {
@@ -110,9 +111,9 @@ export default function SpaceBackground() {
 
       const density = (w * h) / 1000;
       layers = [
-        { c: starLayer(Math.floor(density * 0.16), 0.3, 0.7, 0),  depth: 0.006, alpha: 0.5,  phase: 0,   drift: 0.004 },
-        { c: starLayer(Math.floor(density * 0.07), 0.6, 1.1, 3),  depth: 0.018, alpha: 0.8,  phase: 2.1, drift: 0.010 },
-        { c: starLayer(Math.floor(density * 0.02), 1.0, 1.8, 5),  depth: 0.040, alpha: 1.0,  phase: 4.2, drift: 0.020 },
+        { c: starLayer(Math.floor(density * 0.10), 0.3, 0.7, 0),  depth: 0.006, alpha: 0.5,  phase: 0,   drift: 0.004 },
+        { c: starLayer(Math.floor(density * 0.045), 0.6, 1.1, 3), depth: 0.018, alpha: 0.8,  phase: 2.1, drift: 0.010 },
+        { c: starLayer(Math.floor(density * 0.014), 1.0, 1.8, 5), depth: 0.040, alpha: 1.0,  phase: 4.2, drift: 0.020 },
       ];
       nebula = buildNebula();
     }
@@ -192,17 +193,44 @@ export default function SpaceBackground() {
       if (running) { raf = requestAnimationFrame(frame); } else { cancelAnimationFrame(raf); }
     };
 
-    resize();
-    frame();
-    window.addEventListener("resize", resize);
-    window.addEventListener("mousemove", onMove, { passive: true });
-    document.addEventListener("visibilitychange", onVis);
-
-    return () => {
+    function stop() {
+      if (!started) return;
+      started = false;
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMove);
       document.removeEventListener("visibilitychange", onVis);
+      ctx!.clearRect(0, 0, w, h);
+      layers = [];
+      nebula = null;
+      meteors = [];
+    }
+
+    function start() {
+      if (started) return;
+      started = true;
+      resize();
+      frame();
+      window.addEventListener("resize", resize);
+      window.addEventListener("mousemove", onMove, { passive: true });
+      document.addEventListener("visibilitychange", onVis);
+    }
+
+    const isLight = () =>
+      document.documentElement.getAttribute("data-theme") === "web3-light";
+
+    // The starfield is only designed for dark themes — never run on light.
+    if (!isLight()) start();
+
+    const themeObs = new MutationObserver(() => {
+      if (isLight()) stop();
+      else start();
+    });
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+    return () => {
+      themeObs.disconnect();
+      stop();
     };
   }, []);
 

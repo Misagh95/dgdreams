@@ -24,15 +24,15 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/tasks", icon: Zap, label: "Daily Tasks" },
-  { href: "/litevm", icon: Star, label: "LITVM Hub" },
-  { href: "/genlayer", icon: Globe, label: "GenLayer Hub" },
-  { href: "/truthcourt", icon: Scale, label: "TruthCourt" },
-  { href: "/leaderboard", icon: Trophy, label: "Leaderboard" },
-  { href: "/activity", icon: Activity, label: "Activity" },
-  { href: "/profile", icon: User, label: "Profile" },
-  { href: "/2048", icon: Gamepad2, label: "2048 Game" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", color: "#6F75E5" },
+  { href: "/tasks", icon: Zap, label: "Daily Tasks", color: "#F59E0B" },
+  { href: "/litevm", icon: Star, label: "LITVM Hub", color: "#00D4FF" },
+  { href: "/genlayer", icon: Globe, label: "GenLayer Hub", color: "#3B82F6" },
+  { href: "/truthcourt", icon: Scale, label: "TruthCourt", color: "#A78BFA" },
+  { href: "/leaderboard", icon: Trophy, label: "Leaderboard", color: "#FFB020" },
+  { href: "/activity", icon: Activity, label: "Activity", color: "#34E39B" },
+  { href: "/profile", icon: User, label: "Profile", color: "#FF68F0" },
+  { href: "/2048", icon: Gamepad2, label: "2048 Game", color: "#FF6B6B" },
 ];
 
 const bottomLinks = [
@@ -115,7 +115,15 @@ export default function MobileNav() {
                           border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
                           color: "var(--accent)",
                         } : {}}>
-                        <Icon className="w-4 h-4" />
+                        <span
+                          className="nav-icon"
+                          style={{
+                            background: `color-mix(in srgb, ${item.color} ${isActive ? "16%" : "10%"}, transparent)`,
+                            border: `1px solid color-mix(in srgb, ${item.color} ${isActive ? "40%" : "22%"}, transparent)`,
+                          }}
+                        >
+                          <Icon className="w-3.5 h-3.5" style={{ color: isActive ? undefined : item.color }} />
+                        </span>
                         <span>{item.label}</span>
                         {isGame && <span className="ml-auto badge-cyan text-[9px]">Game</span>}
                       </div>

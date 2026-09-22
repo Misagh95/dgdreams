@@ -88,7 +88,7 @@ function NetworkBlock({
     <div
       onClick={canInteract ? onStart : undefined}
       className={cn(
-        "p-5 rounded-xl transition-all duration-200 relative",
+        "p-3.5 rounded-xl transition-all duration-200 relative",
         isSelected
           ? "ring-1"
           : "hover:opacity-80",
@@ -123,12 +123,12 @@ function NetworkBlock({
         )}
       </button>
 
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-2.5 mb-2.5">
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden"
+          className="w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden"
           style={{ background: `color-mix(in srgb, ${network.color} 20%, transparent)` }}
         >
-          <Image src={network.logo} alt={network.name} width={22} height={22}
+          <Image src={network.logo} alt={network.name} width={18} height={18}
             style={{ objectFit: "contain" }}
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
         </div>
