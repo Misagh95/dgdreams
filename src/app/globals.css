@@ -703,9 +703,8 @@
     border-width: 1.5px;
     pointer-events: none;
   }
-  .dg-ring-a { width: 200px; height: 200px; animation: dg-spin 18s linear infinite; }
-  .dg-ring-b { width: 250px; height: 250px; animation: dg-spin 26s linear infinite reverse; }
-  @keyframes dg-spin { to { transform: rotate(360deg); } }
+  .dg-ring-a { width: 200px; height: 200px; }
+  .dg-ring-b { width: 250px; height: 250px; }
 
   .dg-cube-spin {
     transform: rotateX(-16deg) rotateY(-30deg);
