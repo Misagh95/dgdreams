@@ -708,19 +708,14 @@
   @keyframes dg-spin { to { transform: rotate(360deg); } }
 
   .dg-cube-spin {
-    transform: rotateX(-18deg) rotateY(-32deg);
-    animation: dg-bob 7s ease-in-out infinite;
+    animation: dg-cube 75s linear infinite;
   }
-  @keyframes dg-bob {
-    0%, 100% { transform: rotateX(-18deg) rotateY(-32deg); }
-    50%      { transform: rotateX(-14deg) rotateY(-24deg); }
+  @keyframes dg-cube {
+    from { transform: rotateX(-16deg) rotateY(0deg); }
+    to   { transform: rotateX(-16deg) rotateY(360deg); }
   }
 
-  .dg-cube-float { animation: dg-float 8s ease-in-out infinite; }
-  @keyframes dg-float {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-4px); }
-  }
+  .dg-cube-float { }
 
   .dg-shimmer {
     position: relative;

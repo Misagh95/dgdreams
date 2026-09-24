@@ -100,8 +100,6 @@ export function NetworkCrystalCube({
       )}
 
       <motion.div
-        animate={reduced ? undefined : { y: [-3, 3, -3] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         style={{ perspective: 1100 }}
       >
         <div
@@ -121,7 +119,21 @@ export function NetworkCrystalCube({
                   "inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -10px 24px rgba(0,0,0,0.28)",
                 backdropFilter: "blur(2px)",
               }}
-            />
+            >
+              {/* Chain logo on every side face (i < 4) so it stays visible while rotating */}
+              {i < 4 && isConnected && logo && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Image
+                    src={logo}
+                    alt={network?.name || "network"}
+                    width={40}
+                    height={40}
+                    style={{ filter: `drop-shadow(0 0 12px ${color}88)`, objectFit: "contain" }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
+                  />
+                </div>
+              )}
+            </div>
           ))}
 
           <div
@@ -129,24 +141,7 @@ export function NetworkCrystalCube({
             style={{ transform: `translateZ(${HALF + 2}px)` }}
           >
             <AnimatePresence mode="wait">
-              {isConnected && logo ? (
-                <motion.div
-                  key={key}
-                  initial={{ opacity: 0, scale: 0.7 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.7 }}
-                  transition={{ duration: 0.45, ease: "easeOut" }}
-                >
-                  <Image
-                    src={logo}
-                    alt={network?.name || "network"}
-                    width={48}
-                    height={48}
-                    style={{ filter: `drop-shadow(0 0 14px ${color}88)`, objectFit: "contain" }}
-                    onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
-                  />
-                </motion.div>
-              ) : (
+              {!isConnected && (
                 <motion.div
                   key="neutral"
                   initial={{ opacity: 0, scale: 0.7 }}
