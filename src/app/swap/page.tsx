@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAccount, useBalance, useConfig, useReadContract, useSwitchChain } from "wagmi";
 import { getPublicClient } from "@wagmi/core";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -12,8 +12,9 @@ import TokenSelect from "@/components/swap/TokenSelect";
 import { getNetworkConfig } from "@/config/chains";
 import { parseTxError, getExplorerUrl, shortenHash } from "@/utils/transactions";
 import {
-  fetchQuote, fetchTokens, isNativeToken, sortTokens,
-  SWAP_SUPPORTED_CHAINS, type LifiToken, type LifiQuote,
+  fetchQuotes, fetchTokens, isNativeToken, sortTokens,
+  SWAP_SUPPORTED_CHAINS, SWAP_SOURCES,
+  type LifiToken, type NormalizedQuote, type SwapSourceId,
 } from "@/lib/lifi";
 
 const ERC20_ABI = [
@@ -38,11 +39,35 @@ const NETWORKS = SWAP_SUPPORTED_CHAINS.map((id) => {
   const [fromToken, setFromToken] = useState<LifiToken | undefined>();
   const [toToken, setToToken] = useState<LifiToken | undefined>();
   const [amount, setAmount] = useState("");
-  const [quote, setQuote] = useState<LifiQuote | null>(null);
+  const [quote, setQuote] = useState<NormalizedQuote | null>(null);
+  const [quotes, setQuotes] = useState<NormalizedQuote[]>([]);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [sourceId, setSourceId] = useState<SwapSourceId>("lifi");
   const [phase, setPhase] = useState<Phase>("idle");
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const quoteReqId = useRef(0);
+  const sourceIdRef = useRef<SwapSourceId>("lifi");
+
+  /* Keep refs in sync for use inside async quote callbacks */
+  useEffect(() => { sourceIdRef.current = sourceId; }, [sourceId]);
+  /* Keep refs in sync for use inside async quote callbacks */
+  useEffect(() => { sourceIdRef.current = sourceId; }, [sourceId]);
+
+  const pickSource = useCallback((id: SwapSourceId) => {
+    sourceIdRef.current = id;
+    setSourceId(id);
+    setQuotes((prev) => {
+      const q = prev.find((x) => x.source === id);
+      if (q) {
+        setQuote(q);
+        setTxHash(null);
+        setError(null);
+      }
+      return prev;
+    });
+  }, []);
+
 
   const net = getNetworkConfig(netId);
 
@@ -90,18 +115,29 @@ const NETWORKS = SWAP_SUPPORTED_CHAINS.map((id) => {
     setPhase("quoting");
     setQuoteError(null);
     const timer = setTimeout(async () => {
+      const want = quoteReqId.current + 1;
+      quoteReqId.current = want;
       try {
-        const q = await fetchQuote({
-          chainId: netId,
-          fromToken: fromToken.address as Address,
-          toToken: toToken.address as Address,
-          fromAmount: fromAmountWei.toString(),
-          fromAddress: address,
-        });
-        setQuote(q);
+        const all = await fetchQuotes(
+          SWAP_SOURCES.map((s) => s.id),
+          {
+            chainId: netId,
+            fromToken: fromToken.address as Address,
+            toToken: toToken.address as Address,
+            fromAmount: fromAmountWei.toString(),
+            fromAddress: address,
+          }
+        );
+        if (quoteReqId.current !== want) return; // stale response
+        if (all.length === 0) throw new Error("No route from any source");
+        setQuotes(all);
+        const pick = all.find((q) => q.source === sourceIdRef.current) ?? all[0];
+        setQuote(pick);
         setPhase("quoted");
       } catch (e: any) {
+        if (quoteReqId.current !== want) return;
         setQuote(null);
+        setQuotes([]);
         setQuoteError(e?.message || "No route found");
         setPhase("idle");
       }
@@ -111,7 +147,7 @@ const NETWORKS = SWAP_SUPPORTED_CHAINS.map((id) => {
 
   /* Allowance check for ERC20 source */
   const needsApproval = quote && fromToken && !isFromNative && fromAmountWei
-    ? { spender: quote.estimate.approvalAddress as Address, token: fromToken.address as Address }
+    ? { spender: quote.approvalAddress as Address, token: fromToken.address as Address }
     : null;
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: needsApproval?.token,
@@ -191,7 +227,7 @@ const NETWORKS = SWAP_SUPPORTED_CHAINS.map((id) => {
     setPhase("swapping");
     try {
       await ensureChain();
-      const hash = await sendViaProvider(quote.transactionRequest);
+      const hash = await sendViaProvider(quote.send);
       setTxHash(hash);
       const ok = await pollReceipt(hash);
       if (!ok) {
@@ -212,8 +248,8 @@ const NETWORKS = SWAP_SUPPORTED_CHAINS.map((id) => {
     setQuote(null);
   }, [fromToken, toToken]);
 
-  const estOut = quote && toToken ? formatUnits(BigInt(quote.estimate.toAmount), toToken.decimals) : null;
-  const estOutMin = quote && toToken ? formatUnits(BigInt(quote.estimate.toAmountMin), toToken.decimals) : null;
+  const estOut = quote && toToken ? formatUnits(BigInt(quote.toAmount), toToken.decimals) : null;
+  const estOutMin = quote && toToken ? formatUnits(BigInt(quote.toAmountMin), toToken.decimals) : null;
   const notEnoughBalance = balance && fromAmountWei ? balance.value < fromAmountWei : false;
   const busy = phase === "quoting" || phase === "approving" || phase === "swapping";
 
@@ -293,7 +329,7 @@ const NETWORKS = SWAP_SUPPORTED_CHAINS.map((id) => {
           <div className="p-3 rounded-xl text-xs space-y-1.5" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-default)" }}>
             <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
               <span>Route</span>
-              <span className="font-mono" style={{ color: "var(--accent)" }}>via {quote.tool}</span>
+              <span className="font-mono" style={{ color: "var(--accent)" }}>{quote.tool} · via {quote.source === "lifi" ? "LI.FI" : "Relay"}</span>
             </div>
             <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
               <span>Min. received</span>
@@ -303,6 +339,39 @@ const NETWORKS = SWAP_SUPPORTED_CHAINS.map((id) => {
               <span>Slippage</span>
               <span className="font-mono" style={{ color: "var(--text-bright)" }}>0.5%</span>
             </div>
+          </div>
+        )}
+
+        {/* Source comparison */}
+        {quotes.length > 1 && (
+          <div className="p-3 rounded-xl space-y-1.5" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-default)" }}>
+            <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>Compare sources</span>
+            {quotes.map((q) => {
+              const bestTo = quotes.reduce((m, x) => (BigInt(x.toAmount) > BigInt(m.toAmount) ? x : m)).toAmount;
+              const out = toToken ? Number(formatUnits(BigInt(q.toAmount), toToken.decimals)) : 0;
+              const best = q.toAmount === bestTo;
+              const active = quote?.source === q.source;
+              return (
+                <button
+                  key={q.source}
+                  type="button"
+                  onClick={() => pickSource(q.source)}
+                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-all hover:opacity-85"
+                  style={{
+                    background: active ? "var(--accent-muted)" : "var(--bg-strong)",
+                    border: active ? "1px solid color-mix(in srgb, var(--accent) 35%, transparent)" : "1px solid var(--border-default)",
+                  }}
+                >
+                  <span className="font-semibold" style={{ color: active ? "var(--accent)" : "var(--text-primary)" }}>
+                    {q.source === "lifi" ? "LI.FI" : "Relay"}
+                    {best && (
+                      <span className="ml-2 text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ background: "color-mix(in srgb, var(--success) 12%, transparent)", color: "var(--success)" }}>BEST</span>
+                    )}
+                  </span>
+                  <span className="font-mono" style={{ color: "var(--text-bright)" }}>{out.toPrecision(6)} {toToken?.symbol}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 
