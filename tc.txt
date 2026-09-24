@@ -1,4 +1,0 @@
-
-> typecheck
-> tsc --noEmit
-
