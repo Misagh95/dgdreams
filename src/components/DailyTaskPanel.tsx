@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useWriteContract, useConfig } from "wagmi";
 import { getPublicClient } from "@wagmi/core";
-import { waitForTransactionReceipt } from "wagmi/actions";
+import { encodeFunctionData } from "viem";
 import type { NetworkConfig } from "@/config/chains";
 import { parseTxError, getExplorerUrl, getNativeSymbol, shortenHash } from "@/utils/transactions";
 import { genLayerWriteTask, isGenLayer, GENLAYER_CONTRACT } from "@/lib/genlayer/tasks";
@@ -134,47 +134,68 @@ export default function DailyTaskPanel({
             prev.map((t, idx) => (idx === i ? { ...t, txHash: hash } : t))
           );
         } else {
-          // Pin every RPC call to the target network — reading gas/receipts
-          // from the wallet's currently-active chain can silently use the
-          // wrong fee market (e.g. Base's ~0.006 gwei vs Arc's 20 gwei),
-          // which makes the transaction get rejected.
+          // Chaingreets-style send: hand a MINIMAL tx to the wallet provider.
+          // No site-side gas/fee estimation — a flaky RPC must never block the
+          // wallet popup or the send. The wallet estimates gas + fees itself.
           const pubClient = getPublicClient(wagmiConfig, { chainId: network.id });
-          let gasOptions: Record<string, bigint> = {};
-          try {
-            if (!pubClient) throw new Error("No public client");
-            const gp = await pubClient.getGasPrice();
-            const boosted = (gp * 150n) / 100n;
-            try {
-              const maxPriority = await pubClient!.estimateMaxPriorityFeePerGas();
-              gasOptions = {
-                maxFeePerGas: boosted + maxPriority,
-                maxPriorityFeePerGas: (maxPriority * 150n) / 100n,
-              };
-            } catch {
-              gasOptions = { gasPrice: boosted };
-            }
-          } catch {}
-
-          const hash = await writeContractAsync({
-            chainId: network.id,
-            address: contractAddress,
+          const data = encodeFunctionData({
             abi: NIKBASE_ABI,
             functionName: step.method,
-            args: actualArgs as any,
-            ...gasOptions,
+            args: actualArgs as [],
           });
+
+          const state = wagmiConfig.state;
+          const conn = state.current ? state.connections.get(state.current) : undefined;
+          const rawProvider = (conn?.connector
+            ? await conn.connector.getProvider()
+            : undefined) as
+            | { request: (a: { method: string; params?: readonly unknown[] }) => Promise<unknown> }
+            | undefined;
+
+          let hash: `0x${string}`;
+          if (rawProvider?.request) {
+            hash = (await rawProvider.request({
+              method: "eth_sendTransaction",
+              params: [{ from: address, to: contractAddress, data }],
+            })) as `0x${string}`;
+          } else {
+            // Fallback: wagmi path (still wallet-side estimation).
+            hash = await writeContractAsync({
+              chainId: network.id,
+              address: contractAddress,
+              abi: NIKBASE_ABI,
+              functionName: step.method,
+              args: actualArgs as any,
+            });
+          }
 
           setTasks((prev) =>
             prev.map((t, idx) => (idx === i ? { ...t, txHash: hash } : t))
           );
 
-          const receipt = await waitForTransactionReceipt(wagmiConfig, {
-            chainId: network.id,
-            hash,
-            timeout: 120_000,
-          });
+          // Receipt poll (2s × 60): pinned site RPC first, wallet provider as
+          // fallback — same strategy ChainGreets uses.
+          let receipt: { status?: string } | null = null;
+          for (let p = 0; p < 60 && !isCancelled.current; p++) {
+            await new Promise((r) => setTimeout(r, 2000));
+            try {
+              const r = await pubClient?.getTransactionReceipt({ hash });
+              if (r) { receipt = r as { status?: string }; break; }
+            } catch { /* not mined yet or site RPC hiccup — try provider */ }
+            try {
+              const r = (await rawProvider?.request({
+                method: "eth_getTransactionReceipt",
+                params: [hash],
+              })) as { status?: string } | null;
+              if (r) { receipt = r; break; }
+            } catch { /* keep polling */ }
+          }
+          if (!receipt) {
+            if (isCancelled.current) break;
+            throw new Error("Confirmation timed out — check the explorer link above");
+          }
 
-          if (receipt.status === "reverted") {
+          if (receipt.status === "reverted" || receipt.status === "0x0") {
             setTasks((prev) =>
               prev.map((t, idx) =>
                 idx === i
