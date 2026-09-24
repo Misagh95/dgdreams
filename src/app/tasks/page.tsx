@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useAccount, useSwitchChain, useReadContract, useWriteContract } from "wagmi";
+import { useAccount, useSwitchChain, useReadContract, useWriteContract, useConfig } from "wagmi";
+import { getPublicClient } from "@wagmi/core";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { isAddress } from "viem";
 import Image from "next/image";
 import DashboardLayout from "@/components/DashboardLayout";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
-import DailyTaskPanel, { CONTRACTS } from "@/components/DailyTaskPanel";
+import DailyTaskPanel, { CONTRACTS, canStillRunTask } from "@/components/DailyTaskPanel";
 import { NetworkCube } from "@/components/NetworkCube";
 import { TaskCard3D, DAILY_MISSIONS } from "@/components/TaskCard3D";
 import DailyMissionDeck from "@/components/DailyMissionDeck";
@@ -156,6 +157,14 @@ export default function TasksPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const optimistic = useOptimisticTasks();
+  const wagmiConfig = useConfig();
+
+  // Which of today's tasks are already recorded on-chain. The NikBase contract
+  // accepts each action once per UTC day; probing with eth_call (same call the
+  // wallet simulates) lets the cards show "done today" instead of letting the
+  // user hit "Simulation Failed (execution revert)".
+  const [onChainDoneIds, setOnChainDoneIds] = useState<Set<string>>(new Set());
+  const [probeNonce, setProbeNonce] = useState(0);
 
   // Deep links from the dashboard mission cards: /tasks?mission=gm|checkIn|gn
   const [pendingMission, setPendingMission] = useState<"gm" | "checkIn" | "gn" | null>(null);
@@ -325,6 +334,7 @@ export default function TasksPage() {
     refetchCounts();
     refetchUser();
     setExecutingNetworkId(null);
+    setProbeNonce((n) => n + 1); // re-probe which actions are done today
   }, [refetchCounts, refetchUser]);
 
   const handleSingleTaskComplete = useCallback(
@@ -361,6 +371,50 @@ export default function TasksPage() {
 
   // Hero values — follow the wallet's currently connected network
   const connectedNetwork = chainId ? getNetworkConfig(chainId) : undefined;
+
+  // Probe the active chain for the three actions: a reverted eth_call means
+  // "already done today" (UTC). Cheap, batched, and never blocks the UI.
+  useEffect(() => {
+    let cancelled = false;
+    const contract = connectedNetwork ? CONTRACTS[connectedNetwork.id] : undefined;
+    const pub = connectedNetwork
+      ? getPublicClient(wagmiConfig, { chainId: connectedNetwork.id })
+      : undefined;
+    if (
+      !isConnected ||
+      !validatedAddr ||
+      !connectedNetwork ||
+      !contract ||
+      isGenLayer(connectedNetwork.id) ||
+      !pub
+    ) {
+      setOnChainDoneIds(new Set());
+      return;
+    }
+    (async () => {
+      const done = new Set<string>();
+      await Promise.all(
+        (
+          [
+            { id: "checkIn", method: "dailyCheckIn" },
+            { id: "gm", method: "gm" },
+            { id: "gn", method: "gn" },
+          ] as const
+        ).map(async (t) => {
+          const ok = await canStillRunTask(pub, {
+            account: validatedAddr,
+            contract: contract as `0x${string}`,
+            method: t.method,
+          });
+          if (!ok) done.add(t.id);
+        })
+      );
+      if (!cancelled) setOnChainDoneIds(done);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isConnected, validatedAddr, connectedNetwork, wagmiConfig, probeNonce]);
   const heroNetwork = selectedNetwork ?? connectedNetwork ?? mainnetNetworks[0];
   const heroLogo = heroNetwork.logo;
   const heroColor = heroNetwork.color;
@@ -375,12 +429,14 @@ export default function TasksPage() {
         openConnectModal?.();
         return;
       }
+      // Already recorded on-chain today (UTC) — nothing to sign.
+      if (onChainDoneIds.has(missionId)) return;
       const net = chainId ? getNetworkConfig(chainId) : undefined;
       if (!net) return;
       setSelectedMissionId(missionId);
       handleOpenNetwork(net);
     },
-    [isConnected, chainId, openConnectModal, handleOpenNetwork]
+    [isConnected, chainId, openConnectModal, handleOpenNetwork, onChainDoneIds]
   );
 
 
@@ -403,8 +459,10 @@ export default function TasksPage() {
         chainId={chainId}
         isConnected={isConnected}
         loading={isConnected && countsData === undefined && !isGen}
-        completedCount={optimistic.optimisticActionCount(heroActionCount)}
-        completedTaskIds={optimistic.getOptimisticCompletedIds(new Set())}
+        completedCount={optimistic.optimisticActionCount(
+          Math.max(heroActionCount, onChainDoneIds.size)
+        )}
+        completedTaskIds={optimistic.getOptimisticCompletedIds(onChainDoneIds)}
         onConnect={() => openConnectModal?.()}
         onMission={handleMissionClick}
         contextText={`Execute GM, CHECK and GN on ${heroName} — one transaction each, once per day.`}

@@ -14,6 +14,40 @@ const NIKBASE_ABI = [
   { inputs: [], name: "gn", outputs: [], stateMutability: "nonpayable", type: "function" },
 ] as const;
 
+export { NIKBASE_ABI };
+
+/**
+ * The NikBase contract accepts each action only once per UTC day. Calling an
+ * action twice makes the call revert, and wallets simulate before signing —
+ * which surfaces as "Simulation Failed (execution revert)" and the tx never
+ * reaches the chain.
+ *
+ * This preflight runs the same `eth_call` the wallet would, but from our own
+ * RPC, so we can label the step "already done today" instead of erroring.
+ */
+export async function canStillRunTask(
+  pubClient: { call: (args: { account?: `0x${string}`; to: `0x${string}`; data: `0x${string}` }) => Promise<unknown> },
+  opts: { account: `0x${string}`; contract: `0x${string}`; method: "dailyCheckIn" | "gm" | "gn" }
+): Promise<boolean> {
+  try {
+    const data = encodeFunctionData({ abi: NIKBASE_ABI, functionName: opts.method, args: [] });
+    await pubClient.call({ account: opts.account, to: opts.contract, data });
+    return true;
+  } catch (e: any) {
+    const name: string = e?.name || "";
+    const msg: string = `${e?.shortMessage || ""} ${e?.message || ""}`.toLowerCase();
+    // Only a real execution revert means "already done today". RPC hiccups
+    // (HTTP/timeout errors) must NOT block the transaction — let the wallet
+    // decide in that case.
+    const isRevert =
+      name === "ContractFunctionExecutionError" ||
+      name === "CallExecutionError" ||
+      name === "ExecutionRevertedError" ||
+      msg.includes("revert");
+    return !isRevert;
+  }
+}
+
 export const CONTRACTS: Record<number, `0x${string}` | ""> = {
   8453: "0xbB123f450822A42AeDa8e71aF3534d7dc84627F7",
   999: "0xdbeE9eA39FedD197D224EA7520A20b4434635A6a",
@@ -42,13 +76,13 @@ interface TaskStep {
   args: unknown[];
 }
 
-const DAILY_TASKS: TaskStep[] = [
+export const DAILY_TASKS: TaskStep[] = [
   { id: "checkIn", label: "Daily Check-In", method: "dailyCheckIn", args: [] },
   { id: "gm", label: "GM", method: "gm", args: [] },
   { id: "gn", label: "GN", method: "gn", args: [] },
 ];
 
-type TaskStatus = "pending" | "signing" | "confirmed" | "failed" | "skipped";
+type TaskStatus = "pending" | "signing" | "confirmed" | "already" | "failed" | "skipped";
 
 interface TaskProgress {
   status: TaskStatus;
@@ -94,7 +128,9 @@ export default function DailyTaskPanel({
   const wagmiConfig = useConfig();
   const { writeContractAsync } = useWriteContract();
 
-  const completedCount = tasks.filter((t) => t.status === "confirmed").length;
+  const completedCount = tasks.filter(
+    (t) => t.status === "confirmed" || t.status === "already"
+  ).length;
   const failedCount = tasks.filter((t) => t.status === "failed").length;
 
   const execute = useCallback(async () => {
@@ -102,13 +138,21 @@ export default function DailyTaskPanel({
     setIsExecuting(true);
     isCancelled.current = false;
 
-    const startIdx = tasks.findIndex((t) => t.status === "pending");
+    const startIdx = tasks.findIndex(
+      (t) => t.status === "pending" || t.status === "failed"
+    );
     if (startIdx === -1) {
       setIsExecuting(false);
       return;
     }
 
     const onGenLayer = isGenLayer(network.id);
+
+    // Local counters: React state updates are async, so `tasks` cannot be
+    // trusted for the summary at the end of the loop.
+    let settled = 0;
+    let hasFailure = false;
+    const totalToRun = taskList.length - startIdx;
 
     for (let i = startIdx; i < taskList.length; i++) {
       if (isCancelled.current) break;
@@ -153,6 +197,29 @@ export default function DailyTaskPanel({
             | undefined;
 
           let hash: `0x${string}`;
+          // ── PREFLIGHT ────────────────────────────────────────────────
+          // The contract allows each action once per UTC day. Running the
+          // same eth_call the wallet uses lets us spot "already done today"
+          // BEFORE the wallet popup, so the user never sees the misleading
+          // "Simulation Failed (execution revert)" error.
+          const stillRunnable = !pubClient
+            ? true
+            : await canStillRunTask(pubClient, {
+                account: address,
+                contract: contractAddress,
+                method: step.method,
+              });
+          if (!stillRunnable) {
+            setTasks((prev) =>
+              prev.map((t, idx) =>
+                idx === i ? { ...t, status: "already" as TaskStatus } : t
+              )
+            );
+            onTaskComplete?.(taskList[i].id); // counts toward today's progress
+            settled++;
+            continue; // skip the transaction entirely — nothing to sign
+          }
+
           if (rawProvider?.request) {
             hash = (await rawProvider.request({
               method: "eth_sendTransaction",
@@ -214,6 +281,7 @@ export default function DailyTaskPanel({
           )
         );
         onTaskComplete?.(taskList[i].id);
+        settled++;
       } catch (err: any) {
         const msg = parseTxError(err);
         if (msg.toLowerCase().includes("rejected")) {
@@ -234,15 +302,20 @@ export default function DailyTaskPanel({
           );
           onTaskFailed?.(taskList[i].id);
         }
+        hasFailure = true;
         break;
       }
     }
 
     setIsExecuting(false);
     setCurrentIndex(null);
-    const allDone = tasks.every((t) => t.status === "confirmed");
-    if (allDone) onComplete();
-  }, [contractAddress, writeContractAsync, tasks, isExecuting, onComplete, wagmiConfig, network.id, address]);
+    // `tasks` inside this closure is stale (React state), so use the local
+    // counters: the day is complete when every step we attempted settled
+    // (confirmed on-chain or already done today).
+    if (!hasFailure && !isCancelled.current && settled >= totalToRun) {
+      onComplete();
+    }
+  }, [contractAddress, writeContractAsync, tasks, isExecuting, onComplete, wagmiConfig, network.id, address, taskList]);
 
   const executeRef = useRef<() => Promise<void>>(undefined);
   executeRef.current = execute;
@@ -329,8 +402,8 @@ export default function DailyTaskPanel({
                     className="relative py-3.5"
                     style={{ opacity: st.status === "pending" && !active ? 0.45 : 1, transition: "opacity .4s" }}
                   >
-                    <div className="node" data-state={st.status} style={{ top: "1.15rem" }}>
-                      {st.status === "confirmed" && "✓"}
+                    <div className="node" data-state={st.status === "already" ? "confirmed" : st.status} style={{ top: "1.15rem" }}>
+                      {(st.status === "confirmed" || st.status === "already") && "✓"}
                       {st.status === "failed" && "✕"}
                     </div>
 
@@ -341,8 +414,8 @@ export default function DailyTaskPanel({
                       >
                         {step.label}
                       </span>
-                      <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-faint)" }}>
-                        {st.status === "signing" ? "broadcasting" : st.status}
+                      <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: st.status === "already" ? "var(--success)" : "var(--text-faint)" }}>
+                        {st.status === "signing" ? "broadcasting" : st.status === "already" ? "already done today" : st.status}
                       </span>
                     </div>
 
