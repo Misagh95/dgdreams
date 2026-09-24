@@ -35,18 +35,20 @@ export const arcMainnetChain = /*#__PURE__*/ defineChain({
   name: "Arc",
   nativeCurrency: { decimals: 18, name: "USDC", symbol: "USDC" },
   rpcUrls: {
-    // Circle's official endpoint first, Arcscan's public node as fallback
-    // (arc.io is DNS-filtered on some ISPs, arc-scan.org is reachable).
+    // Order matters: wallets (MetaMask) only use the FIRST url, and
+    // rpc.mainnet.arc.io is currently sinkholed to 0.0.0.0 on many networks.
+    // drpc.org is fast/reliable, ArcScan's public node works as fallback.
     default: {
-      http: ["https://rpc.mainnet.arc.io", "https://rpc.arc-scan.org"],
+      http: ["https://arc.drpc.org", "https://rpc.arc-scan.org", "https://rpc.mainnet.arc.io"],
     },
     public: {
-      http: ["https://rpc.mainnet.arc.io", "https://rpc.arc-scan.org"],
+      http: ["https://arc.drpc.org", "https://rpc.arc-scan.org", "https://rpc.mainnet.arc.io"],
     },
   },
   blockExplorers: {
-    default: { name: "Arc Explorer", url: "https://explorer.arc.io" },
-    arcscan: { name: "ArcScan", url: "https://arc-scan.org" },
+    // explorer.arc.io fails DNS resolution — ArcScan first.
+    default: { name: "ArcScan", url: "https://arc-scan.org" },
+    circle: { name: "Arc Explorer", url: "https://explorer.arc.io" },
   },
 });
 

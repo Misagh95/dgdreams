@@ -134,7 +134,11 @@ export default function DailyTaskPanel({
             prev.map((t, idx) => (idx === i ? { ...t, txHash: hash } : t))
           );
         } else {
-          const pubClient = getPublicClient(wagmiConfig);
+          // Pin every RPC call to the target network — reading gas/receipts
+          // from the wallet's currently-active chain can silently use the
+          // wrong fee market (e.g. Base's ~0.006 gwei vs Arc's 20 gwei),
+          // which makes the transaction get rejected.
+          const pubClient = getPublicClient(wagmiConfig, { chainId: network.id });
           let gasOptions: Record<string, bigint> = {};
           try {
             if (!pubClient) throw new Error("No public client");
@@ -152,6 +156,7 @@ export default function DailyTaskPanel({
           } catch {}
 
           const hash = await writeContractAsync({
+            chainId: network.id,
             address: contractAddress,
             abi: NIKBASE_ABI,
             functionName: step.method,
@@ -164,6 +169,7 @@ export default function DailyTaskPanel({
           );
 
           const receipt = await waitForTransactionReceipt(wagmiConfig, {
+            chainId: network.id,
             hash,
             timeout: 120_000,
           });
