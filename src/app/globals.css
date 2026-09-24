@@ -708,11 +708,11 @@
   @keyframes dg-spin { to { transform: rotate(360deg); } }
 
   .dg-cube-spin {
-    animation: dg-cube 400s linear infinite;
+    animation: dg-cube 10s ease-in-out infinite alternate;
   }
   @keyframes dg-cube {
     from { transform: rotateX(-16deg) rotateY(0deg); }
-    to   { transform: rotateX(-16deg) rotateY(360deg); }
+    to   { transform: rotateX(-16deg) rotateY(-180deg); }
   }
 
   .dg-cube-float { }
