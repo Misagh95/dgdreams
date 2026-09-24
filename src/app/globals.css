@@ -708,7 +708,7 @@
   @keyframes dg-spin { to { transform: rotate(360deg); } }
 
   .dg-cube-spin {
-    animation: dg-cube 75s linear infinite;
+    animation: dg-cube 400s linear infinite;
   }
   @keyframes dg-cube {
     from { transform: rotateX(-16deg) rotateY(0deg); }
