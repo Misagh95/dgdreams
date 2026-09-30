@@ -248,6 +248,9 @@ export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
   5042002: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
    1913: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
    5042: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
+  // NikBase v3.0.0 — verified on bscscan / opbnb.bscscan
+  56: "0x4AE47749254CA48e950067057e7EEaaDD1498cdb",
+  204: "0x94e067F69BC5C1d2F58C91EC0f1C03469452Eec9",
 };
 
 function makeNetworkConfig(
