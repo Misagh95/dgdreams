@@ -6,13 +6,14 @@ import { getPublicClient } from "@wagmi/core";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { isAddress } from "viem";
 import Image from "next/image";
+import { Award, Loader2, Sparkles, Zap } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import DailyTaskPanel, { CONTRACTS, canStillRunTask } from "@/components/DailyTaskPanel";
 import { NetworkCube } from "@/components/NetworkCube";
 import { TaskCard3D, DAILY_MISSIONS } from "@/components/TaskCard3D";
 import DailyMissionDeck from "@/components/DailyMissionDeck";
-import { mainnetNetworks, testnetNetworks, type NetworkConfig, getNetworkConfig } from "@/config/chains";
+import { mainnetNetworks, testnetNetworks, NIKBASE_CONTRACTS, type NetworkConfig, getNetworkConfig } from "@/config/chains";
 import { cn } from "@/utils/cn";
 import { getNativeSymbol, shortenHash, getExplorerUrl } from "@/utils/transactions";
 import { genLayerReadContract, isGenLayer } from "@/lib/genlayer/tasks";
@@ -236,20 +237,43 @@ export default function TasksPage() {
   const streak = isGen ? genStreak : (userData ? Number(userData[0]) : 0);
   const totalActions = isGen ? genTotalActions : (userData ? Number(userData[2]) : 0);
 
-  const nftAddress = selectedNetwork
-    ? (SOULBOUND_ADDR[selectedNetwork.id] || undefined)
+  // ── Soulbound badge ────────────────────────────────────────────────
+  // Lives on the wallet's current network; minting costs network gas only.
+  const nftNetwork = chainId ? getNetworkConfig(chainId) : selectedNetwork;
+  const nftAddress = nftNetwork
+    ? (SOULBOUND_ADDR[nftNetwork.id] || undefined)
     : undefined;
   const validatedNft =
     nftAddress && isAddress(nftAddress)
       ? (nftAddress as `0x${string}`)
       : undefined;
 
+  // Daily-mission completion on that same network (0..3) — unlocks the mint
+  const nftNikBaseRaw = nftNetwork ? NIKBASE_CONTRACTS[nftNetwork.id] : undefined;
+  const nftNikBase =
+    nftNikBaseRaw && isAddress(nftNikBaseRaw)
+      ? (nftNikBaseRaw as `0x${string}`)
+      : undefined;
+  const { data: nftCounts } = useReadContract({
+    address: nftNikBase,
+    abi: NIKBASE_ABI,
+    functionName: "getActionCounts",
+    args: validatedAddr ? [validatedAddr] : undefined,
+    query: { enabled: !!nftNikBase && !!validatedAddr, refetchInterval: 10_000 },
+  });
+  const nftActionsDone = Math.max(
+    nftCounts ? Number(nftCounts[0]) : 0,
+    onChainDoneIds.size,
+    optimistic.optimisticActionCount(0)
+  );
+  const nftUnlocked = nftActionsDone >= 3;
+
   const { data: nftTokenId } = useReadContract({
     address: validatedNft,
     abi: SOULBOUND_ABI,
     functionName: "userTokenId",
     args: validatedAddr ? [validatedAddr] : undefined,
-    query: { enabled: !!validatedNft && !!validatedAddr && onRightChain },
+    query: { enabled: !!validatedNft && !!validatedAddr },
   });
   const hasNft = nftTokenId !== undefined && nftTokenId > 0;
 
@@ -469,7 +493,102 @@ export default function TasksPage() {
         notice={deckNotice}
       />
 
-      {/* All networks — compact cards grid */}
+      {/* ─── SOULBOUND BADGE — mint after finishing all 3 daily missions ─── */}
+      <div
+        className="mt-6 rounded-2xl p-5 sm:p-6"
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)" }}
+      >
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{
+                background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
+              }}
+            >
+              <Award className="w-5 h-5" style={{ color: "var(--accent)" }} />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold" style={{ color: "var(--text-bright)" }}>
+                Soulbound streak badge
+                {hasNft && (
+                  <span
+                    className="ml-2 text-[10px] font-mono px-2 py-0.5 rounded-md align-middle"
+                    style={{ background: "color-mix(in srgb, var(--success) 14%, transparent)", color: "var(--success)" }}
+                  >
+                    {TIER_INFO[nftTier]?.label ?? "Minted"} · {nftStreak}d
+                  </span>
+                )}
+              </h3>
+              <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                {!isConnected
+                  ? "Connect your wallet to unlock your soulbound badge."
+                  : !validatedNft
+                  ? `Soulbound badges aren't deployed on ${nftNetwork?.name ?? "this network"} yet — mint on Base, Ethereum, ARC or GIWA in the meantime.`
+                  : hasNft
+                  ? `Badge minted on ${nftNetwork?.name}. Keep the streak alive and upgrade to the next tier.`
+                  : nftUnlocked
+                  ? `All 3 daily missions done on ${nftNetwork?.name}. Mint your badge now — you only pay network gas.`
+                  : `Finish GM + Check + GN on this network to unlock the mint (${Math.min(nftActionsDone, 3)}/3).`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {isConnected && validatedNft && !hasNft && (
+              <button
+                onClick={handleMint}
+                disabled={!nftUnlocked || mintPending}
+                title={nftUnlocked ? "Mint your soulbound badge (gas only)" : "Complete all 3 daily missions first"}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 hover:brightness-110 focus:outline-none focus-visible:ring-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: "var(--accent)", color: "#000" }}
+              >
+                {mintPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                {mintPending ? "Minting…" : "Mint NFT"}
+              </button>
+            )}
+            {isConnected && validatedNft && hasNft && (
+              <button
+                onClick={handleUpgrade}
+                disabled={upgradePending}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 hover:opacity-85 focus:outline-none focus-visible:ring-2 disabled:opacity-40"
+                style={{ background: "var(--bg-strong)", color: "var(--text-bright)", border: "1px solid var(--border-strong)" }}
+              >
+                {upgradePending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                {upgradePending ? "Upgrading…" : "Upgrade tier"}
+              </button>
+            )}
+            {!isConnected && (
+              <button
+                onClick={() => openConnectModal?.()}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 hover:brightness-110"
+                style={{ background: "var(--accent)", color: "#000" }}
+              >
+                Connect wallet
+              </button>
+            )}
+          </div>
+        </div>
+
+        {isConnected && validatedNft && !hasNft && (
+          <div className="mt-4">
+            <div className="h-[3px] rounded-full overflow-hidden" style={{ background: "var(--border-subtle)" }}>
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${(Math.min(nftActionsDone, 3) / 3) * 100}%`,
+                  background: "linear-gradient(90deg, var(--accent), var(--success))",
+                }}
+              />
+            </div>
+            <p className="text-[10px] font-mono mt-2" style={{ color: "var(--text-quaternary)" }}>
+              {Math.min(nftActionsDone, 3)}/3 daily missions · gas-only mint, no fee
+            </p>
+          </div>
+        )}
+      </div>
+
       <div className="mt-8">
         <div className="flex items-center justify-between mb-3 px-1">
           <span className="text-[10px] font-mono uppercase tracking-[0.2em]" style={{ color: "var(--text-tertiary)" }}>
@@ -485,6 +604,8 @@ export default function TasksPage() {
               key={n.id}
               network={n}
               isConnected={isConnected}
+              chainId={chainId}
+              connectedChain={connectedNetwork}
               actionCount={0}
               onStart={() => {
                 setSelectedMissionId(null);
