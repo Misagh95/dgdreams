@@ -37,6 +37,8 @@ const networks = [
   { name: "Ink", short: "INK", color: "#0052ff", logo: "/logos/ink.svg", status: "maintenance" },
   { name: "Robinhood", short: "RH", color: "#00C805", logo: "/logos/robinhood.png", status: "coming-soon" },
   { name: "Arc", short: "ARC", color: "#00D4AA", logo: "/logos/arc.png", status: "operational" },
+  { name: "BNB Chain", short: "BNB", color: "#F0B90B", logo: "/logos/bnb.svg", status: "operational" },
+  { name: "opBNB", short: "opBNB", color: "#00B2A9", logo: "/logos/opbnb.svg", status: "operational" },
   { name: "GenLayer", short: "GEN", color: "#110FFF", logo: "/logos/genlayer.svg", status: "operational" },
 ];
 

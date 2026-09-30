@@ -1,5 +1,23 @@
-import { mainnet, sepolia, baseSepolia } from "viem/chains";
+import { mainnet, sepolia, baseSepolia, opBNB } from "viem/chains";
 import { defineChain, type Chain } from "viem";
+
+/** BNB Chain (BSC) — custom definition so the official public RPC comes first */
+export const bnbChain = /*#__PURE__*/ defineChain({
+  id: 56,
+  name: "BNB Chain",
+  nativeCurrency: { decimals: 18, name: "BNB", symbol: "BNB" },
+  rpcUrls: {
+    default: {
+      http: ["https://bsc-dataseed.binance.org", "https://56.rpc.thirdweb.com"],
+    },
+    public: {
+      http: ["https://bsc-dataseed.binance.org", "https://56.rpc.thirdweb.com"],
+    },
+  },
+  blockExplorers: {
+    default: { name: "BscScan", url: "https://bscscan.com" },
+  },
+});
 
 export const giwaSepoliaChain = /*#__PURE__*/ defineChain({
   id: 91342,
@@ -302,6 +320,16 @@ export const mainnetNetworks: NetworkConfig[] = [
     color: "#00D4AA",
     logo: "/logos/arc.png",
   }),
+  makeNetworkConfig(bnbChain, {
+    shortName: "BNB",
+    color: "#F0B90B",
+    logo: "/logos/bnb.svg",
+  }),
+  makeNetworkConfig(opBNB, {
+    shortName: "opBNB",
+    color: "#00B2A9",
+    logo: "/logos/opbnb.svg",
+  }),
 ];
 
 export const testnetNetworks: NetworkConfig[] = [
@@ -365,6 +393,8 @@ export const allChains = [
   robinhoodChain,
   inkChain,
   arcMainnetChain,
+  bnbChain,
+  opBNB,
   sepolia,
   baseSepolia,
   giwaSepoliaChain,

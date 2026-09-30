@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="opBNB">
+  <g fill="#00B2A9">
+    <polygon points="32,24 40,32 32,40 24,32"/>
+    <polygon points="32,5 40,13 32,21 24,13"/>
+    <polygon points="32,43 40,51 32,59 24,51"/>
+    <polygon points="13,24 21,32 13,40 5,32"/>
+    <polygon points="51,24 59,32 51,40 43,32"/>
+  </g>
+  <circle cx="49" cy="49" r="13" fill="#0B0F1A"/>
+  <circle cx="49" cy="49" r="12" fill="none" stroke="#F0B90B" stroke-width="2"/>
+  <text x="49" y="54" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="15" font-weight="700" fill="#F0B90B" text-anchor="middle">op</text>
+</svg>
