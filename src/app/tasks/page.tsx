@@ -31,6 +31,8 @@ const SOULBOUND_ADDR: Record<number, `0x${string}` | ""> = {
    5042: "0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0",
 // SoulboundStreak — verified; wired to this chain's NikBase (0x94e067F6…)
   204: "0x92783e87c0F00c3B58597efee4F2743395e526af",
+// SoulboundStreak — verified; wired to this chain's NikBase (0x4AE47749…)
+  56: "0x7Ac043C44b4BCEac7ccd8FdD5906b2EF8B93ee05",
 };
 
 const SOULBOUND_ABI = [
