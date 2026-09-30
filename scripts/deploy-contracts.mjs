@@ -19,6 +19,7 @@ const CONTRACTS = [
   {
     name: "NikBase",
     artifact: "out/NikBase.sol/NikBase.json",
+    args: () => [],
     maps: [
       { file: "src/config/chains.ts", anchor: "export const NIKBASE_CONTRACTS" },
       { file: "src/components/DailyTaskPanel.tsx", anchor: "export const CONTRACTS" },
@@ -27,8 +28,18 @@ const CONTRACTS = [
   {
     name: "Game2048",
     artifact: "out/Game2048.sol/Game2048.json",
+    args: () => [],
     maps: [
       { file: "src/config/chains.ts", anchor: "export const GAME2048_CONTRACTS" },
+    ],
+  },
+  {
+    // Depends on the NikBase deployed on the same chain, so it must run after it.
+    name: "SoulboundStreak",
+    artifact: "out/SoulboundStreak.sol/SoulboundStreak.json",
+    args: (onChain, account) => [onChain.NikBase, account],
+    maps: [
+      { file: "src/app/tasks/page.tsx", anchor: "const SOULBOUND_ADDR" },
     ],
   },
 ];
@@ -97,8 +108,9 @@ for (const target of TARGETS) {
 
   for (const contract of CONTRACTS) {
     const { abi, bytecode } = loadArtifact(contract.artifact);
+    const args = contract.args(deployed[target.id], account.address);
 
-    const hash = await wallet.deployContract({ abi, bytecode, chain: null });
+    const hash = await wallet.deployContract({ abi, bytecode, args, chain: null });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     const address = receipt.contractAddress;
     if (!address) {
@@ -107,6 +119,9 @@ for (const target of TARGETS) {
     }
     deployed[target.id][contract.name] = address;
     console.log(`  ✓ ${contract.name} → ${address}`);
+    if (args.length) {
+      console.log(`    args   ${args.join(", ")}`);
+    }
     console.log(`    tx     ${hash}`);
     console.log(`    ${net.blockExplorers.default.url}/address/${address}`);
   }
