@@ -231,6 +231,9 @@ export const GAME2048_CONTRACTS: Record<number, `0x${string}`> = {
   4441: "0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff",
   5042002: "0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff",
   1913: "0xff3A00Cf7d83723F88097bcc8230ae37B3aDF3ff",
+  // Game2048 — verified on bscscan / opbnb.bscscan (BNB uses 0x4f41…, the working verified instance)
+  56: "0x4f4102286c8a03CeE2b926c2AfAb06bdd5C6307A",
+  204: "0xaa96e7C48Ad064f7f7827ad9f38579dba3bae325",
 };
 
 export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
