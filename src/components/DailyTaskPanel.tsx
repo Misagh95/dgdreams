@@ -260,11 +260,18 @@ export default function DailyTaskPanel({
             prev.map((t, idx) => (idx === i ? { ...t, txHash: hash } : t))
           );
 
-          // Receipt poll (2s × 60): pinned site RPC first, wallet provider as
-          // fallback — same strategy ChainGreets uses.
+          // Receipt confirmation. Two signals, whichever lands first:
+          //   1) the receipt itself
+          //   2) a NEW BLOCK on the target chain (tx is mined within ~1 block)
+          // The old code slept a flat 2000ms before even the first check,
+          // which added ~2s of dead time per transaction on every chain.
           let receipt: { status?: string } | null = null;
-          for (let p = 0; p < 60 && !isCancelled.current; p++) {
-            await new Promise((r) => setTimeout(r, 2000));
+          const SCHEDULE = [150, 300, 500, 750, 1000, 1000, 1500, 1500, 2000];
+          let lastBlock = (await pubClient?.getBlockNumber().catch(() => undefined)) ?? 0n;
+          for (let p = 0; p < 90 && !isCancelled.current; p++) {
+            if (p > 0) {
+              await new Promise((r) => setTimeout(r, SCHEDULE[Math.min(p - 1, SCHEDULE.length - 1)]));
+            }
             try {
               const r = await pubClient?.getTransactionReceipt({ hash });
               if (r) { receipt = r as { status?: string }; break; }
@@ -276,6 +283,17 @@ export default function DailyTaskPanel({
               })) as { status?: string } | null;
               if (r) { receipt = r; break; }
             } catch { /* keep polling */ }
+            // Block moved: the tx is very likely in it, check once more right away.
+            try {
+              const bn = await pubClient?.getBlockNumber();
+              if (bn !== undefined && bn > lastBlock) {
+                lastBlock = bn;
+                try {
+                  const r2 = await pubClient?.getTransactionReceipt({ hash });
+                  if (r2) { receipt = r2 as { status?: string }; break; }
+                } catch { /* next round */ }
+              }
+            } catch { /* ignore */ }
           }
           if (!receipt) {
             if (isCancelled.current) break;
