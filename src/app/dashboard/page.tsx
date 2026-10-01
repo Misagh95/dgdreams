@@ -496,7 +496,7 @@ export default function DashboardPage() {
                       Play & earn on-chain scores
                     </p>
                     <p className="text-[10px] font-mono mt-2" style={{ color: "var(--text-quaternary)" }}>
-                      High score: <span style={{ color: "var(--accent)" }}>0</span> &middot; 12 networks
+                      High score: <span style={{ color: "var(--accent)" }}>0</span> &middot; 14 networks
                     </p>
                     <div className="flex items-center gap-1.5 mt-3">
                       <div className="flex items-center gap-1 px-2 py-0.5 rounded-md"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import Image from "next/image";
 import { useWriteContract, useConfig } from "wagmi";
 import { getPublicClient } from "@wagmi/core";
 import { encodeFunctionData } from "viem";
@@ -17,6 +18,13 @@ const NIKBASE_ABI = [
 export { NIKBASE_ABI };
 
 /**
+ * Upper bound for the pre-flight eth_call. It runs between the user's click
+ * and the wallet popup, so anything slower than this is worse than skipping
+ * the check entirely.
+ */
+export const PREFLIGHT_TIMEOUT_MS = 2500;
+
+/**
  * The NikBase contract accepts each action only once per UTC day. Calling an
  * action twice makes the call revert, and wallets simulate before signing —
  * which surfaces as "Simulation Failed (execution revert)" and the tx never
@@ -31,12 +39,21 @@ export async function canStillRunTask(
 ): Promise<boolean> {
   try {
     const data = encodeFunctionData({ abi: NIKBASE_ABI, functionName: opts.method, args: [] });
-    await pubClient.call({ account: opts.account, to: opts.contract, data });
+    await Promise.race([
+      pubClient.call({ account: opts.account, to: opts.contract, data }),
+      // Hard cap: this preflight sits between the click and the wallet popup,
+      // so a slow RPC must never stall the user. Past the cap we optimistically
+      // allow the transaction — the wallet's own simulation is still the final
+      // guard, it just loses the friendly "already done today" label.
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("preflight timeout")), PREFLIGHT_TIMEOUT_MS)
+      ),
+    ]);
     return true;
   } catch (e: any) {
     const name: string = e?.name || "";
     const msg: string = `${e?.shortMessage || ""} ${e?.message || ""}`.toLowerCase();
-    // Only a real execution revert means "already done today". RPC hiccups
+    // A real execution revert means "already done today". RPC hiccups
     // (HTTP/timeout errors) must NOT block the transaction — let the wallet
     // decide in that case.
     const isRevert =
@@ -356,7 +373,13 @@ export default function DailyTaskPanel({
                 className="w-11 h-11 rounded-full grid place-items-center overflow-hidden"
                 style={{ background: `color-mix(in srgb, ${network.color} 22%, transparent)` }}
               >
-                <img src={network.logo} alt="" width={26} height={26} style={{ objectFit: "contain" }} />
+                <Image
+                  src={network.logo}
+                  alt=""
+                  width={26}
+                  height={26}
+                  style={{ objectFit: "contain" }}
+                />
               </div>
             </div>
 

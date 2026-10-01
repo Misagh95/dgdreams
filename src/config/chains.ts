@@ -1,5 +1,32 @@
-import { mainnet, sepolia, baseSepolia, opBNB } from "viem/chains";
+import { mainnet, sepolia, baseSepolia } from "viem/chains";
 import { defineChain, type Chain } from "viem";
+
+/** opBNB — custom so the flaky official node is not the only endpoint. */
+export const opBnbChain = /*#__PURE__*/ defineChain({
+  id: 204,
+  name: "opBNB",
+  nativeCurrency: { decimals: 18, name: "BNB", symbol: "BNB" },
+  rpcUrls: {
+    default: {
+      // measured: publicnode ~177ms warm, drpc ~189ms, official node flaky
+      http: [
+        "https://opbnb-rpc.publicnode.com",
+        "https://opbnb.drpc.org",
+        "https://opbnb-mainnet-rpc.bnbchain.org",
+      ],
+    },
+    public: {
+      http: [
+        "https://opbnb-rpc.publicnode.com",
+        "https://opbnb.drpc.org",
+        "https://opbnb-mainnet-rpc.bnbchain.org",
+      ],
+    },
+  },
+  blockExplorers: {
+    default: { name: "opBNB (BscScan)", url: "https://opbnb.bscscan.com" },
+  },
+});
 
 /** BNB Chain (BSC) — custom definition so the official public RPC comes first */
 export const bnbChain = /*#__PURE__*/ defineChain({
@@ -8,10 +35,10 @@ export const bnbChain = /*#__PURE__*/ defineChain({
   nativeCurrency: { decimals: 18, name: "BNB", symbol: "BNB" },
   rpcUrls: {
     default: {
-      http: ["https://bsc-dataseed.binance.org", "https://56.rpc.thirdweb.com"],
+      http: ["https://bsc-dataseed.binance.org", "https://bsc.drpc.org"],
     },
     public: {
-      http: ["https://bsc-dataseed.binance.org", "https://56.rpc.thirdweb.com"],
+      http: ["https://bsc-dataseed.binance.org", "https://bsc.drpc.org"],
     },
   },
   blockExplorers: {
@@ -57,10 +84,10 @@ export const arcMainnetChain = /*#__PURE__*/ defineChain({
     // rpc.mainnet.arc.io is currently sinkholed to 0.0.0.0 on many networks.
     // drpc.org is fast/reliable, ArcScan's public node works as fallback.
     default: {
-      http: ["https://arc.drpc.org", "https://rpc.arc-scan.org", "https://rpc.mainnet.arc.io"],
+      http: ["https://arc.drpc.org", "https://rpc.mainnet.arc.io"],
     },
     public: {
-      http: ["https://arc.drpc.org", "https://rpc.arc-scan.org", "https://rpc.mainnet.arc.io"],
+      http: ["https://arc.drpc.org", "https://rpc.mainnet.arc.io"],
     },
   },
   blockExplorers: {
@@ -331,7 +358,7 @@ export const mainnetNetworks: NetworkConfig[] = [
     color: "#F0B90B",
     logo: "/logos/bnb.svg",
   }),
-  makeNetworkConfig(opBNB, {
+  makeNetworkConfig(opBnbChain, {
     shortName: "opBNB",
     color: "#00B2A9",
     logo: "/logos/opbnb.svg",
@@ -400,7 +427,7 @@ export const allChains = [
   inkChain,
   arcMainnetChain,
   bnbChain,
-  opBNB,
+  opBnbChain,
   sepolia,
   baseSepolia,
   giwaSepoliaChain,

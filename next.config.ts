@@ -37,6 +37,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // lucide-react ships ~1500 icon modules; without this Next pulls the whole
+    // barrel into every page bundle and parse time shows up as slow loads.
+    optimizePackageImports: ["lucide-react", "framer-motion"],
+  },
   async headers() {
     return [
       {

@@ -202,7 +202,7 @@ export default function TasksPage() {
     args: validatedAddr ? [validatedAddr] : undefined,
     query: {
       enabled: !!validatedContract && !!validatedAddr && onRightChain && !isGen,
-      refetchInterval: 10_000,
+      refetchInterval: 30_000,
     },
   });
 
@@ -263,7 +263,7 @@ export default function TasksPage() {
     abi: NIKBASE_ABI,
     functionName: "getActionCounts",
     args: validatedAddr ? [validatedAddr] : undefined,
-    query: { enabled: !!nftNikBase && !!validatedAddr, refetchInterval: 10_000 },
+    query: { enabled: !!nftNikBase && !!validatedAddr, refetchInterval: 30_000 },
   });
   const nftActionsDone = Math.max(
     nftCounts ? Number(nftCounts[0]) : 0,
@@ -444,8 +444,6 @@ export default function TasksPage() {
     };
   }, [isConnected, validatedAddr, connectedNetwork, wagmiConfig, probeNonce]);
   const heroNetwork = selectedNetwork ?? connectedNetwork ?? mainnetNetworks[0];
-  const heroLogo = heroNetwork.logo;
-  const heroColor = heroNetwork.color;
   const heroName = heroNetwork.name;
   const heroActionCount = (selectedNetwork ?? connectedNetwork) && onRightChain ? actionCount : 0;
 
