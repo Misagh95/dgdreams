@@ -40,7 +40,13 @@ const nextConfig: NextConfig = {
   experimental: {
     // lucide-react ships ~1500 icon modules; without this Next pulls the whole
     // barrel into every page bundle and parse time shows up as slow loads.
-    optimizePackageImports: ["lucide-react", "framer-motion"],
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
+      "viem",
+      "wagmi",
+      "@rainbow-me/rainbowkit",
+    ],
   },
   async headers() {
     return [
