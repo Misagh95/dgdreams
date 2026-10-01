@@ -313,8 +313,14 @@
     border: 1px solid var(--border-default);
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-md), var(--shadow-inset);
-    backdrop-filter: blur(24px) saturate(1.3);
-    -webkit-backdrop-filter: blur(24px) saturate(1.3);
+    /* Kept, but the blur radius is capped: backdrop-filter re-blurs the whole
+       area underneath on every repaint, and a 24px blur over a full-screen
+       canvas is the single most expensive paint on low-end phones. 14px still
+       reads as glass at a fraction of the cost. */
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    /* Isolate so the blur cannot force a repaint of the whole page. */
+    contain: paint;
     transition: transform .45s var(--ease-out),
                 border-color .3s var(--ease),
                 box-shadow .45s var(--ease-out);
@@ -768,5 +774,18 @@
   *, *::before, *::after {
     animation-duration: .01ms !important;
     transition-duration: .01ms !important;
+  }
+  /* Decorative, always-on motion also stops repainting entirely. The JS-driven
+     canvas loops check this flag too (see SpaceBackground), so this covers the
+     expensive ones as well as the CSS keyframes. */
+  .orbit::before, .orbit::after,
+  .dg-ring, .dg-cube-spin, .dg-cube-float,
+  .dg-shimmer, .pulse-dot, .node-pulse {
+    animation: none !important;
+  }
+  /* Blur is the most expensive paint; drop it when motion is reduced. */
+  .glass-panel, .glass-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
