@@ -7,18 +7,18 @@ import usePerfMode from "@/hooks/usePerfMode";
 const THEMES = [
   { id: "web3-light", label: "Web3 Light", icon: "☀️", desc: "Chaingreets default", preview: "#6F75E5" },
   { id: "web3", label: "Web3 Dark", icon: "🌙", desc: "Lime & indigo glow", preview: "#D0FF94" },
-  { id: "cyber", label: "Cyber Neon", icon: "⚡", desc: "Cyan-purple neon", preview: "#00F2FE" },
-  { id: "emerald", label: "Emerald", icon: "👑", desc: "Dark forest luxury", preview: "#50E3C2" },
-  { id: "frost", label: "Frost", icon: "❄️", desc: "Obsidian minimal", preview: "#E8E8F0" },
-  { id: "matrix", label: "Matrix", icon: "💻", desc: "Hacker terminal", preview: "#00FF41" },
 ] as const;
 
 type ThemeId = (typeof THEMES)[number]["id"];
 
+/** Every theme that was removed maps onto the dark theme, so old saved
+ *  preferences keep giving a dark UI instead of falling back to light. */
+const LEGACY_DARK = new Set(["dark", "cyber", "emerald", "frost", "matrix"]);
+
 function getInitialTheme(): ThemeId {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("voidchain-theme");
-    if (stored === "dark" || stored === "cyber") return "cyber";
+    if (stored === "dark" || LEGACY_DARK.has(stored || "")) return "web3";
     if (stored && THEMES.some((t) => t.id === stored)) return stored as ThemeId;
   }
   return "web3-light";
