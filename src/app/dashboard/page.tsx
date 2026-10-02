@@ -1,7 +1,7 @@
 "use client";
 
 import { useAccount } from "wagmi";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -157,6 +157,9 @@ function NetworkCube({ logo, color, name }: { logo: string; color: string; name:
 export default function DashboardPage() {
   const { address, isConnected, chainId } = useAccount();
   const [mounted, setMounted] = useState(false);
+  // The dashboard runs three infinite ambient animations. Users who ask for
+  // reduced motion should get a static dashboard, not a cheaper animation.
+  const reduced = useReducedMotion();
 
   const connectedNetwork = chainId ? getNetworkConfig(chainId) : undefined;
   const cubeLogo = connectedNetwork?.logo || "/logo.svg";
@@ -188,12 +191,15 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3 sm:gap-5 flex-wrap relative">
               <div className="flex items-center gap-2">
                 <motion.div
-                  animate={{ opacity: [1, 0.4, 1], scale: [1, 0.85, 1] }}
+                  animate={reduced ? undefined : { opacity: [1, 0.4, 1], scale: [1, 0.85, 1] }}
                   transition={{ duration: 2, repeat: 999999, ease: "easeInOut" }}
                   className="w-2.5 h-2.5 rounded-full"
                   style={{
                     background: "var(--success)",
                     boxShadow: "0 0 12px var(--success), 0 0 24px color-mix(in srgb, var(--success) 40%, transparent)",
+                    // Own compositor layer: the glow no longer repaints the
+                    // header behind it on every frame.
+                    willChange: "opacity, transform",
                   }}
                 />
                 <span className="text-xs font-mono font-semibold tracking-wide" style={{ color: "var(--success)" }}>
@@ -208,13 +214,14 @@ export default function DashboardPage() {
               {!isConnected ? (
                 <Link href="/profile">
                   <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 24px color-mix(in srgb, var(--accent) 40%, transparent)" }}
+                    whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
                     style={{
                       background: "var(--theme-gradient)",
                       color: "#fff",
                       textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                      willChange: "transform",
                     }}
                   >
                     <Zap className="w-3.5 h-3.5" />
@@ -401,7 +408,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
             {networks.map((chain) => (
               <motion.div key={chain.short}
-                initial={{ opacity: 0, y: 10 }}
+                initial={reduced ? undefined : { opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + networks.indexOf(chain) * 0.04 }}>
                 <ChainCard chain={chain} />
@@ -455,12 +462,13 @@ export default function DashboardPage() {
           <motion.div {...fadeUp} transition={{ delay: 0.28 }} className="lg:col-span-1">
             <Link href="/2048">
               <motion.div
-                whileHover={{ scale: 1.01, y: -3 }}
-                whileTap={{ scale: 0.99 }}
+                whileHover={reduced ? undefined : { scale: 1.01, y: -3 }}
+                whileTap={reduced ? undefined : { scale: 0.99 }}
                 className="rounded-2xl p-5 sm:p-6 cursor-pointer h-full relative overflow-hidden"
                 style={{
                   background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, var(--bg-card)) 0%, color-mix(in srgb, #4F46E5 6%, var(--bg-subtle)) 100%)",
                   border: "1px solid var(--border-default)",
+                  willChange: "transform",
                 }}
               >
                 <div className="absolute top-0 right-0 w-48 h-48 opacity-[0.04] pointer-events-none"
@@ -483,12 +491,16 @@ export default function DashboardPage() {
 
                   <div className="flex-1 flex flex-col items-center justify-center py-4">
                     <motion.div
-                  animate={{ rotate: [0, 1, -1, 0] }}
-                  transition={{ duration: 4, repeat: 999999, ease: "easeInOut" }}
+                      animate={reduced ? undefined : { opacity: [1, 0.82, 1] }}
+                      transition={{ duration: 4, repeat: 999999, ease: "easeInOut" }}
                       className="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-black mb-3"
                       style={{
                         background: "var(--theme-gradient)",
                         boxShadow: "0 0 32px color-mix(in srgb, var(--accent) 20%, transparent)",
+                        // Opacity pulses on the compositor; rotating this box
+                        // re-rasterised the 32px glow every frame for a ±1deg
+                        // wobble nobody could see.
+                        willChange: "opacity",
                       }}>
                       2048
                     </motion.div>
@@ -529,12 +541,13 @@ export default function DashboardPage() {
           >
             <div className="flex items-center gap-2">
               <motion.div
-                animate={{ opacity: [1, 0.3, 1], scale: [1, 0.8, 1] }}
+                animate={reduced ? undefined : { opacity: [1, 0.3, 1], scale: [1, 0.8, 1] }}
                 transition={{ duration: 2, repeat: 999999 }}
                 className="w-2 h-2 rounded-full"
                 style={{
                   background: "var(--success)",
                   boxShadow: "0 0 8px var(--success)",
+                  willChange: "opacity, transform",
                 }}
               />
               <span style={{ color: "var(--success)", fontWeight: 600 }}>SYSTEM ONLINE</span>
