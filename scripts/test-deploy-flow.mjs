@@ -14,7 +14,7 @@ const RPC = "http://127.0.0.1:8545";
 // anvil account #0
 const account = privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
 
-const NAMES = ["NikBase", "SoulboundStreak", "Game2048", "LitePrediction"];
+const NAMES = ["NikBase", "SimpleToken", "SimpleNft", "SoulboundStreak", "Game2048", "LitePrediction"];
 
 const transport = http(RPC);
 const pub = createPublicClient({ transport });
@@ -33,6 +33,10 @@ for (const name of NAMES) {
   const args =
     name === "SoulboundStreak" && nikAddress
       ? [nikAddress, account.address]
+      : name === "SimpleToken"
+      ? ["Demo Token", "DEMO", (1_000_000n * 10n ** 18n).toString()]
+      : name === "SimpleNft"
+      ? ["Demo Collection", "DEMO", "https://example.com/meta/"]
       : [];
 
   const data = encodeDeployData({ abi: art.abi, bytecode: art.bytecode, args });
@@ -77,6 +81,21 @@ for (const name of NAMES) {
       args: [account.address],
     });
     check = `playCount -> ${pc}`;
+  }
+  if (name === "SimpleToken") {
+    const [supply, nm, sym] = await Promise.all([
+      pub.readContract({ address: addr, abi: art.abi, functionName: "totalSupply" }),
+      pub.readContract({ address: addr, abi: art.abi, functionName: "name" }),
+      pub.readContract({ address: addr, abi: art.abi, functionName: "symbol" }),
+    ]);
+    check = `name=${nm} symbol=${sym} supply=${supply}`;
+  }
+  if (name === "SimpleNft") {
+    const [nm, base] = await Promise.all([
+      pub.readContract({ address: addr, abi: art.abi, functionName: "name" }),
+      pub.readContract({ address: addr, abi: art.abi, functionName: "baseURI" }),
+    ]);
+    check = `name=${nm} baseURI=${base}`;
   }
 
   console.log(`✓ ${name.padEnd(16)} ${addr}  initCode ${((data.length - 2) / 2)}B  ${check}`);

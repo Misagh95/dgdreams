@@ -415,7 +415,7 @@ export default function DailyTaskPanel({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div className="launch-console pointer-events-auto max-h-[88vh] flex flex-col">
 
-          {/* ── سرستون ── */}
+          {/* ── header ── */}
           <div className="flex flex-col items-center gap-3 px-6 pt-8 pb-6">
             <div className="orbit">
               <div
@@ -451,7 +451,7 @@ export default function DailyTaskPanel({
               </a>
             </div>
 
-            {/* شمارنده‌ی بزرگ */}
+            {/* big counter */}
             <div className="flex items-baseline gap-1 mt-1">
               <span className="stat-value" style={{ fontSize: "2rem" }}>{completedCount}</span>
               <span className="text-sm" style={{ color: "var(--text-faint)" }}>/ {taskList.length}</span>
@@ -461,7 +461,7 @@ export default function DailyTaskPanel({
             </div>
           </div>
 
-          {/* ── مراحل ── */}
+          {/* ── steps ── */}
           <div className="px-6 pb-2 overflow-y-auto">
             <div className="spine">
               <div
@@ -516,7 +516,7 @@ export default function DailyTaskPanel({
             </div>
           </div>
 
-          {/* ── نوار فرمان ── */}
+          {/* ── command bar ── */}
           <div
             className="flex items-center gap-3 px-6 py-5 mt-2"
             style={{ borderTop: "1px solid var(--border-default)" }}

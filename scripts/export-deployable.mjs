@@ -23,6 +23,25 @@ const DEPLOYABLE = [
     blurb:
       "Records GM, check-in and GN once per UTC day per wallet, and tracks the streak. One deployment per network.",
     tag: "missions",
+    glyph: "◈",
+  },
+  {
+    name: "SimpleToken",
+    artifact: "SimpleToken.sol/SimpleToken.json",
+    title: "SimpleToken — ERC-20",
+    blurb:
+      "A plain token with a name, symbol and initial supply that you choose. Owner can mint or burn afterwards.",
+    tag: "token",
+    glyph: "◎",
+  },
+  {
+    name: "SimpleNft",
+    artifact: "SimpleNft.sol/SimpleNft.json",
+    title: "SimpleNft — ERC-721 collection",
+    blurb:
+      "A plain NFT collection. Owner mints tokens one at a time or in a batch; metadata comes from a base URI you set.",
+    tag: "NFT",
+    glyph: "⬡",
   },
   {
     name: "SoulboundStreak",
@@ -31,6 +50,7 @@ const DEPLOYABLE = [
     blurb:
       "ERC-721 badge that can only be minted once per wallet and can never be sold or transferred. Needs the NikBase address of the same network.",
     tag: "NFT",
+    glyph: "⬢",
   },
   {
     name: "Game2048",
@@ -39,6 +59,7 @@ const DEPLOYABLE = [
     blurb:
       "Stores play count and high score for the on-chain 2048 game. Very small and very cheap to deploy.",
     tag: "game",
+    glyph: "▦",
   },
   {
     name: "LitePrediction",
@@ -47,6 +68,7 @@ const DEPLOYABLE = [
     blurb:
       "Create markets, take a side, resolve and claim. Intended for a LiteVM-style chain.",
     tag: "market",
+    glyph: "◐",
   },
 ];
 
@@ -76,12 +98,12 @@ for (const c of DEPLOYABLE) {
     title: c.title,
     blurb: c.blurb,
     tag: c.tag,
+    glyph: c.glyph,
     abi,
     bytecode,
     constructorInputs: ctor ? ctor.inputs : [],
     runtimeBytes,
   };
-
   const dest = join(DEST, `${c.name}.json`);
   writeFileSync(dest, JSON.stringify(payload));
   const kb = (JSON.stringify(payload).length / 1024).toFixed(0);

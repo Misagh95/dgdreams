@@ -10,8 +10,11 @@ import { mainnetNetworks, testnetNetworks, NIKBASE_CONTRACTS } from "@/config/ch
 type Artifact = {
   name: string;
   title: string;
+
   blurb: string;
+
   tag: string;
+  glyph: string;
   abi: Abi;
   bytecode: `0x${string}`;
   constructorInputs: AbiParameter[];
@@ -19,9 +22,35 @@ type Artifact = {
 };
 
 const ALL_NETWORKS = [...mainnetNetworks, ...testnetNetworks];
-const NAMES = ["NikBase", "SoulboundStreak", "Game2048", "LitePrediction"];
+const NAMES = ["NikBase", "SimpleToken", "SimpleNft", "SoulboundStreak", "Game2048", "LitePrediction"];
 const card = { background: "var(--bg-card)", border: "1px solid var(--border-default)" } as const;
 const inputStyle = { background: "var(--bg-subtle)", border: "1px solid var(--border-default)", color: "var(--text-primary)" };
+
+/** ASCII digits, so the UI stays consistent. */
+function faDigits(v: string | number): string {
+  return String(v);
+}
+
+/** numbered section header, so the three steps read as a sequence */
+function Step({ n, title }: { n: string; title: string }) {
+  return (
+    <div className="flex items-center gap-2.5 pt-1">
+      <span
+        className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-mono font-bold flex-shrink-0"
+        style={{
+          background: "color-mix(in srgb, var(--accent) 16%, transparent)",
+          border: "1px solid color-mix(in srgb, var(--accent) 34%, transparent)",
+          color: "var(--accent)",
+        }}
+      >
+        {n}
+      </span>
+      <span className="text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>
+        {title}
+      </span>
+    </div>
+  );
+}
 
 export default function DeployPage() {
   const { address, isConnected, chainId } = useAccount();
@@ -136,11 +165,20 @@ export default function DeployPage() {
 
   return (
     <DashboardLayout title="Deploy" subtitle="// put a contract on-chain from your own wallet">
-      <div className="max-w-3xl space-y-4">
-        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-          Pick a contract and a network. <strong>Your wallet pays the gas</strong> — the app
-          never holds keys and never deploys on your behalf.
-        </p>
+      <div className="max-w-3xl space-y-5">
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            background: "color-mix(in srgb, var(--accent) 7%, var(--bg-card))",
+            border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)",
+          }}
+        >
+          <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            Pick a contract and any configured network.{" "}
+            <strong style={{ color: "var(--text-bright)" }}>Your wallet pays the gas</strong> — the app
+            never holds keys and never deploys on your behalf.
+          </p>
+        </div>
 
         {Object.keys(artifacts).length === 0 && (
           <p className="text-xs font-mono" style={{ color: "var(--text-quaternary)" }}>
@@ -148,6 +186,7 @@ export default function DeployPage() {
           </p>
         )}
 
+        <Step n="1" title="Pick a contract" />
         <div className="grid gap-3 sm:grid-cols-2">
           {Object.values(artifacts).map((a) => {
             const on = a.name === selectedName;
@@ -155,35 +194,62 @@ export default function DeployPage() {
               <button
                 key={a.name}
                 onClick={() => setSelectedName(a.name)}
-                className="text-left rounded-2xl p-4 transition-all"
+                className="glass-card text-left rounded-2xl p-4 transition-all"
                 style={{
-                  background: on ? "var(--bg-strong)" : "var(--bg-card)",
-                  border: `1px solid ${on ? "color-mix(in srgb, var(--accent) 45%, transparent)" : "var(--border-default)"}`,
+                  background: on
+                    ? "color-mix(in srgb, var(--accent) 10%, var(--bg-card))"
+                    : "var(--bg-card)",
+                  border: `1px solid ${on ? "color-mix(in srgb, var(--accent) 50%, transparent)" : "var(--border-default)"}`,
+                  boxShadow: on ? "0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent)" : undefined,
                 }}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold" style={{ color: "var(--text-bright)" }}>
-                    {a.title}
+                <div className="flex items-start gap-3">
+                  <span
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0"
+                    style={{
+                      background: "color-mix(in srgb, var(--accent) 16%, transparent)",
+                      border: "1px solid color-mix(in srgb, var(--accent) 32%, transparent)",
+                      color: "var(--accent)",
+                    }}
+                  >
+                    {a.glyph ?? "◆"}
                   </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold truncate" style={{ color: "var(--text-bright)" }}>
+                        {a.title}
+                      </span>
+                      {on && (
+                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "var(--accent)" }} />
+                      )}
+                    </div>
+                    <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+                      {a.name}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-[11px] mt-3 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                  {a.blurb}
+                </p>
+                <div className="flex items-center gap-2 mt-3">
                   <span
                     className="text-[9px] font-mono px-2 py-0.5 rounded-md"
-                    style={{ background: "color-mix(in srgb, var(--accent) 14%, transparent)", color: "var(--accent)" }}
+                    style={{ background: "var(--bg-subtle)", color: "var(--text-quaternary)" }}
                   >
                     {a.tag}
                   </span>
+                  <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+                    {faDigits((a.runtimeBytes / 1024).toFixed(1))}KB
+                    {a.constructorInputs.length > 0 && ` · ${faDigits(a.constructorInputs.length)} ctor args`}
+                  </span>
                 </div>
-                <p className="text-[11px] mt-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
-                  {a.blurb}
-                </p>
-                <p className="text-[10px] font-mono mt-2" style={{ color: "var(--text-quaternary)" }}>
-                  {(a.runtimeBytes / 1024).toFixed(1)}KB runtime
-                  {a.constructorInputs.length > 0 && ` · ${a.constructorInputs.length} ctor args`}
-                </p>
               </button>
             );
           })}
         </div>
 
+        {/* 2 — network */}
+        <Step n="2" title="Pick a network" />
         <div className="rounded-2xl p-4" style={card}>
           <label className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--text-quaternary)" }}>
             Network
@@ -215,6 +281,7 @@ export default function DeployPage() {
           )}
         </div>
 
+          <Step n="3" title="Constructor inputs (if any)" />
         {contract && contract.constructorInputs.length > 0 && (
           <div className="rounded-2xl p-4 space-y-3" style={card}>
             <label className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--text-quaternary)" }}>
@@ -319,7 +386,7 @@ export default function DeployPage() {
           <summary className="text-[11px] font-mono cursor-pointer" style={{ color: "var(--text-tertiary)" }}>
             How this works / safety notes
           </summary>
-          <ul className="text-[11px] mt-3 space-y-1.5" style={{ color: "var(--text-tertiary)" }}>
+          <ul className="text-[11px] mt-3 space-y-1.5 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
             <li>• The bytecode here is the compiled output of this repo&apos;s contracts.</li>
             <li>• Deployment is a plain contract-creation transaction sent by your own wallet.</li>
             <li>• Gas is set by the network you pick — check the cost before signing on a mainnet.</li>
