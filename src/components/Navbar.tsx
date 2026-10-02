@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/tasks", label: "Tasks" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/2048", label: "2048" },
+  { href: "/deploy", label: "Deploy" },
 ];
 
 const MORE_LINKS = [

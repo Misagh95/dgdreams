@@ -21,6 +21,7 @@ import {
   BarChart3,
   Globe,
   ArrowDownUp,
+  Rocket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", color: "#6F75E5" },
   { href: "/tasks", icon: Zap, label: "Daily Tasks", color: "#F59E0B" },
   { href: "/swap", icon: ArrowDownUp, label: "Swap", color: "#00D4AA" },
+  { href: "/deploy", icon: Rocket, label: "Deploy", color: "#F97316" },
   { href: "/litevm", icon: Star, label: "LITVM Hub", color: "#00D4FF" },
   { href: "/genlayer", icon: Globe, label: "GenLayer Hub", color: "#3B82F6" },
   { href: "/truthcourt", icon: Scale, label: "TruthCourt", color: "#A78BFA" },
