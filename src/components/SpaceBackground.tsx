@@ -2,6 +2,14 @@
 
 import { useEffect, useRef } from "react";
 
+// Frame budget for the ambient starfield. It drifts very slowly and is made of
+// soft gradients, so 60fps bought nothing visible while doubling the per-second
+// fill cost. 30fps is indistinguishable and halves the work.
+const TARGET_FPS = 30;
+const MIN_FRAME_MS = 1000 / TARGET_FPS;
+// Never drop below this: an 8fps background still beats a machine pinned at 100%.
+const MAX_FRAME_MS = 1000 / 8;
+
 export default function SpaceBackground() {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -12,23 +20,34 @@ export default function SpaceBackground() {
     if (!ctx) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // A weak machine should not pay for ambient motion at all.
+    const weak = (navigator.hardwareConcurrency ?? 8) <= 2;
+
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
-    let w = 0, h = 0, dpr = 1, raf = 0, t = 0, running = true;
-    let started = false;
+    let w = 0, h = 0, dpr = 1, raf = 0, t = 0, running = true, started = false;
+    let last = 0;
+    let frameBudget = MIN_FRAME_MS;
     const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
 
-    type Layer = { c: HTMLCanvasElement; depth: number; alpha: number; phase: number; drift: number };
-    let layers: Layer[] = [];
-    let nebula: HTMLCanvasElement | null = null;
+    type Meteor = { x: number; y: number; vx: number; vy: number; len: number; life: number; max: number };
+    let meteors: Meteor[] = [];
+    let nextMeteor = 260;
 
-    function starLayer(count: number, rMin: number, rMax: number, glow: number): HTMLCanvasElement {
-      const c = document.createElement("canvas");
-      c.width = Math.ceil(w * dpr);
-      c.height = Math.ceil(h * dpr);
-      const g = c.getContext("2d")!;
-      g.scale(dpr, dpr);
+    /**
+     * The starfield is baked into two pre-composited skies (far/near) ONCE per
+     * resize. Everything static — the soft nebula, the stars and the horizon
+     * glow — used to be re-stamped hundreds of times per frame, plus a
+     * full-screen radial gradient was allocated and evaluated every frame.
+     * Now a frame is just two blits plus the meteors.
+     */
+    let skyFar: HTMLCanvasElement | null = null;
+    let skyNear: HTMLCanvasElement | null = null;
 
+    function paintStars(
+      g: CanvasRenderingContext2D,
+      count: number, rMin: number, rMax: number, glow: number, alpha: number
+    ) {
       for (let i = 0; i < count; i++) {
         const x = Math.random() * w;
         const y = Math.random() * h;
@@ -45,42 +64,69 @@ export default function SpaceBackground() {
           g.arc(x, y, r * glow, 0, Math.PI * 2);
           g.fill();
         }
-        g.fillStyle = `rgba(${col},${rand(0.55, 1)})`;
+        g.fillStyle = `rgba(${col},${rand(0.55, 1) * alpha})`;
         g.beginPath();
         g.arc(x, y, r, 0, Math.PI * 2);
         g.fill();
       }
-      return c;
     }
-
+/** Soft nebula with the 40px blur applied ONCE, at viewport size. */
     function buildNebula(): HTMLCanvasElement {
       const c = document.createElement("canvas");
-      const s = Math.ceil(Math.max(w, h) * 1.4);
-      c.width = c.height = s;
+      c.width = Math.ceil(w * dpr);
+      c.height = Math.ceil(h * dpr);
       const g = c.getContext("2d")!;
+      g.scale(dpr, dpr);
 
       const blobs = [
-        { x: 0.28, y: 0.3,  r: 0.42, col: "56,120,255",  a: 0.16 },
-        { x: 0.74, y: 0.52, r: 0.36, col: "139,92,246",  a: 0.13 },
-        { x: 0.5,  y: 0.82, r: 0.34, col: "34,228,250",  a: 0.10 },
-        { x: 0.12, y: 0.74, r: 0.26, col: "255,92,150",  a: 0.06 },
+        { x: 0.28, y: 0.3, r: 0.42, col: "56,120,255", a: 0.16 },
+        { x: 0.74, y: 0.52, r: 0.36, col: "139,92,246", a: 0.13 },
+        { x: 0.5, y: 0.82, r: 0.34, col: "34,228,250", a: 0.10 },
+        { x: 0.12, y: 0.74, r: 0.26, col: "255,92,150", a: 0.06 },
       ];
       for (const b of blobs) {
-        const grad = g.createRadialGradient(b.x * s, b.y * s, 0, b.x * s, b.y * s, b.r * s);
+        const grad = g.createRadialGradient(b.x * w, b.y * h, 0, b.x * w, b.y * h, b.r * Math.max(w, h));
         grad.addColorStop(0, `rgba(${b.col},${b.a})`);
         grad.addColorStop(0.45, `rgba(${b.col},${b.a * 0.35})`);
         grad.addColorStop(1, `rgba(${b.col},0)`);
         g.fillStyle = grad;
-        g.fillRect(0, 0, s, s);
+        g.fillRect(0, 0, w, h);
       }
+      // One-time blur. Previously the source was 1.4x the largest side, so the
+      // per-frame blit resampled ~7MP even though the blur itself was cached.
       g.filter = "blur(40px)";
       g.drawImage(c, 0, 0);
       return c;
     }
 
-    type Meteor = { x: number; y: number; vx: number; vy: number; len: number; life: number; max: number };
-    let meteors: Meteor[] = [];
-    let nextMeteor = 260;
+    function buildSketches() {
+      const density = (w * h) / 1000;
+
+      const far = document.createElement("canvas");
+      far.width = Math.ceil(w * dpr);
+      far.height = Math.ceil(h * dpr);
+      const gf = far.getContext("2d")!;
+      gf.scale(dpr, dpr);
+      gf.drawImage(buildNebula(), 0, 0, w, h);
+      paintStars(gf, Math.floor(density * 0.10), 0.3, 0.7, 0, 0.5);
+      paintStars(gf, Math.floor(density * 0.045), 0.6, 1.1, 3, 0.8);
+      // horizon glow is static, so it belongs in the bake, not the frame loop
+      const horizon = gf.createRadialGradient(w / 2, h * 1.5, h * 0.55, w / 2, h * 1.5, h * 1.05);
+      horizon.addColorStop(0, "rgba(34,228,250,0.10)");
+      horizon.addColorStop(0.55, "rgba(70,90,220,0.05)");
+      horizon.addColorStop(1, "rgba(0,0,0,0)");
+      gf.fillStyle = horizon;
+      gf.fillRect(0, 0, w, h);
+      skyFar = far;
+
+      const near = document.createElement("canvas");
+      near.width = Math.ceil(w * dpr);
+      near.height = Math.ceil(h * dpr);
+      const gn = near.getContext("2d")!;
+      gn.scale(dpr, dpr);
+      paintStars(gn, Math.floor(density * 0.014), 1.0, 1.8, 5, 1.0);
+      skyNear = near;
+    }
 
     function spawnMeteor() {
       const fromLeft = Math.random() > 0.35;
@@ -108,45 +154,44 @@ export default function SpaceBackground() {
         canvas.style.height = `${h}px`;
       }
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      const density = (w * h) / 1000;
-      layers = [
-        { c: starLayer(Math.floor(density * 0.10), 0.3, 0.7, 0),  depth: 0.006, alpha: 0.5,  phase: 0,   drift: 0.004 },
-        { c: starLayer(Math.floor(density * 0.045), 0.6, 1.1, 3), depth: 0.018, alpha: 0.8,  phase: 2.1, drift: 0.010 },
-        { c: starLayer(Math.floor(density * 0.014), 1.0, 1.8, 5), depth: 0.040, alpha: 1.0,  phase: 4.2, drift: 0.020 },
-      ];
-      nebula = buildNebula();
+      buildSketches();
     }
 
-    function frame() {
+    /** Draw a sky twice so its drift wraps seamlessly. */
+    function blitWrapped(img: HTMLCanvasElement, ox: number, oy: number) {
+      ctx!.drawImage(img, ox, oy, w, h);
+      ctx!.drawImage(img, ox + w, oy, w, h);
+    }
+
+    function draw(ts: number) {
       if (!running) return;
+      const t0 = performance.now();
+
+      // Frame cap: rAF still fires at 60Hz, but the actual paint is throttled.
+      if (last && ts - last < frameBudget) {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
+      last = ts;
+
       ctx!.clearRect(0, 0, w, h);
 
       ptr.x += (ptr.tx - ptr.x) * 0.045;
       ptr.y += (ptr.ty - ptr.y) * 0.045;
 
-      if (nebula) {
-        const s = nebula.width;
-        ctx!.save();
-        ctx!.globalCompositeOperation = "screen";
-        ctx!.translate(w / 2 + ptr.x * 12, h / 2 + ptr.y * 12);
-        ctx!.rotate(t * 0.00004);
-        ctx!.globalAlpha = 0.9 + Math.sin(t * 0.002) * 0.1;
-        ctx!.drawImage(nebula, -s / 2, -s / 2);
-        ctx!.restore();
+      // Two full-screen blits instead of six + a rotated 7MP "screen" composite
+      // + a freshly allocated full-screen radial gradient every frame.
+      if (skyFar) {
+        ctx!.globalAlpha = 0.82 + Math.sin(t * 0.012) * 0.18;
+        const oxF = ((t * 0.004) % w + w) % w;
+        blitWrapped(skyFar, -oxF + ptr.x * 12, ptr.y * 12);
       }
-
-      for (const L of layers) {
-        const ox = ((t * L.drift) % w + w) % w;
-        const twinkle = L.alpha * (0.82 + Math.sin(t * 0.012 + L.phase) * 0.18);
-        ctx!.save();
-        ctx!.globalAlpha = twinkle;
-        const dx = -ox + ptr.x * L.depth * 900;
-        const dy = ptr.y * L.depth * 900;
-        ctx!.drawImage(L.c, dx, dy, w, h);
-        ctx!.drawImage(L.c, dx + w, dy, w, h);
-        ctx!.restore();
+      if (skyNear) {
+        ctx!.globalAlpha = 0.86 + Math.sin(t * 0.012 + 2.1) * 0.14;
+        const oxN = ((t * 0.02) % w + w) % w;
+        blitWrapped(skyNear, -oxN + ptr.x * 40, ptr.y * 40);
       }
+      ctx!.globalAlpha = 1;
 
       if (!reduced) {
         if (--nextMeteor <= 0) {
@@ -159,11 +204,10 @@ export default function SpaceBackground() {
           const fade = Math.sin((m.life / m.max) * Math.PI);
           const tailX = m.x - m.vx * (m.len / 10);
           const tailY = m.y - m.vy * (m.len / 10);
-          const g = ctx!.createLinearGradient(m.x, m.y, tailX, tailY);
-          g.addColorStop(0, `rgba(255,255,255,${0.9 * fade})`);
-          g.addColorStop(0.25, `rgba(150,220,255,${0.4 * fade})`);
-          g.addColorStop(1, "rgba(150,220,255,0)");
-          ctx!.strokeStyle = g;
+          // Solid stroke + globalAlpha instead of allocating a linear gradient
+          // for every meteor on every frame (a 1.6px line, visually identical).
+          ctx!.globalAlpha = fade;
+          ctx!.strokeStyle = "rgb(210,238,255)";
           ctx!.lineWidth = 1.6;
           ctx!.lineCap = "round";
           ctx!.beginPath();
@@ -171,17 +215,21 @@ export default function SpaceBackground() {
           ctx!.lineTo(tailX, tailY);
           ctx!.stroke();
         }
+        ctx!.globalAlpha = 1;
       }
 
-      const horizon = ctx!.createRadialGradient(w / 2, h * 1.5, h * 0.55, w / 2, h * 1.5, h * 1.05);
-      horizon.addColorStop(0, "rgba(34,228,250,0.10)");
-      horizon.addColorStop(0.55, "rgba(70,90,220,0.05)");
-      horizon.addColorStop(1, "rgba(0,0,0,0)");
-      ctx!.fillStyle = horizon;
-      ctx!.fillRect(0, 0, w, h);
-
       t += reduced ? 0 : 1;
-      raf = requestAnimationFrame(frame);
+
+      // Adapt to what the machine can actually do: if our own paint is eating
+      // the frame, back off instead of pinning a core at 100%.
+      const spent = performance.now() - t0;
+      if (spent > 12 && frameBudget < MAX_FRAME_MS) {
+        frameBudget = Math.min(frameBudget * 1.5, MAX_FRAME_MS);
+      } else if (spent < 4 && frameBudget > MIN_FRAME_MS) {
+        frameBudget = Math.max(frameBudget / 1.25, MIN_FRAME_MS);
+      }
+
+      raf = requestAnimationFrame(draw);
     }
 
     const onMove = (e: MouseEvent) => {
@@ -190,28 +238,58 @@ export default function SpaceBackground() {
     };
     const onVis = () => {
       running = !document.hidden;
-      if (running) { raf = requestAnimationFrame(frame); } else { cancelAnimationFrame(raf); }
+      if (running) {
+        last = 0;
+        raf = requestAnimationFrame(draw);
+      } else {
+        cancelAnimationFrame(raf);
+      }
     };
+
+    function paintStatic() {
+      // reduced-motion / weak device: draw the sky once, no loop at all.
+      ctx!.clearRect(0, 0, w, h);
+      if (skyFar) ctx!.drawImage(skyFar, 0, 0, w, h);
+      if (skyNear) ctx!.drawImage(skyNear, 0, 0, w, h);
+    }
 
     function stop() {
       if (!started) return;
       started = false;
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
+      clearTimeout(resizeTimer);
+      window.removeEventListener("resize", onResizeThrottled);
       window.removeEventListener("mousemove", onMove);
       document.removeEventListener("visibilitychange", onVis);
       ctx!.clearRect(0, 0, w, h);
-      layers = [];
-      nebula = null;
+      skyFar = null;
+      skyNear = null;
       meteors = [];
+    }
+
+    let resizeTimer = 0;
+    function onResizeThrottled() {
+      // Re-baking the skies is not free; a drag-resize would otherwise queue a
+      // bake per event.
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        if (!started) return;
+        resize();
+        if (reduced || weak) paintStatic();
+      }, 200);
     }
 
     function start() {
       if (started) return;
       started = true;
       resize();
-      frame();
-      window.addEventListener("resize", resize);
+      if (reduced || weak) {
+        paintStatic();
+      } else {
+        last = 0;
+        raf = requestAnimationFrame(draw);
+      }
+      window.addEventListener("resize", onResizeThrottled);
       window.addEventListener("mousemove", onMove, { passive: true });
       document.addEventListener("visibilitychange", onVis);
     }
@@ -226,7 +304,10 @@ export default function SpaceBackground() {
       if (isLight()) stop();
       else start();
     });
-    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    themeObs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
 
     return () => {
       themeObs.disconnect();
