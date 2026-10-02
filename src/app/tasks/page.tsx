@@ -710,6 +710,7 @@ export default function TasksPage() {
           onTaskStart={handleSingleTaskStart}
           onTaskFailed={handleSingleTaskFailed}
           only={(selectedMissionId as "gm" | "checkIn" | "gn" | undefined) ?? undefined}
+          knownDoneIds={onChainDoneIds}
           onComplete={handleTaskComplete}
           autoStart={panelAutoStart}
         />

@@ -122,6 +122,12 @@ interface DailyTaskPanelProps {
   autoStart?: boolean;
   /** Run only this single task instead of the full 3-task sequence */
   only?: ActionId;
+  /**
+   * Task ids the page already verified as done-on-chain today (page-level
+   * probe). Skips those tasks locally with no pre-flight eth_call, so a
+   * completed task shows "already done" with zero network wait.
+   */
+  knownDoneIds?: Set<string>;
 }
 
 export default function DailyTaskPanel({
@@ -135,6 +141,7 @@ export default function DailyTaskPanel({
   onTaskFailed,
   autoStart,
   only,
+  knownDoneIds,
 }: DailyTaskPanelProps) {
   const taskList = only
     ? DAILY_TASKS.filter((t) => t.id === only)
@@ -222,14 +229,20 @@ export default function DailyTaskPanel({
           // same eth_call the wallet uses lets us spot "already done today"
           // BEFORE the wallet popup, so the user never sees the misleading
           // "Simulation Failed (execution revert)" error.
-          const stillRunnable = !pubClient
+          // Fast path first: the page may already know this mission is done
+          // today (page-level probe). Skip it locally with no pre-flight
+          // eth_call — zero network wait.
+          const isKnownDone = knownDoneIds?.has(step.id) ?? false;
+          const stillRunnable = isKnownDone
+            ? false
+            : !pubClient
             ? true
             : await canStillRunTask(pubClient, {
                 account: address,
                 contract: contractAddress,
                 method: step.method,
               });
-          if (!stillRunnable) {
+          if (isKnownDone || !stillRunnable) {
             setTasks((prev) =>
               prev.map((t, idx) =>
                 idx === i ? { ...t, status: "already" as TaskStatus } : t
@@ -353,7 +366,7 @@ export default function DailyTaskPanel({
     if (!hasFailure && !isCancelled.current && settled >= totalToRun) {
       onComplete();
     }
-  }, [contractAddress, writeContractAsync, tasks, isExecuting, onComplete, wagmiConfig, network.id, address, taskList]);
+  }, [contractAddress, writeContractAsync, tasks, isExecuting, onComplete, wagmiConfig, network.id, address, taskList, knownDoneIds]);
 
   const executeRef = useRef<() => Promise<void>>(undefined);
   executeRef.current = execute;
