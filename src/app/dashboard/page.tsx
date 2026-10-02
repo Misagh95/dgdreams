@@ -2,6 +2,7 @@
 
 import { useAccount } from "wagmi";
 import { motion, useReducedMotion } from "framer-motion";
+import usePerfMode from "@/hooks/usePerfMode";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -159,7 +160,9 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   // The dashboard runs three infinite ambient animations. Users who ask for
   // reduced motion should get a static dashboard, not a cheaper animation.
-  const reduced = useReducedMotion();
+  // Performance mode does the same, for anyone who prefers the CPU back.
+  const [perfLow] = usePerfMode();
+  const reduced = useReducedMotion() || perfLow;
 
   const connectedNetwork = chainId ? getNetworkConfig(chainId) : undefined;
   const cubeLogo = connectedNetwork?.logo || "/logo.svg";

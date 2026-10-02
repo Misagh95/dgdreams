@@ -275,7 +275,7 @@ export default function SpaceBackground() {
       resizeTimer = window.setTimeout(() => {
         if (!started) return;
         resize();
-        if (reduced || weak) paintStatic();
+        if (isStaticOnly()) paintStatic();
       }, 200);
     }
 
@@ -283,7 +283,7 @@ export default function SpaceBackground() {
       if (started) return;
       started = true;
       resize();
-      if (reduced || weak) {
+      if (isStaticOnly()) {
         paintStatic();
       } else {
         last = 0;
@@ -297,16 +297,24 @@ export default function SpaceBackground() {
     const isLight = () =>
       document.documentElement.getAttribute("data-theme") === "web3-light";
 
+    // Performance mode: same static frame as reduced-motion, and the loop is
+    // not started at all, so the starfield costs zero CPU per second.
+    const isStaticOnly = () =>
+      reduced ||
+      weak ||
+      document.documentElement.getAttribute("data-perf") === "low";
+
     // The starfield is only designed for dark themes — never run on light.
     if (!isLight()) start();
 
+    // react to both the theme switch and the performance-mode toggle
     const themeObs = new MutationObserver(() => {
       if (isLight()) stop();
       else start();
     });
     themeObs.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-theme"],
+      attributeFilter: ["data-theme", "data-perf"],
     });
 
     return () => {

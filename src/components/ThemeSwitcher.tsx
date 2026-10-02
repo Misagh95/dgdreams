@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Zap } from "lucide-react";
+import usePerfMode from "@/hooks/usePerfMode";
 
 const THEMES = [
   { id: "web3-light", label: "Web3 Light", icon: "☀️", desc: "Chaingreets default", preview: "#6F75E5" },
@@ -25,6 +27,7 @@ function getInitialTheme(): ThemeId {
 export default function ThemeSwitcher() {
   const [current, setCurrent] = useState<ThemeId>("web3-light");
   const [open, setOpen] = useState(false);
+  const [perfLow, setPerfLow] = usePerfMode();
 
   useEffect(() => {
     const t = getInitialTheme();
@@ -114,6 +117,43 @@ export default function ThemeSwitcher() {
                 </button>
               );
             })}
+
+            <div className="my-2 h-px" style={{ background: "var(--border-default)" }} />
+
+            <p className="text-[10px] font-mono px-2 py-1.5" style={{ color: "var(--text-quaternary)" }}>
+              PERFORMANCE
+            </p>
+            <button
+              onClick={() => setPerfLow(!perfLow)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200"
+              style={{ background: perfLow ? "var(--bg-strong)" : "transparent" }}
+              title="Turn off the animated background and the frosted blur so the page stops using the CPU while you wait for transactions."
+            >
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: perfLow
+                    ? "color-mix(in srgb, var(--accent) 18%, transparent)"
+                    : "var(--bg-subtle)",
+                  border: perfLow
+                    ? "1px solid color-mix(in srgb, var(--accent) 45%, transparent)"
+                    : "1px solid var(--border-default)",
+                }}
+              >
+                <Zap
+                  className="w-4 h-4"
+                  style={{ color: perfLow ? "var(--accent)" : "var(--text-tertiary)" }}
+                />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-xs font-semibold" style={{ color: "var(--text-bright)" }}>
+                  Performance mode {perfLow ? "ON" : "OFF"}
+                </div>
+                <div className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+                  {perfLow ? "Background static, no blur" : "Animated + frosted panels"}
+                </div>
+              </div>
+            </button>
           </div>
         </>
       )}
