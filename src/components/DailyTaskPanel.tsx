@@ -20,9 +20,11 @@ export { NIKBASE_ABI };
 /**
  * Upper bound for the pre-flight eth_call. It runs between the user's click
  * and the wallet popup, so anything slower than this is worse than skipping
- * the check entirely.
+ * the check entirely: past the cap we fail OPEN (send the tx) and let the
+ * wallet's own simulation decide. The check only exists to label an
+ * already-done task, not to gate the transaction.
  */
-export const PREFLIGHT_TIMEOUT_MS = 2500;
+export const PREFLIGHT_TIMEOUT_MS = 800;
 
 /**
  * The NikBase contract accepts each action only once per UTC day. Calling an
@@ -128,6 +130,14 @@ interface DailyTaskPanelProps {
    * completed task shows "already done" with zero network wait.
    */
   knownDoneIds?: Set<string>;
+  /**
+   * Timestamp of when the page-level probe finished. The probe already ran
+   * canStillRunTask for all three actions, so when it is recent every task
+   * NOT in knownDoneIds is provably runnable and the panel can skip its own
+   * pre-flight eth_call entirely — removing one round trip per mission.
+   * Freshness is evaluated at click time, not render time.
+   */
+  probeAt?: number;
 }
 
 export default function DailyTaskPanel({
@@ -142,6 +152,7 @@ export default function DailyTaskPanel({
   autoStart,
   only,
   knownDoneIds,
+  probeAt,
 }: DailyTaskPanelProps) {
   const taskList = only
     ? DAILY_TASKS.filter((t) => t.id === only)
@@ -229,13 +240,20 @@ export default function DailyTaskPanel({
           // same eth_call the wallet uses lets us spot "already done today"
           // BEFORE the wallet popup, so the user never sees the misleading
           // "Simulation Failed (execution revert)" error.
-          // Fast path first: the page may already know this mission is done
-          // today (page-level probe). Skip it locally with no pre-flight
-          // eth_call — zero network wait.
+          // Fast path: the page's own probe (3 parallel eth_calls, run on
+          // connect/completion) already answered both questions:
+          //   - knownDoneIds has it -> already done today, skip it locally
+          //   - probe fresh + not in knownDoneIds -> provably runnable, no
+          //     need for a second eth_call before the wallet popup
           const isKnownDone = knownDoneIds?.has(step.id) ?? false;
+          // Evaluated at click time: a probe younger than 15s already told us
+          // this task is runnable (it is absent from knownDoneIds), so the
+          // second eth_call would only repeat the same answer.
+          const probeIsFresh =
+            probeAt !== undefined && Date.now() - probeAt < 15_000;
           const stillRunnable = isKnownDone
             ? false
-            : !pubClient
+            : probeIsFresh || !pubClient
             ? true
             : await canStillRunTask(pubClient, {
                 account: address,
@@ -366,7 +384,7 @@ export default function DailyTaskPanel({
     if (!hasFailure && !isCancelled.current && settled >= totalToRun) {
       onComplete();
     }
-  }, [contractAddress, writeContractAsync, tasks, isExecuting, onComplete, wagmiConfig, network.id, address, taskList, knownDoneIds]);
+  }, [contractAddress, writeContractAsync, tasks, isExecuting, onComplete, wagmiConfig, network.id, address, taskList, knownDoneIds, probeAt]);
 
   const executeRef = useRef<() => Promise<void>>(undefined);
   executeRef.current = execute;

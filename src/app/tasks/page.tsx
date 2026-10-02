@@ -170,6 +170,9 @@ export default function TasksPage() {
   // user hit "Simulation Failed (execution revert)".
   const [onChainDoneIds, setOnChainDoneIds] = useState<Set<string>>(new Set());
   const [probeNonce, setProbeNonce] = useState(0);
+  // When the last probe finished, so DailyTaskPanel can skip its own redundant
+  // pre-flight eth_call while the answer is still fresh.
+  const [probeAt, setProbeAt] = useState(0);
 
   // Deep links from the dashboard mission cards: /tasks?mission=gm|checkIn|gn
   const [pendingMission, setPendingMission] = useState<"gm" | "checkIn" | "gn" | null>(null);
@@ -437,7 +440,10 @@ export default function TasksPage() {
           if (!ok) done.add(t.id);
         })
       );
-      if (!cancelled) setOnChainDoneIds(done);
+      if (!cancelled) {
+        setOnChainDoneIds(done);
+        setProbeAt(Date.now());
+      }
     })();
     return () => {
       cancelled = true;
@@ -711,6 +717,7 @@ export default function TasksPage() {
           onTaskFailed={handleSingleTaskFailed}
           only={(selectedMissionId as "gm" | "checkIn" | "gn" | undefined) ?? undefined}
           knownDoneIds={onChainDoneIds}
+          probeAt={probeAt || undefined}
           onComplete={handleTaskComplete}
           autoStart={panelAutoStart}
         />
