@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react";
 
 // Frame budget for the ambient starfield. It drifts very slowly and is made of
-// soft gradients, so 60fps bought nothing visible while doubling the per-second
-// fill cost. 30fps is indistinguishable and halves the work.
-const TARGET_FPS = 30;
+// soft gradients, so 60fps bought nothing visible while tripling the per-second
+// fill cost. 20fps is indistinguishable for this motion.
+const TARGET_FPS = 20;
 const MIN_FRAME_MS = 1000 / TARGET_FPS;
 // Never drop below this: an 8fps background still beats a machine pinned at 100%.
 const MAX_FRAME_MS = 1000 / 8;

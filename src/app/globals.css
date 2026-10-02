@@ -327,6 +327,19 @@
   }
   .glass-card { border-radius: var(--r-md); }
 
+  /* Touch / narrow viewports: a backdrop blur costs several ms per frame per
+     panel, and a page can hold up to 28 of them sitting over the animating
+     starfield. Drop the blur there — the panels keep their colour, border and
+     gradient, they just stop being frosted. */
+  @media (max-width: 900px), (pointer: coarse) {
+    .glass-panel,
+    .glass-card {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background: color-mix(in srgb, var(--bg-card) 95%, transparent);
+    }
+  }
+
   .glass-panel-hover:hover,
   .glass-card:hover {
     transform: translateY(-3px);
@@ -499,8 +512,15 @@
     position: absolute;
     inset: 0;
     opacity: .04;
-    mix-blend-mode: overlay;
+    /* Was mix-blend-mode: overlay. That forced the GPU to re-composite the
+       WHOLE viewport against the animating starfield canvas on every single
+       frame — the most expensive thing on the page after the canvas itself.
+       At 4% opacity a static noise texture over normal alpha is visually the
+       same, and composites as a cheap source-over. */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    /* Own layer so the grain is composited once, not re-rasterised per frame. */
+    will-change: opacity;
+    pointer-events: none;
   }
 
   .cosmos-overlay {
