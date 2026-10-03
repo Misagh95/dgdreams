@@ -86,6 +86,8 @@ export const CONTRACTS: Record<number, `0x${string}` | ""> = {
   56: "0x4AE47749254CA48e950067057e7EEaaDD1498cdb",
   204: "0x94e067F69BC5C1d2F58C91EC0f1C03469452Eec9",
   42161: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
+  421614: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
+  10: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
 };
 
 type ActionId = "checkIn" | "gm" | "gn";
