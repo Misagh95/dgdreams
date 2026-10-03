@@ -1,11 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useConfig, useSwitchChain } from "wagmi";
 import { isAddress } from "viem";
 import { Rocket, CheckCircle2, XCircle, SkipForward, Loader2, ExternalLink, Zap } from "lucide-react";
 import { runSequence, type SequenceStepDef, type StepResult, type StepStatus } from "@/lib/sequence";
-import { NIKBASE_CONTRACTS, type NetworkConfig } from "@/config/chains";
+import NetworkSelect from "@/components/NetworkSelect";
+import {
+  NIKBASE_CONTRACTS,
+  mainnetNetworks,
+  testnetNetworks,
+  type NetworkConfig,
+} from "@/config/chains";
+
+/** every EVM network the 5-in-1 runner may target, for its own picker */
+const ALL_NETWORKS: NetworkConfig[] = [...mainnetNetworks, ...testnetNetworks];
 
 type DeployArtifact = NonNullable<SequenceStepDef["artifact"]>;
 
@@ -81,6 +90,8 @@ export default function FiveInOne(props: FiveInOneProps) {
   const [running, setRunning] = useState(false);
   const [redeploy, setRedeploy] = useState(false);
   const [deployed, setDeployed] = useState<DeployMap>({});
+  /** network chosen inside this card; null = follow the connected wallet chain */
+  const [pickedNetworkId, setPickedNetworkId] = useState<number | null>(null);
   const abort = useRef({ aborted: false });
   const locallyDone = useRef<Set<string>>(new Set());
 
@@ -95,12 +106,23 @@ export default function FiveInOne(props: FiveInOneProps) {
     return out;
   }, []);
 
+  const target: NetworkConfig | undefined = pickedNetworkId
+    ? (ALL_NETWORKS.find((n) => n.id === pickedNetworkId) ?? network)
+    : network;
+
+  /** list shown in the card's own picker; always contains the current target */
+  const networkOptions = useMemo(() => {
+    const base = [...mainnetNetworks, ...testnetNetworks];
+    if (target && !base.some((n) => n.id === target.id)) base.push(target);
+    return base;
+  }, [target]);
+
   // show what is already deployed whenever the network changes
   useEffect(() => {
     setResults([]);
     setRedeploy(false);
-    setDeployed(network ? refreshFromStore(network.id) : {});
-  }, [network?.id, refreshFromStore]); // eslint-disable-line react-hooks/exhaustive-deps
+    setDeployed(target ? refreshFromStore(target.id) : {});
+  }, [target?.id, refreshFromStore]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     (async () => {
@@ -117,14 +139,14 @@ export default function FiveInOne(props: FiveInOneProps) {
     })();
   }, []);
 
-  const nikBase = network ? NIKBASE_CONTRACTS[network.id] : undefined;
+  const nikBase = target ? NIKBASE_CONTRACTS[target.id] : undefined;
   const isDone = useCallback(
     (id: string) => locallyDone.current.has(id) || !!doneTaskIds?.has(id),
     [doneTaskIds]
   );
 
   const start = useCallback(async () => {
-    if (!network || !account || running) return;
+    if (!target || !account || running) return;
     setRunning(true);
     abort.current = { aborted: false };
     setResults([]);
@@ -135,7 +157,7 @@ export default function FiveInOne(props: FiveInOneProps) {
       { id: "gm", label: "GM", kind: "mission", method: "gm", available: !!nikBase },
       { id: "gn", label: "GN", kind: "mission", method: "gn", available: !!nikBase },
       ...ARTIFACTS.map((a) => {
-        const key = `${network.id}:${a.key}`;
+        const key = `${target.id}:${a.key}`;
         const cached = redeploy ? undefined : store[key];
         return {
           id: a.key,
@@ -154,17 +176,17 @@ export default function FiveInOne(props: FiveInOneProps) {
       const out = await runSequence({
         steps,
         account,
-        chainId: network.id,
+        chainId: target.id,
         contractAddress: nikBase,
-        rpcUrls: network.rpcUrls.default.http,
-        explorerUrl: network.blockExplorers.default.url,
+        rpcUrls: target.rpcUrls.default.http,
+        explorerUrl: target.blockExplorers.default.url,
         getProvider: async () => {
           const state = wagmiConfig.state;
           const conn = state.current ? state.connections.get(state.current) : undefined;
           return conn?.connector ? ((await conn.connector.getProvider()) as never) : undefined;
         },
-        switchChain: async (target) => {
-          const res = await switchChainAsync({ chainId: target });
+        switchChain: async (chainIdTo) => {
+          const res = await switchChainAsync({ chainId: chainIdTo });
           return (res as { chainId?: number } | undefined)?.chainId;
         },
         done: { isDone, mark: (id) => locallyDone.current.add(id) },
@@ -180,22 +202,22 @@ export default function FiveInOne(props: FiveInOneProps) {
       let changed = false;
       for (const r of out) {
         if (r.address) {
-          next[`${network.id}:${r.id}`] = r.address;
+          next[`${target.id}:${r.id}`] = r.address;
           changed = true;
         }
       }
       if (changed) writeStore(next);
-      setDeployed(refreshFromStore(network.id));
+      setDeployed(refreshFromStore(target.id));
       onFinished?.(out);
     } finally {
       setRunning(false);
       setCurrent(null);
     }
-  }, [network, account, running, artifacts, nikBase, wagmiConfig, switchChainAsync, isDone, onFinished, redeploy, refreshFromStore]);
+  }, [target, account, running, artifacts, nikBase, wagmiConfig, switchChainAsync, isDone, onFinished, redeploy, refreshFromStore]);
 
   const doneCount = results.filter((r) => r.status === "done" || r.status === "already").length;
   const loaded = Object.keys(artifacts).length === ARTIFACTS.length;
-  const canRun = isConnected && !!network && !!nikBase && !running && loaded;
+  const canRun = isConnected && !!target && !!nikBase && !running && loaded;
 
   return (
     <div
@@ -223,17 +245,25 @@ export default function FiveInOne(props: FiveInOneProps) {
               5-in-1
             </h3>
             <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>
-              GM + GN + Simple + Token + NFT on {network?.name ?? "your network"}, one click
+              GM + GN + Simple + Token + NFT on {target?.name ?? "your network"}, one click
             </p>
           </div>
         </div>
 
-        <button
-          onClick={isConnected ? start : onConnect}
-          disabled={isConnected && (!canRun || running)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-40"
-          style={{ background: "var(--accent)", color: "#000" }}
-        >
+        <div className="flex items-center gap-2 flex-wrap">
+          <NetworkSelect
+            networks={networkOptions}
+            value={target?.id ?? 0}
+            onChange={(id) => setPickedNetworkId(id)}
+            placeholder="Select network"
+            disabled={running}
+          />
+          <button
+            onClick={isConnected ? start : onConnect}
+            disabled={isConnected && (!canRun || running)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-40"
+            style={{ background: "var(--accent)", color: "#000" }}
+          >
           {running ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
@@ -244,12 +274,13 @@ export default function FiveInOne(props: FiveInOneProps) {
             : isConnected
               ? "Run all 5"
               : "Connect wallet"}
-        </button>
+          </button>
+        </div>
       </div>
 
       {isConnected && !nikBase && (
         <p className="text-[11px] mt-3" style={{ color: "#FFC24B" }}>
-          No NikBase contract on {network?.name ?? "this network"} - the two missions would be skipped.
+          No NikBase contract on {target?.name ?? "this network"} - the two missions would be skipped.
         </p>
       )}
 
@@ -267,7 +298,7 @@ export default function FiveInOne(props: FiveInOneProps) {
               </span>
               <span className="flex-1" />
               <a
-                href={`${network?.blockExplorers.default.url}/address/${deployed[a.key]}`}
+                href={`${target?.blockExplorers.default.url}/address/${deployed[a.key]}`}
                 target="_blank"
                 rel="noreferrer"
                 className="text-[10px] font-mono truncate max-w-[130px]"
@@ -332,7 +363,7 @@ export default function FiveInOne(props: FiveInOneProps) {
                   <span className="flex-1" />
                   {r.address && (
                     <a
-                      href={`${network?.blockExplorers.default.url}/address/${r.address}`}
+                      href={`${target?.blockExplorers.default.url}/address/${r.address}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-[10px] font-mono truncate max-w-[120px]"
