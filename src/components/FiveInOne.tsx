@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useConfig, useSwitchChain } from "wagmi";
+import { isAddress } from "viem";
 import { Rocket, CheckCircle2, XCircle, SkipForward, Loader2, ExternalLink, Zap } from "lucide-react";
 import { runSequence, type SequenceStepDef, type StepResult, type StepStatus } from "@/lib/sequence";
 import { NIKBASE_CONTRACTS, type NetworkConfig } from "@/config/chains";
@@ -43,6 +44,32 @@ const STATUS_STYLE: Record<StepStatus, { color: string; icon: typeof CheckCircle
   skipped: { color: "var(--text-quaternary)", icon: SkipForward },
 };
 
+/**
+ * Deployed addresses, kept per chain so a second run reuses them instead of
+ * paying for the same contract again. The runner re-checks the code on chain
+ * before trusting a stored address, so a stale entry can never silently
+ * satisfy a step.
+ */
+const STORE_KEY = "dgdreams-deployments-v1";
+type DeployMap = Record<string, string>;
+
+function readStore(): DeployMap {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem(STORE_KEY) || "{}") as DeployMap;
+  } catch {
+    return {};
+  }
+}
+
+function writeStore(map: DeployMap) {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(map));
+  } catch {
+    /* private mode / quota */
+  }
+}
+
 export default function FiveInOne(props: FiveInOneProps) {
   const { network, isConnected, account, onConnect, doneTaskIds, onFinished } = props;
   const wagmiConfig = useConfig();
@@ -52,8 +79,28 @@ export default function FiveInOne(props: FiveInOneProps) {
   const [results, setResults] = useState<StepResult[]>([]);
   const [current, setCurrent] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
+  const [redeploy, setRedeploy] = useState(false);
+  const [deployed, setDeployed] = useState<DeployMap>({});
   const abort = useRef({ aborted: false });
   const locallyDone = useRef<Set<string>>(new Set());
+
+  /** addresses already deployed on this network, from the local store */
+  const refreshFromStore = useCallback((chainId: number) => {
+    const store = readStore();
+    const out: DeployMap = {};
+    for (const a of ARTIFACTS) {
+      const v = store[`${chainId}:${a.key}`];
+      if (v) out[a.key] = v;
+    }
+    return out;
+  }, []);
+
+  // show what is already deployed whenever the network changes
+  useEffect(() => {
+    setResults([]);
+    setRedeploy(false);
+    setDeployed(network ? refreshFromStore(network.id) : {});
+  }, [network?.id, refreshFromStore]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     (async () => {
@@ -83,18 +130,24 @@ export default function FiveInOne(props: FiveInOneProps) {
     setResults([]);
     setCurrent(null);
 
+    const store = readStore();
     const steps: SequenceStepDef[] = [
       { id: "gm", label: "GM", kind: "mission", method: "gm", available: !!nikBase },
       { id: "gn", label: "GN", kind: "mission", method: "gn", available: !!nikBase },
-      ...ARTIFACTS.map((a) => ({
-        id: a.key,
-        label: a.label,
-        kind: "deploy" as const,
-        artifact: artifacts[a.key]
-          ? { ...artifacts[a.key], constructorInputs: a.args }
-          : undefined,
-        available: !!artifacts[a.key],
-      })),
+      ...ARTIFACTS.map((a) => {
+        const key = `${network.id}:${a.key}`;
+        const cached = redeploy ? undefined : store[key];
+        return {
+          id: a.key,
+          label: a.label,
+          kind: "deploy" as const,
+          artifact: artifacts[a.key]
+            ? { ...artifacts[a.key], constructorInputs: a.args }
+            : undefined,
+          available: !!artifacts[a.key],
+          ...(cached && isAddress(cached) ? { cachedAddress: cached as `0x${string}` } : {}),
+        };
+      }),
     ];
 
     try {
@@ -121,12 +174,24 @@ export default function FiveInOne(props: FiveInOneProps) {
         },
         signal: abort.current,
       });
+
+      // remember freshly deployed addresses so the next run reuses them
+      const next = readStore();
+      let changed = false;
+      for (const r of out) {
+        if (r.address) {
+          next[`${network.id}:${r.id}`] = r.address;
+          changed = true;
+        }
+      }
+      if (changed) writeStore(next);
+      setDeployed(refreshFromStore(network.id));
       onFinished?.(out);
     } finally {
       setRunning(false);
       setCurrent(null);
     }
-  }, [network, account, running, artifacts, nikBase, wagmiConfig, switchChainAsync, isDone, onFinished]);
+  }, [network, account, running, artifacts, nikBase, wagmiConfig, switchChainAsync, isDone, onFinished, redeploy, refreshFromStore]);
 
   const doneCount = results.filter((r) => r.status === "done" || r.status === "already").length;
   const loaded = Object.keys(artifacts).length === ARTIFACTS.length;
@@ -186,6 +251,45 @@ export default function FiveInOne(props: FiveInOneProps) {
         <p className="text-[11px] mt-3" style={{ color: "#FFC24B" }}>
           No NikBase contract on {network?.name ?? "this network"} - the two missions would be skipped.
         </p>
+      )}
+
+      {Object.keys(deployed).length > 0 && (
+        <div className="mt-3 space-y-1">
+          {ARTIFACTS.filter((a) => deployed[a.key]).map((a) => (
+            <div
+              key={a.key}
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
+              style={{ background: "var(--bg-subtle)", border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)" }}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--accent)" }} />
+              <span className="text-[11px] font-mono" style={{ color: "var(--text-secondary)" }}>
+                {a.label}
+              </span>
+              <span className="flex-1" />
+              <a
+                href={`${network?.blockExplorers.default.url}/address/${deployed[a.key]}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[10px] font-mono truncate max-w-[130px]"
+                style={{ color: "var(--accent)" }}
+              >
+                {deployed[a.key].slice(0, 10)}...
+              </a>
+            </div>
+          ))}
+          <label className="flex items-center gap-2 cursor-pointer select-none pt-1">
+            <input
+              type="checkbox"
+              checked={redeploy}
+              onChange={(e) => setRedeploy(e.target.checked)}
+              className="accent-[var(--accent)]"
+              style={{ width: 12, height: 12 }}
+            />
+            <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+              Redeploy even though an address is saved (costs another deployment)
+            </span>
+          </label>
+        </div>
       )}
 
       {results.length > 0 && (

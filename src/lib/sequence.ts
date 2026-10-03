@@ -32,6 +32,12 @@ export interface SequenceStepDef {
   artifact?: { abi: Abi; bytecode: `0x${string}`; constructorInputs: unknown[] };
   /** set to false when this step cannot run on the selected network */
   available?: boolean;
+  /**
+   * Address of an instance deployed earlier. The runner checks that code is
+   * actually present there and, if so, reports the step as already done instead
+   * of deploying a duplicate.
+   */
+  cachedAddress?: `0x${string}`;
 }
 
 export interface StepResult {
@@ -164,6 +170,23 @@ export async function runSequence(opts: RunOptions): Promise<StepResult[]> {
       results[i].status = "already";
       publish(i);
       continue;
+    }
+
+    // a deploy we already did: confirm the code is still there, then reuse it
+    if (step.kind === "deploy" && step.cachedAddress) {
+      const live = await pub
+        .getBytecode({ address: step.cachedAddress })
+        .then((c) => !!c && c !== "0x")
+        .catch(() => false);
+      if (live) {
+        results[i].status = "already";
+        results[i].address = step.cachedAddress;
+        results[i].explorerUrl = explorerUrl
+          ? `${explorerUrl}/address/${step.cachedAddress}`
+          : undefined;
+        publish(i);
+        continue;
+      }
     }
 
     try {
