@@ -27,23 +27,32 @@ const NON_ZERO_BYTE_GAS = 16;
 const CODE_DEPOSIT_GAS_PER_BYTE = 200;
 const TX_BASE_GAS = 21_000;
 
-/** what the 5-in-1 runner deploys, and what it deployed before the trim */
+/**
+ * what the 5-in-1 runner deploys, and what it deployed before the trim
+ *
+ * The one-click group is measured from the "slim" build, which is what actually
+ * ships to the browser — see foundry.toml for why that build exists.
+ */
 const GROUPS = [
   {
-    title: "5-in-1 runner (current, OneClick.sol)",
+    title: "5-in-1 runner (current, OneClick.sol, slim build)",
+    profile: "slim",
     contracts: ["DGDemo", "DGLiteToken", "DGLiteNft"],
   },
   {
     title: "5-in-1 runner (before the trim)",
+    profile: "default",
     contracts: ["LitePrediction", "SimpleToken", "SimpleNft"],
   },
 ];
 
-function measure(name) {
+function measure(name, profile = "default") {
+  const env = { ...process.env, FOUNDRY_PROFILE: profile };
   const deployed = execSync(`forge inspect ${name} deployedBytecode`, {
     encoding: "utf8",
+    env,
   }).trim();
-  const init = execSync(`forge inspect ${name} bytecode`, { encoding: "utf8" }).trim();
+  const init = execSync(`forge inspect ${name} bytecode`, { encoding: "utf8", env }).trim();
 
   const codeBytes = Math.max(0, (deployed.length - 2) / 2);
   const initBytes = Math.max(0, (init.length - 2) / 2);
@@ -66,12 +75,12 @@ function measure(name) {
 const n = (v) => v.toLocaleString("en-US");
 
 for (const group of GROUPS) {
-  console.log(`\n${group.title}`);
+  console.log(`\n${group.title}  [profile: ${group.profile || "default"}]`);
   console.log("-".repeat(72));
 
   let sum = 0;
   for (const name of group.contracts) {
-    const m = measure(name);
+    const m = measure(name, group.profile);
     sum += m.total;
     console.log(
       `${m.name.padEnd(16)} runtime ${String(m.codeBytes).padStart(5)}B` +

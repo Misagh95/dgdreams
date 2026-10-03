@@ -4,6 +4,7 @@
 node_modules/
 .next/
 out/
+out-slim/
 dist/
 broadcast/
 cache/
