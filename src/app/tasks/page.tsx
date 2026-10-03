@@ -20,6 +20,7 @@ import { getNativeSymbol, shortenHash, getExplorerUrl } from "@/utils/transactio
 import { genLayerReadContract, isGenLayer } from "@/lib/genlayer/tasks";
 import { useOptimisticTasks } from "@/hooks/useOptimisticTasks";
 import { useUtcDay } from "@/hooks/useUtcDay";
+import { useWalletStreak } from "@/hooks/useWalletStreak";
 
 const SOULBOUND_ADDR: Record<number, `0x${string}` | ""> = {
   8453: "", 999: "", 130: "", 4217: "", 4663: "", 1: "",
@@ -240,6 +241,19 @@ export default function TasksPage() {
   const [genActionCount, setGenActionCount] = useState(0);
   const [genStreak, setGenStreak] = useState(0);
   const [genTotalActions, setGenTotalActions] = useState(0);
+
+  // Register this wallet's streak against the chain that holds it. The wallet
+  // signs in (no gas) and the server reads the real value off NikBase, so the
+  // streak is recorded *by the wallet*, not claimed by it.
+  const { streak: walletStreak, syncing: streakSyncing, sync: syncStreak } =
+    useWalletStreak(validatedAddr);
+
+  // Re-verify the recorded streak whenever the missions change, so what is
+  // stored matches the chain rather than trailing it.
+  useEffect(() => {
+    if (!isConnected || !validatedAddr || !onRightChain || !selectedNetwork) return;
+    void syncStreak(selectedNetwork.id);
+  }, [isConnected, validatedAddr, onRightChain, selectedNetwork, onChainDoneIds, syncStreak]);
 
   useEffect(() => {
     if (isGen && validatedAddr && onRightChain) {
@@ -706,6 +720,21 @@ export default function TasksPage() {
                 <span>Next day</span>
                 <span style={{ color: "var(--accent)" }}>{countdown}</span>
               </div>
+              <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
+                <span>Recorded streak</span>
+                <span style={{ color: walletStreak ? "var(--success)" : "var(--text-bright)" }}>
+                  {streakSyncing
+                    ? "verifying…"
+                    : walletStreak
+                      ? `${walletStreak.streak}d on ${walletStreak.chainName}`
+                      : "—"}
+                </span>
+              </div>
+              {walletStreak && (
+                <p className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+                  Read from the NikBase contract for your wallet, so this is proof, not a claim.
+                </p>
+              )}
             </div>
 
             {!CONTRACTS[selectedNetwork.id] ? (

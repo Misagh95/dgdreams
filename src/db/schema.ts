@@ -113,6 +113,40 @@ export const litevmStats = pgTable("litevm_stats", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+/**
+ * One row per wallet per network, mirroring what the NikBase contract already
+ * records on-chain.
+ *
+ * The wallet proves ownership by signing in (see lib/session.ts) before its
+ * address is written here, and the server re-reads the streak straight from the
+ * contract rather than trusting a number the client sent. So this table is an
+ * index of chain truth, not a self-reported score: a user cannot inflate their
+ * streak by editing a request body.
+ */
+export const walletStreaks = pgTable(
+  "wallet_streaks",
+  {
+    id: serial("id").primaryKey(),
+    walletAddress: text("wallet_address").notNull(),
+    chainId: integer("chain_id").notNull(),
+    chainName: text("chain_name"),
+    /** streak as reported by NikBase.getUserData on this chain */
+    streak: integer("streak").default(0),
+    totalCheckIns: integer("total_check_ins").default(0),
+    totalActions: integer("total_actions").default(0),
+    /** UTC day number the streak was last verified, so stale rows are detectable */
+    day: integer("day"),
+    syncedAt: timestamp("synced_at").defaultNow(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    walletChainIdx: uniqueIndex("wallet_streak_chain_idx").on(
+      table.walletAddress,
+      table.chainId
+    ),
+  })
+);
+
 export const predictionActivities = pgTable("prediction_activities", {
   id: serial("id").primaryKey(),
   walletAddress: text("wallet_address").notNull(),

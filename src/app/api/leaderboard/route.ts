@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { litevmStats, gameScores, tournamentEntries } from "@/db/schema";
+import { litevmStats, gameScores, tournamentEntries, walletStreaks } from "@/db/schema";
 import { desc, count, sum, avg, eq } from "drizzle-orm";
 import { ensureTables } from "@/lib/init-db";
 
@@ -43,28 +43,31 @@ export async function GET(request: NextRequest) {
     let stats: LeaderboardStats = { totalPlayers: 0, totalValue: 0, avgValue: 0 };
 
     if (category === "streak") {
-      const where = isAll ? undefined : eq(litevmStats.chain, chain);
+      // Read from wallet_streaks, which only ever holds values the server read
+      // off NikBase for a wallet that signed in. The old litevm_stats.streak
+      // column was client-reported and could be inflated by a crafted request.
+      const where = isAll ? undefined : eq(walletStreaks.chainId, parseInt(chain, 10));
       const [data, agg] = await Promise.all([
         db
           .select()
-          .from(litevmStats)
+          .from(walletStreaks)
           .where(where)
-          .orderBy(desc(litevmStats.streak))
+          .orderBy(desc(walletStreaks.streak))
           .limit(limit),
         db
           .select({
             totalPlayers: count(),
-            totalValue: sum(litevmStats.streak),
-            avgValue: avg(litevmStats.streak),
+            totalValue: sum(walletStreaks.streak),
+            avgValue: avg(walletStreaks.streak),
           })
-          .from(litevmStats)
+          .from(walletStreaks)
           .where(where),
       ]);
       rows = data.map((s) => ({
         walletAddress: s.walletAddress,
         value: s.streak ?? 0,
-        secondary: `${s.totalAct ?? 0} actions · ${s.totalCi ?? 0} check-ins`,
-        network: s.chain || LITVM_NETWORK,
+        secondary: `${s.totalActions ?? 0} actions · ${s.totalCheckIns ?? 0} check-ins`,
+        network: s.chainName || ALL_NETWORKS,
       }));
       stats = {
         totalPlayers: agg[0]?.totalPlayers ?? 0,

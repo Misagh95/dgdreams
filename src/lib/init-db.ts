@@ -81,6 +81,23 @@ export async function ensureTables() {
     // Add chain column to existing score tables (migration for live DBs).
     await db.execute(sql`ALTER TABLE game_scores ADD COLUMN IF NOT EXISTS chain TEXT`);
     await db.execute(sql`ALTER TABLE litevm_stats ADD COLUMN IF NOT EXISTS chain TEXT`);
+    // Streaks indexed per wallet + network. The unique index is what makes the
+    // sync an upsert rather than an ever-growing log.
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS wallet_streaks (
+        id SERIAL PRIMARY KEY,
+        wallet_address TEXT NOT NULL,
+        chain_id INTEGER NOT NULL,
+        chain_name TEXT,
+        streak INTEGER DEFAULT 0,
+        total_check_ins INTEGER DEFAULT 0,
+        total_actions INTEGER DEFAULT 0,
+        day INTEGER,
+        synced_at TIMESTAMP DEFAULT NOW(),
+        created_at TIMESTAMP DEFAULT NOW(),
+        CONSTRAINT wallet_streak_chain_idx UNIQUE (wallet_address, chain_id)
+      )
+    `);
     initialized = true;
   } catch (e) {
     initialized = false;
