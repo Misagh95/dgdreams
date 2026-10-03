@@ -33,8 +33,8 @@ const faqs = [
     color: "#ffaa00",
     items: [
       { q: "How do I earn points?", a: "Points are earned by completing on-chain actions: daily tasks (+10 pts each), maintaining streaks (+5 pts per day), playing 2048 (+50 pts per game), and high score bonuses." },
-      { q: "What is the streak system?", a: "Your streak tracks consecutive days of on-chain activity. A 7-day streak unlocks soulbound NFT minting. Streaks are tracked per wallet on the NikBase contract." },
-      { q: "How are LITVM points calculated?", a: "LITVM points combine: Task Actions (totalAct × 10), Streak Bonus (streak × 5), Game Plays (playCount × 50), and Score Bonus (highScore ÷ 100). Total is viewable at /litevm." },
+      { q: "What is the streak system?", a: "Your streak tracks consecutive days of on-chain activity. A 7-day streak unlocks soulbound NFT minting. Streaks are tracked per wallet on the NikBase contract, and the day rolls over at 00:00 UTC." },
+      { q: "How are points calculated?", a: "Points combine task actions, a daily streak bonus, game plays and score bonuses. Your totals are ranked on the Leaderboard page." },
     ],
   },
   {

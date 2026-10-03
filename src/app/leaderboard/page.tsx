@@ -45,7 +45,10 @@ const CATEGORIES: {
 }[] = [
   { id: "streak", label: "Streak", icon: Flame, color: "#ff6b6b", unit: "d", sub: "Consecutive days" },
   { id: "game2048", label: "2048", icon: Gamepad2, color: "#FFD700", unit: "pts", sub: "Best score" },
-  { id: "litevm", label: "LiteVM", icon: Star, color: "#00d4ff", unit: "pts", sub: "Total points" },
+  // "points" was the "LiteVM" category. The LiteVM Hub page is gone, so the
+// tab is relabelled to what it actually ranks — total points. The id stays
+// "litevm" because the API and the litevm_stats table still use that name.
+{ id: "litevm", label: "Points", icon: Star, color: "#00d4ff", unit: "pts", sub: "Total points" },
 ];
 
 const ALL_NETWORKS = "All Networks";
@@ -505,7 +508,7 @@ export default function LeaderboardPage() {
               </div>
               <div className="text-[10px] font-mono mt-1" style={{ color: "var(--text-quaternary)" }}>
                 {network === ALL_NETWORKS
-                  ? "Connect your wallet and start earning streaks, 2048 scores or LiteVM points."
+                  ? "Connect your wallet and start earning streaks, 2048 scores or points."
                   : "No data recorded on this network yet — try another network."}
               </div>
             </div>
