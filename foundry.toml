@@ -4,8 +4,17 @@ out = "out"
 libs = ["node_modules"]
 solc_version = "0.8.24"
 optimizer = true
+# 200 runs keeps runtime gas low, which matters for the daily missions that get
+# called all day. Deployment size is handled by keeping the shipped contracts
+# small (see contracts/OneClick.sol), not by starving the optimizer.
 optimizer_runs = 200
 via_ir = false
+# Every contract shipped to the browser is paid for twice: once as creation
+# calldata at 16 gas per non-zero byte, and again as code deposit at 200 gas
+# per runtime byte. The trailing CBOR metadata (compiler version + IPFS hash)
+# is dead weight in both, so it is stripped.
+bytecode_hash = "none"
+cbor_metadata = false
 remappings = [
     "@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/",
 ]

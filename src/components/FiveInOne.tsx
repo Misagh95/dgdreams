@@ -17,7 +17,10 @@ import {
 /** every EVM network the 5-in-1 runner may target, for its own picker */
 const ALL_NETWORKS: NetworkConfig[] = [...mainnetNetworks, ...testnetNetworks];
 
-type DeployArtifact = NonNullable<SequenceStepDef["artifact"]>;
+type DeployArtifact = NonNullable<SequenceStepDef["artifact"]> & {
+  /** recorded by the exporter so the UI can price a deployment up front */
+  runtimeBytes?: number;
+};
 
 interface FiveInOneProps {
   network?: NetworkConfig;
@@ -30,20 +33,51 @@ interface FiveInOneProps {
   onFinished?: (results: StepResult[]) => void;
 }
 
-/** the three deploys, in order: Simple, Token, NFT */
+/**
+ * The three deploys, in order: Simple, Token, NFT.
+ *
+ * These point at the OneClick.sol editions rather than the full-featured
+ * SimpleToken / SimpleNft / LitePrediction contracts. Deployment gas is charged
+ * at 200 per byte of runtime code plus 16 per non-zero calldata byte, so the
+ * full versions cost ~2.7M gas to deploy while these cost ~0.86M — the
+ * difference between "too expensive to try" and "one click".
+ */
 const ARTIFACTS = [
-  { key: "LitePrediction", label: "Simple", args: [] as unknown[] },
+  { key: "DGDemo", label: "Simple", args: ["gm"] },
   {
-    key: "SimpleToken",
+    key: "DGLiteToken",
     label: "Token",
     args: ["Demo Token", "DEMO", (1_000_000n * 10n ** 18n).toString()],
   },
   {
-    key: "SimpleNft",
+    key: "DGLiteNft",
     label: "NFT",
-    args: ["Demo Collection", "DEMO", "https://example.com/meta/"],
+    args: ["Demo Collection", "DEMO"],
   },
 ];
+
+/**
+ * Approximate deployment cost per artifact, in gas:
+ *   21,000 intrinsic + 200 per byte of runtime code (the code deposit)
+ *   + 16 per non-zero calldata byte (4 per zero byte) on the init code.
+ *
+ * The constructor's own execution is not modelled — it is a rounding error
+ * next to the code deposit — so this is a lower bound, and close enough to
+ * compare options. Shown in the UI because "what will this cost me" is the
+ * first question anyone asks before clicking a button that spends their money.
+ * Ground truth for these numbers: scripts/measure-deploy-cost.mjs.
+ */
+function estimateDeployGas(artifact: DeployArtifact | undefined): number {
+  const bytecode = artifact?.bytecode;
+  if (!bytecode || bytecode.length < 3) return 0;
+  const hex = bytecode.startsWith("0x") ? bytecode.slice(2) : bytecode;
+  const zeros = (hex.match(/00/g) || []).length;
+  const calldataGas = (hex.length / 2 - zeros) * 16 + zeros * 4;
+  // runtimeBytes is exact when the exporter recorded it, otherwise fall back to
+  // the (smaller) init code as a rough stand-in
+  const runtimeBytes = artifact?.runtimeBytes ?? Math.round(hex.length / 2 / 1.6);
+  return 21_000 + runtimeBytes * 200 + calldataGas;
+}
 
 const STATUS_STYLE: Record<StepStatus, { color: string; icon: typeof CheckCircle2 }> = {
   pending: { color: "var(--text-quaternary)", icon: SkipForward },
@@ -227,6 +261,17 @@ export default function FiveInOne(props: FiveInOneProps) {
   const loaded = Object.keys(artifacts).length === ARTIFACTS.length;
   const canRun = isConnected && !!target && !!nikBase && !running && loaded;
 
+  // What a fresh run would cost: the three deployments plus two cheap mission
+  // calls. Contracts already deployed on this network are free, which is the
+  // whole point of the cached-address reuse.
+  const deployGas = ARTIFACTS.reduce(
+    (sum, a) => sum + (deployed[a.key] ? 0 : estimateDeployGas(artifacts[a.key])),
+    0
+  );
+  const MISSION_GAS_EACH = 30_000;
+  const estimatedGas = deployGas + 2 * MISSION_GAS_EACH;
+  const reusedCount = ARTIFACTS.filter((a) => deployed[a.key]).length;
+
   return (
     <div
       className="rounded-2xl p-4 sm:p-5"
@@ -406,6 +451,25 @@ export default function FiveInOne(props: FiveInOneProps) {
         5 separate transactions, one after another - your wallet signs each one. Gas is charged per
         step, and a failed step does not stop the rest.
       </p>
+
+      {loaded && estimatedGas > 0 && (
+        <div
+          className="flex items-center justify-between gap-3 mt-2 px-2.5 py-1.5 rounded-lg"
+          style={{
+            background: "var(--bg-subtle)",
+            border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)",
+          }}
+        >
+          <span className="text-[10px] font-mono" style={{ color: "var(--text-tertiary)" }}>
+            {reusedCount > 0
+              ? `${reusedCount}/3 already deployed here - next run costs almost nothing`
+              : "Estimated gas for this run"}
+          </span>
+          <span className="text-[11px] font-mono" style={{ color: "var(--accent)" }}>
+            ~{estimatedGas.toLocaleString("en-US")}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

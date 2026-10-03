@@ -22,7 +22,19 @@ type Artifact = {
 };
 
 const ALL_NETWORKS = [...mainnetNetworks, ...testnetNetworks];
-const NAMES = ["NikBase", "SimpleToken", "SimpleNft", "SoulboundStreak", "Game2048", "LitePrediction"];
+const NAMES = [
+  "NikBase",
+  "SimpleToken",
+  "SimpleNft",
+  "SoulboundStreak",
+  "Game2048",
+  "LitePrediction",
+  // One-click editions: same shapes, but small enough that deploying them
+  // costs ~1/3 of the gas. Used by the 5-in-1 runner.
+  "DGDemo",
+  "DGLiteToken",
+  "DGLiteNft",
+];
 const card = { background: "var(--bg-card)", border: "1px solid var(--border-default)" } as const;
 const inputStyle = { background: "var(--bg-subtle)", border: "1px solid var(--border-default)", color: "var(--text-primary)" };
 

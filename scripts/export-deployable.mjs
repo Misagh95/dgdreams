@@ -70,6 +70,33 @@ const DEPLOYABLE = [
     tag: "market",
     glyph: "◐",
   },
+  // One-click editions used by the 5-in-1 runner. Same idea, but stripped to
+  // the functions that flow actually calls, because deployment gas is charged
+  // per byte of code and every unused function is paid for on every run.
+  {
+    name: "DGDemo",
+    artifact: "OneClick.sol/DGDemo.json",
+    title: "DGDemo — greeter",
+    blurb: "Says GM on-chain and counts how many times you did. Tiny and cheap.",
+    tag: "oneclick",
+    glyph: "◌",
+  },
+  {
+    name: "DGLiteToken",
+    artifact: "OneClick.sol/DGLiteToken.json",
+    title: "DGLiteToken — minimal ERC-20",
+    blurb: "Transfer, approve, transferFrom. No owner, no mint, no admin.",
+    tag: "oneclick",
+    glyph: "◈",
+  },
+  {
+    name: "DGLiteNft",
+    artifact: "OneClick.sol/DGLiteNft.json",
+    title: "DGLiteNft — minimal ERC-721",
+    blurb: "Mint, approve, transferFrom. Metadata is served off-chain.",
+    tag: "oneclick",
+    glyph: "◇",
+  },
 ];
 
 if (!existsSync(DEST)) mkdirSync(DEST, { recursive: true });
