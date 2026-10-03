@@ -15,11 +15,8 @@ const NAV_LINKS = [
 ];
 
 const MORE_LINKS = [
-  { href: "/litevm", label: "LiteVM Hub" },
   { href: "/genlayer", label: "GenLayer Hub" },
   { href: "/truthcourt", label: "TruthCourt" },
-  { href: "/activity", label: "Activity" },
-  { href: "/profile", label: "Profile" },
   { href: "/faq", label: "FAQ" },
 ];
 

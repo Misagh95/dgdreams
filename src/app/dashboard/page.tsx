@@ -1,6 +1,7 @@
 "use client";
 
 import { useAccount } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { motion, useReducedMotion } from "framer-motion";
 import usePerfMode from "@/hooks/usePerfMode";
 import Image from "next/image";
@@ -157,6 +158,9 @@ function NetworkCube({ logo, color, name }: { logo: string; color: string; name:
 
 export default function DashboardPage() {
   const { address, isConnected, chainId } = useAccount();
+  // The connect CTA used to link to /profile, which owned the wallet button.
+  // Now that page is gone, so it opens the RainbowKit modal directly.
+  const { openConnectModal } = useConnectModal();
   const [mounted, setMounted] = useState(false);
   // The dashboard runs three infinite ambient animations. Users who ask for
   // reduced motion should get a static dashboard, not a cheaper animation.
@@ -215,22 +219,21 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-2.5 relative">
               {!isConnected ? (
-                <Link href="/profile">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
-                    style={{
-                      background: "var(--theme-gradient)",
-                      color: "#fff",
-                      textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                      willChange: "transform",
-                    }}
-                  >
-                    <Zap className="w-3.5 h-3.5" />
-                    <span>Connect Wallet</span>
-                  </motion.button>
-                </Link>
+                <motion.button
+                  onClick={() => openConnectModal?.()}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
+                  style={{
+                    background: "var(--theme-gradient)",
+                    color: "#fff",
+                    textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                    willChange: "transform",
+                  }}
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Connect Wallet</span>
+                </motion.button>
               ) : (
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-mono"
                   style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-default)" }}>

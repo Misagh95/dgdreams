@@ -7,13 +7,10 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  Activity,
-  User,
   Gamepad2,
   Menu,
   X,
   Zap,
-  Star,
   Trophy,
   HelpCircle,
   BookOpen,
@@ -30,12 +27,9 @@ const navItems = [
   { href: "/tasks", icon: Zap, label: "Daily Tasks", color: "#F59E0B" },
   { href: "/swap", icon: ArrowDownUp, label: "Swap", color: "#00D4AA" },
   { href: "/deploy", icon: Rocket, label: "Deploy", color: "#F97316" },
-  { href: "/litevm", icon: Star, label: "LITVM Hub", color: "#00D4FF" },
   { href: "/genlayer", icon: Globe, label: "GenLayer Hub", color: "#3B82F6" },
   { href: "/truthcourt", icon: Scale, label: "TruthCourt", color: "#A78BFA" },
   { href: "/leaderboard", icon: Trophy, label: "Leaderboard", color: "#FFB020" },
-  { href: "/activity", icon: Activity, label: "Activity", color: "#34E39B" },
-  { href: "/profile", icon: User, label: "Profile", color: "#FF68F0" },
   { href: "/2048", icon: Gamepad2, label: "2048 Game", color: "#FF6B6B" },
 ];
 

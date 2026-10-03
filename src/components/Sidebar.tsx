@@ -6,11 +6,8 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
-  Activity,
-  User,
   Gamepad2,
   Zap,
-  Star,
   ChevronRight,
   HelpCircle,
   Scale,
@@ -30,12 +27,9 @@ const navItems = [
   { href: "/tasks", icon: Zap, label: "Daily Tasks", badge: "14", color: "#F59E0B" },
   { href: "/swap", icon: ArrowDownUp, label: "Swap", badge: "New", color: "#00D4AA" },
   { href: "/deploy", icon: Rocket, label: "Deploy", badge: "New", color: "#F97316" },
-  { href: "/litevm", icon: Star, label: "LITVM Hub", badge: null, color: "#00D4FF" },
   { href: "/genlayer", icon: Globe, label: "GenLayer Hub", badge: "AI", color: "#3B82F6" },
   { href: "/truthcourt", icon: Scale, label: "TruthCourt", badge: "AI", color: "#A78BFA" },
   { href: "/leaderboard", icon: Trophy, label: "Leaderboard", badge: null, color: "#FFB020" },
-  { href: "/activity", icon: Activity, label: "Activity", badge: null, color: "#34E39B" },
-  { href: "/profile", icon: User, label: "Profile", badge: null, color: "#FF68F0" },
 ];
 
 const infoLinks = [
