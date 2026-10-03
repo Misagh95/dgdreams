@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { Zap } from "lucide-react";
 import type { NetworkConfig } from "@/config/chains";
+import { useIsLightTheme } from "@/hooks/useIsLightTheme";
 
 /* ─────────────────────────────────────────────
    Daily Mission Deck — premium glass/crystal UI
@@ -198,6 +199,47 @@ function MissionCard({
 }) {
   const reduced = useReducedMotion();
   const c = mission.color;
+  const isLight = useIsLightTheme();
+
+  /**
+   * The mission palette is pastel, which reads fine on the dark theme but turns
+   * into near-white-on-white in the light one — the button lost both its fill and
+   * its label. So on light we paint the full pastel and force dark ink on top of
+   * it; the contrast then comes from the ink, not from --accent-contrast, which
+   * is #FFFFFF on light themes and was what made the label vanish.
+   */
+  const actionButtonStyle = (): React.CSSProperties => {
+    if (completed) {
+      return {
+        background: "var(--bg-subtle)",
+        color: "var(--text-secondary)",
+        border: "1px solid var(--border-default)",
+      };
+    }
+    if (pending) {
+      return {
+        background: isLight
+          ? `color-mix(in srgb, ${c} 30%, #fff)`
+          : `color-mix(in srgb, ${c} 30%, transparent)`,
+        color: isLight ? "#101018" : c,
+        border: `1px solid ${c}66`,
+        animation: "pulse 2s ease-in-out infinite",
+      };
+    }
+    if (disabled) {
+      return {
+        background: "var(--bg-subtle)",
+        color: "var(--text-secondary)",
+        border: "1px solid var(--border-strong)",
+      };
+    }
+    return {
+      background: isLight ? c : `color-mix(in srgb, ${c} 75%, transparent)`,
+      color: "#101018",
+      border: `1px solid ${isLight ? `color-mix(in srgb, ${c} 80%, #000)` : c}`,
+      boxShadow: `0 6px 18px -8px ${c}`,
+    };
+  };
 
   return (
     <motion.div
@@ -254,7 +296,12 @@ function MissionCard({
                 </svg>
               </motion.div>
             ) : (
-              <span className="text-sm font-semibold tracking-wide" style={{ color: c }} aria-hidden>
+              <span
+                className="text-sm font-semibold tracking-wide"
+                // pastel on white is low contrast, so darken it on light themes
+                style={{ color: isLight ? `color-mix(in srgb, ${c} 70%, #000)` : c }}
+                aria-hidden
+              >
                 {mission.abbr.slice(0, 2)}
               </span>
             )}
@@ -287,7 +334,15 @@ function MissionCard({
         <div className="mt-auto flex items-center justify-between gap-3">
           <span
             className="text-[10px] font-mono px-2 py-1 rounded-md"
-            style={{ background: `${c}12`, color: c, border: `1px solid ${c}1f` }}
+            style={{
+              // same pastel-on-white problem as the button: on the light theme
+              // the label needs a darkened version of the accent to be readable
+              background: isLight
+                ? `color-mix(in srgb, ${c} 18%, #fff)`
+                : `${c}12`,
+              color: isLight ? `color-mix(in srgb, ${c} 65%, #000)` : c,
+              border: `1px solid ${isLight ? `color-mix(in srgb, ${c} 45%, #000)` : `${c}1f`}`,
+            }}
           >
             {mission.reward}
           </span>
@@ -303,16 +358,8 @@ function MissionCard({
               }}
               disabled={completed || pending}
               aria-label={completed ? `${mission.title} — completed` : pending ? `${mission.title} — processing` : `${mission.action} — ${mission.title}`}
-              className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-115 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-              style={
-                completed
-                  ? { background: "var(--bg-subtle)", color: "var(--text-tertiary)", border: "1px solid var(--border-default)" }
-                  : pending
-                  ? { background: `color-mix(in srgb, ${c} 30%, transparent)`, color: c, border: `1px solid ${c}44`, animation: "pulse 2s ease-in-out infinite" }
-                  : disabled
-                  ? { background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1px solid var(--border-strong)" }
-                  : { background: `color-mix(in srgb, ${c} 75%, transparent)`, color: "var(--accent-contrast)", border: `1px solid ${c}`, boxShadow: `0 6px 18px -8px ${c}` }
-              }
+              className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-all duration-200 hover:brightness-95 focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+              style={actionButtonStyle()}
             >
               <Zap className="w-3.5 h-3.5" />
               {completed ? "Completed" : pending ? "Processing..." : disabled ? "Connect wallet" : mission.action}
