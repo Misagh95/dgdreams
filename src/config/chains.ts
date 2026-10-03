@@ -211,6 +211,58 @@ export const inkChain = /*#__PURE__*/ defineChain({
   },
 });
 
+/** Arbitrum One — custom so a second endpoint backs up the official node. */
+export const arbitrumChain = /*#__PURE__*/ defineChain({
+  id: 42161,
+  name: "Arbitrum One",
+  nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
+  rpcUrls: {
+    // arb1.arbitrum.io rate-limits aggressively from shared IPs, so a public
+    // node leads and the official one stays as the fallback.
+    default: {
+      http: ["https://arbitrum-one-rpc.publicnode.com", "https://arb1.arbitrum.io/rpc"],
+    },
+    public: {
+      http: ["https://arbitrum-one-rpc.publicnode.com", "https://arb1.arbitrum.io/rpc"],
+    },
+  },
+  blockExplorers: {
+    default: { name: "Arbiscan", url: "https://arbiscan.io" },
+  },
+});
+
+/** OP Mainnet — same reasoning as Arbitrum. */
+export const optimismChain = /*#__PURE__*/ defineChain({
+  id: 10,
+  name: "OP Mainnet",
+  nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
+  rpcUrls: {
+    default: {
+      http: ["https://optimism-rpc.publicnode.com", "https://mainnet.optimism.io"],
+    },
+    public: {
+      http: ["https://optimism-rpc.publicnode.com", "https://mainnet.optimism.io"],
+    },
+  },
+  blockExplorers: {
+    default: { name: "Optimistic Etherscan", url: "https://optimistic.etherscan.io" },
+  },
+});
+
+/** Arbitrum Sepolia — testnet, for trying the flow before mainnet gas. */
+export const arbitrumSepoliaChain = /*#__PURE__*/ defineChain({
+  id: 421614,
+  name: "Arbitrum Sepolia",
+  nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
+  rpcUrls: {
+    default: { http: ["https://arbitrum-sepolia-rpc.publicnode.com"] },
+    public: { http: ["https://arbitrum-sepolia-rpc.publicnode.com"] },
+  },
+  blockExplorers: {
+    default: { name: "Arbiscan Sepolia", url: "https://sepolia.arbiscan.io" },
+  },
+});
+
 export const genlayerBradburyChain = /*#__PURE__*/ defineChain({
   id: 4221,
   name: "GenLayer Bradbury",
@@ -373,6 +425,16 @@ export const mainnetNetworks: NetworkConfig[] = [
     color: "#00B2A9",
     logo: "/logos/opbnb.svg",
   }),
+  makeNetworkConfig(arbitrumChain, {
+    shortName: "ARB",
+    color: "#12AAFF",
+    logo: "/logos/arbitrum.svg",
+  }),
+  makeNetworkConfig(optimismChain, {
+    shortName: "OP",
+    color: "#FF0420",
+    logo: "/logos/optimism.svg",
+  }),
 ];
 
 export const testnetNetworks: NetworkConfig[] = [
@@ -426,6 +488,12 @@ export const testnetNetworks: NetworkConfig[] = [
     requiresLegacyGas: true,
     legacyGasPrice: "0x989680", // 0.1 gwei
   }),
+  makeNetworkConfig(arbitrumSepoliaChain, {
+    shortName: "ARB-S",
+    color: "#12AAFF",
+    isTestnet: true,
+    logo: "/logos/arbitrum.svg",
+  }),
 ];
 
 export function getNetworkConfig(chainId: number): NetworkConfig | undefined {
@@ -445,11 +513,14 @@ export const allChains = [
   arcMainnetChain,
   bnbChain,
   opBnbChain,
+  arbitrumChain,
+  optimismChain,
   sepolia,
   baseSepolia,
   giwaSepoliaChain,
   liteforgeChain,
   arcTestChain,
   simpleChain,
+  arbitrumSepoliaChain,
   genlayerBradburyChain,
 ];
