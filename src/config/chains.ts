@@ -243,6 +243,16 @@ export interface NetworkConfig {
   nikBaseContract?: `0x${string}`;
   /** CropInsurance contract address on this network */
   cropInsuranceContract?: `0x${string}`;
+  /**
+   * Arbitrum Orbit style chains reject a transaction unless it carries an
+   * explicit legacy `gasPrice`, and they also reject it when the wallet's
+   * local nonce drifts from the sequencer's expected message index. When set,
+   * the mission sender injects `legacyGasPrice` and refreshes the nonce from
+   * the RPC before sending. See sendTx() in DailyTaskPanel.
+   */
+  requiresLegacyGas?: boolean;
+  /** Hex gas price to use on such chains, e.g. 0x989680 = 0.1 gwei. */
+  legacyGasPrice?: `0x${string}`;
 }
 
 export const GAME2048_CONTRACTS: Record<number, `0x${string}`> = {
@@ -389,6 +399,10 @@ export const testnetNetworks: NetworkConfig[] = [
     color: "#FFD700",
     isTestnet: true,
     logo: "/logos/litvm.png",
+    // Arbitrum Orbit sequencer: needs an explicit legacy gasPrice, and a nonce
+    // fetched from the RPC because the wallet's local nonce can drift.
+    requiresLegacyGas: true,
+    legacyGasPrice: "0x989680", // 0.1 gwei
   }),
   makeNetworkConfig(arcTestChain, {
     shortName: "ARC",
@@ -408,6 +422,9 @@ export const testnetNetworks: NetworkConfig[] = [
     isTestnet: true,
     logo: "/logos/genlayer.svg",
     cropInsuranceContract: "0x5af45E1F050ffe09E7dD9adaeac83a3Ab7081E6a" as `0x${string}`,
+    // Orbit style sequencer, same treatment as Liteforge.
+    requiresLegacyGas: true,
+    legacyGasPrice: "0x989680", // 0.1 gwei
   }),
 ];
 

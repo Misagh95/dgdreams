@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useWriteContract, useConfig } from "wagmi";
 import { getPublicClient } from "@wagmi/core";
-import { encodeFunctionData } from "viem";
+import { encodeFunctionData, toHex } from "viem";
 import type { NetworkConfig } from "@/config/chains";
 import { parseTxError, getExplorerUrl, getNativeSymbol, shortenHash } from "@/utils/transactions";
 import { genLayerWriteTask, isGenLayer, GENLAYER_CONTRACT } from "@/lib/genlayer/tasks";
@@ -272,9 +272,31 @@ export default function DailyTaskPanel({
           }
 
           if (rawProvider?.request) {
+            // ── ORBIT CHAINS ───────────────────────────────────────────────
+            // Arbitrum Orbit sequencers (Liteforge/LitVM, GenLayer) reject a
+            // transaction that carries no explicit gasPrice, and they also
+            // reject it when the wallet's local nonce has drifted from the
+            // sequencer's expected message index. Both are invisible to the
+            // user and look like a random failure, so inject them here.
+            const txParams: Record<string, unknown> = { from: address, to: contractAddress, data };
+            if (network.requiresLegacyGas) {
+              if (!txParams.gasPrice && !txParams.maxFeePerGas) {
+                txParams.gasPrice = network.legacyGasPrice ?? "0x989680";
+              }
+              try {
+                const nonce = await pubClient?.getTransactionCount({
+                  address,
+                  blockTag: "pending",
+                });
+                if (nonce !== undefined) txParams.nonce = toHex(nonce);
+              } catch {
+                // nonce fetch failed — let the wallet decide
+              }
+            }
+
             hash = (await rawProvider.request({
               method: "eth_sendTransaction",
-              params: [{ from: address, to: contractAddress, data }],
+              params: [txParams],
             })) as `0x${string}`;
           } else {
             // Fallback: wagmi path (still wallet-side estimation).
