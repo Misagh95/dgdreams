@@ -434,12 +434,12 @@ export const mainnetNetworks: NetworkConfig[] = [
   makeNetworkConfig(arbitrumChain, {
     shortName: "ARB",
     color: "#12AAFF",
-    logo: "/logos/arbitrum.svg",
+    logo: "/logos/arbitrum.png",
   }),
   makeNetworkConfig(optimismChain, {
     shortName: "OP",
     color: "#FF0420",
-    logo: "/logos/optimism.svg",
+    logo: "/logos/optimism.png",
   }),
 ];
 
@@ -498,7 +498,7 @@ export const testnetNetworks: NetworkConfig[] = [
     shortName: "ARB-S",
     color: "#12AAFF",
     isTestnet: true,
-    logo: "/logos/arbitrum.svg",
+    logo: "/logos/arbitrum.png",
   }),
 ];
 

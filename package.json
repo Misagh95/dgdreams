@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "deploy:l2": "node scripts/deploy-l2.mjs",
-    "deploy:l2:dry": "node scripts/deploy-l2.mjs --dry-run"
+    "deploy:l2:dry": "node scripts/deploy-l2.mjs --dry-run",
+    "verify:l2": "node scripts/verify-l2.mjs",
+    "verify:l2:dry": "node scripts/verify-l2.mjs --dry-run"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.2.3",

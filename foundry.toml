@@ -38,9 +38,17 @@ remappings = [
 [rpc_endpoints]
 bsc = "${BSC_RPC_URL}"
 opbnb = "${OPBNB_RPC_URL}"
+arbitrum = "${ARBITRUM_RPC_URL}"
+optimism = "${OPTIMISM_RPC_URL}"
+arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC_URL}"
 
+# Explorer API keys, used by scripts/verify-l2.mjs.
+#   ARBITRUM_API_KEY / OPTIMISM_API_KEY  → arbiscan.io and optimistic.etherscan.io
 [etherscan]
 bsc = { key = "${BSCSCAN_API_KEY}" }
 opbnb = { key = "${BSCSCAN_API_KEY}" }
+arbitrum = { key = "${ARBITRUM_API_KEY}", chain = 42161 }
+optimism = { key = "${OPTIMISM_API_KEY}", chain = 10 }
+arbitrum_sepolia = { key = "${ARBITRUM_API_KEY}", chain = 421614 }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md
