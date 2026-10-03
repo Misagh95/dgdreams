@@ -323,6 +323,7 @@ export const GAME2048_CONTRACTS: Record<number, `0x${string}`> = {
   // Game2048 — verified on bscscan / opbnb.bscscan (BNB uses 0x4f41…, the working verified instance)
   56: "0x4f4102286c8a03CeE2b926c2AfAb06bdd5C6307A",
   204: "0xaa96e7C48Ad064f7f7827ad9f38579dba3bae325",
+  42161: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
 };
 
 export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
@@ -343,6 +344,7 @@ export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
   // NikBase v3.0.0 — verified on bscscan / opbnb.bscscan
   56: "0x4AE47749254CA48e950067057e7EEaaDD1498cdb",
   204: "0x94e067F69BC5C1d2F58C91EC0f1C03469452Eec9",
+  42161: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
 };
 
 function makeNetworkConfig(

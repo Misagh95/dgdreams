@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Deploy NikBase + Game2048 + SoulboundStreak to the L2s, then wire the addresses
  * into the app config automatically.
  *
@@ -166,9 +166,17 @@ for (const target of TARGETS) {
   const balance = await publicClient.getBalance({ address: account.address });
   console.log(`\n── ${name} (chain ${id}) ──`);
   console.log(`  balance  ${formatEther(balance)} ${net.nativeCurrency.symbol}`);
-  if (balance === 0n && !dryRun) {
-    console.error(`  ✗ deployer is unfunded on ${name} — fund it first`);
-    process.exit(1);
+
+  // Skip an unfunded chain rather than aborting the run: a testnet with no
+  // balance must not cost you the mainnets that were already funded.
+  if (balance === 0n) {
+    if (dryRun) {
+      console.log(`  x deployer is unfunded on ${name} - nothing can be sent here`);
+      continue;
+    }
+    console.error(`  x deployer is unfunded on ${name} - skipping this network`);
+    console.error(`    fund it, then re-run: node scripts/deploy-l2.mjs --only ${id}`);
+    continue;
   }
 
   deployed[id] = {};
@@ -233,26 +241,53 @@ for (const target of TARGETS) {
       console.log(`    would deploy${shown.length ? ` with args: ${shown.join(", ")}` : ""}`);
       continue;
     }
+// Arbitrum's public node estimates the badge deploy at the block limit and
+    // then refuses it with "contract creation code storage out of gas", even
+    // though it is far under EIP-170. Sending an explicit gas limit skips that
+    // second estimate entirely, which is the difference between the badge
+    // landing and the whole run dying on the third contract.
+    const gasLimit = estimate ? (estimate.gas * 120n) / 100n : undefined;
 
-    const hash = await wallet.deployContract({ abi, bytecode, args, chain: null });
+    let hash;
+    try {
+      hash = await wallet.deployContract({
+        abi,
+        bytecode,
+        args,
+        chain: null,
+        ...(gasLimit ? { gas: gasLimit } : {}),
+      });
+    } catch (e) {
+      const detail = String(e?.details || e?.shortMessage || e).split("\n")[0];
+      console.error(`  x ${contract.name}: ${detail}`);
+      console.error(
+        "    whatever was already deployed is on chain and already written to the config"
+      );
+      process.exit(1);
+    }
+
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     const address = receipt.contractAddress;
     if (!address) {
-      console.error(`  ✗ ${contract.name}: no address in the receipt`);
+      console.error(`  x ${contract.name}: no address in the receipt`);
       process.exit(1);
     }
 
     deployed[id][contract.name] = address;
-    console.log(`  ✓ ${contract.name} → ${address}`);
+    console.log(`  v ${contract.name} -> ${address}`);
     if (args.length) console.log(`    args   ${args.join(", ")}`);
     console.log(`    tx     ${hash}`);
     console.log(`    ${net.blockExplorers.default.url}/address/${address}`);
     if (estimate) {
       console.log(
-        `    gas used ${receipt.gasUsed.toLocaleString()} · fee ` +
+        `    gas used ${receipt.gasUsed.toLocaleString()} - fee ` +
           `${formatEther(receipt.gasUsed * receipt.effectiveGasPrice)} ${net.nativeCurrency.symbol}`
       );
-// ── wire the addresses into the app config ─────────────────────────────────
+    }
+  }
+}
+
+// ── wire the addresses into the app config ────────────────────────────────
 if (!dryRun) {
   const touched = new Set();
   for (const contract of CONTRACTS) {
@@ -266,15 +301,13 @@ if (!dryRun) {
     }
   }
   console.log(
-    `\nDone. Addresses wired into: ${[...touched].join(", ")} — commit when happy.`
+    `\nDone. Addresses wired into: ${[...touched].join(", ")} - commit when happy.`
   );
   console.log(
     "These contracts keep their metadata, so Arbiscan and Etherscan can verify\n" +
       "them against exactly the sources in contracts/."
   );
 } else {
-  console.log("\nDry run complete — re-run without --dry-run to deploy.");
+  console.log("\nDry run complete - re-run without --dry-run to deploy.");
 }
-    }
-  }
-}
+
