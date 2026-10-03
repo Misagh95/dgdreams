@@ -4,6 +4,7 @@ import { streaks } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { getAddressFromToken } from "@/lib/session";
+import { utcDayStart } from "@/lib/utcDay";
 
 export async function GET() {
   try {
@@ -60,7 +61,9 @@ export async function POST(request: Request) {
       .insert(streaks)
       .values({
         userId: body.userId ?? null,
-        date: new Date(),
+        // Normalized to 00:00 UTC so rows group by UTC day, the same boundary
+        // the NikBase contract uses for its per-day counters.
+        date: utcDayStart(),
         chainId: body.chainId ?? null,
         chainName: body.chainName ?? null,
         actionCount: body.actionCount ?? 1,

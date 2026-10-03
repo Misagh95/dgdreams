@@ -19,6 +19,7 @@ import { cn } from "@/utils/cn";
 import { getNativeSymbol, shortenHash, getExplorerUrl } from "@/utils/transactions";
 import { genLayerReadContract, isGenLayer } from "@/lib/genlayer/tasks";
 import { useOptimisticTasks } from "@/hooks/useOptimisticTasks";
+import { useUtcDay } from "@/hooks/useUtcDay";
 
 const SOULBOUND_ADDR: Record<number, `0x${string}` | ""> = {
   8453: "", 999: "", 130: "", 4217: "", 4663: "", 1: "",
@@ -219,6 +220,22 @@ export default function TasksPage() {
       enabled: !!validatedContract && !!validatedAddr && onRightChain && !isGen,
     },
   });
+
+  // The contracts roll over at 00:00 UTC. Every cached "already done today"
+  // flag is stale the moment that passes, so drop the whole per-day state and
+  // re-probe — otherwise an open tab would keep locking the user out until a
+  // hard refresh. `countdown` drives the "new day in …" label below.
+  const { countdown } = useUtcDay(
+    useCallback(() => {
+      setOnChainDoneIds(new Set());
+      setProbeAt(0);
+      optimistic.resetAll();
+      setHistoryEvents([]);
+      setProbeNonce((n) => n + 1);
+      refetchCounts();
+      refetchUser();
+    }, [optimistic, refetchCounts, refetchUser])
+  );
 
   const [genActionCount, setGenActionCount] = useState(0);
   const [genStreak, setGenStreak] = useState(0);
@@ -684,6 +701,10 @@ export default function TasksPage() {
               <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
                 <span>Frequency</span>
                 <span style={{ color: "var(--text-bright)" }}>Once per UTC day</span>
+              </div>
+              <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
+                <span>Next day</span>
+                <span style={{ color: "var(--accent)" }}>{countdown}</span>
               </div>
             </div>
 

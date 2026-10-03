@@ -22,9 +22,21 @@ import {
   Target,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { useAccount, useBalance, useEnsName, useSignMessage } from "wagmi";
+import { useAccount, useBalance, useEnsName, useSignMessage, useReadContract } from "wagmi";
 import { mainnet } from "viem/chains";
+import { isAddress } from "viem";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useUtcDay } from "@/hooks/useUtcDay";
+import { getNetworkConfig, NIKBASE_CONTRACTS } from "@/config/chains";
+
+/** Streak lives on-chain in NikBase.getUserData, and resets at 00:00 UTC. */
+const NIKBASE_ABI = [
+  { inputs: [{ name: "user", type: "address" }], name: "getUserData", outputs: [
+    { name: "streak", type: "uint256" },
+    { name: "totalCheckIns", type: "uint256" },
+    { name: "totalActions", type: "uint256" },
+  ], stateMutability: "view", type: "function" },
+] as const;
 
 const SOCIAL_PLATFORMS = [
   { key: "gmail", label: "Gmail", icon: Mail, color: "#EA4335" },
@@ -45,6 +57,29 @@ export default function ProfilePage() {
   const [socialsSaving, setSocialsSaving] = useState(false);
   const [socialSaved, setSocialSaved] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
+
+  // New UTC day ⇒ the on-chain streak may have expired to 0, so refetch.
+  const { day: utcDay, countdown } = useUtcDay();
+
+  // Streak is read live from the NikBase contract on the connected chain.
+  const nikBaseRaw = chainId ? NIKBASE_CONTRACTS[chainId] : undefined;
+  const nikBase =
+    nikBaseRaw && isAddress(nikBaseRaw) ? (nikBaseRaw as `0x${string}`) : undefined;
+  const networkName = chainId ? getNetworkConfig(chainId)?.name : undefined;
+  const { data: onChainUser, refetch: refetchOnChainUser } = useReadContract({
+    address: nikBase,
+    abi: NIKBASE_ABI,
+    functionName: "getUserData",
+    args: address ? [address] : undefined,
+    query: { enabled: !!nikBase && !!address },
+  });
+  const streak = onChainUser ? Number(onChainUser[0]) : 0;
+  const totalPoints = onChainUser ? Number(onChainUser[1]) * 10 : 0;
+
+  // A UTC rollover can expire the streak, so re-read it the moment the day flips.
+  useEffect(() => {
+    refetchOnChainUser();
+  }, [utcDay, refetchOnChainUser]);
 
   const fetchActivities = useCallback(async () => {
     if (!address) return;
@@ -211,8 +246,8 @@ export default function ProfilePage() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 flex-shrink-0">
               {[
-                { label: "Streak", value: "0", unit: "days", icon: Flame, color: "#ff6b00" },
-                { label: "Points", value: "0", unit: "total", icon: Star, color: "#ffaa00" },
+                { label: "Streak", value: isConnected && nikBase ? String(streak) : "—", unit: `days · UTC, new day in ${countdown}`, icon: Flame, color: "#ff6b00" },
+                { label: "Points", value: isConnected && nikBase ? String(totalPoints) : "—", unit: `total · check-ins on ${networkName ?? "—"}`, icon: Star, color: "#ffaa00" },
                 { label: "Balance", value: isConnected && balance ? `${Number(balance.formatted).toFixed(4)}` : "—", unit: balance?.symbol || "ETH", icon: Wallet, color: "#00d4ff" },
               ].map((stat) => {
                 const Icon = stat.icon;

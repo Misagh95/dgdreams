@@ -6,6 +6,7 @@ import { isAddress } from "viem";
 import { Rocket, CheckCircle2, XCircle, SkipForward, Loader2, ExternalLink, Zap } from "lucide-react";
 import { runSequence, type SequenceStepDef, type StepResult, type StepStatus } from "@/lib/sequence";
 import NetworkSelect from "@/components/NetworkSelect";
+import { useUtcDay } from "@/hooks/useUtcDay";
 import {
   NIKBASE_CONTRACTS,
   mainnetNetworks,
@@ -94,6 +95,13 @@ export default function FiveInOne(props: FiveInOneProps) {
   const [pickedNetworkId, setPickedNetworkId] = useState<number | null>(null);
   const abort = useRef({ aborted: false });
   const locallyDone = useRef<Set<string>>(new Set());
+
+  // GM/GN are once per UTC day, so the "already done" markers we collected in
+  // this session stop being true the moment the UTC day rolls over.
+  useUtcDay(useCallback(() => {
+    locallyDone.current = new Set();
+    setResults([]);
+  }, []));
 
   /** addresses already deployed on this network, from the local store */
   const refreshFromStore = useCallback((chainId: number) => {
