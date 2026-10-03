@@ -246,7 +246,29 @@ for (const target of TARGETS) {
     // though it is far under EIP-170. Sending an explicit gas limit skips that
     // second estimate entirely, which is the difference between the badge
     // landing and the whole run dying on the third contract.
-    const gasLimit = estimate ? (estimate.gas * 120n) / 100n : undefined;
+    //
+    // The headroom is deliberately small. Unused gas is refunded, but the
+    // wallet still checks `gas * maxFeePerGas` against the balance up front, so
+    // a fat buffer can reject a deploy the account can actually afford.
+    const gasLimit = estimate ? (estimate.gas * 105n) / 100n : undefined;
+
+    // The pre-flight balance check catches this before the wallet does, and can
+    // say what is actually missing instead of "insufficient funds for gas".
+    if (estimate && gasLimit) {
+      const required = gasLimit * estimate.price;
+      if (balance < required) {
+        const short = required - balance;
+        console.error(
+          `  x ${contract.name}: not enough ${net.nativeCurrency.symbol} on ${name}`
+        );
+        console.error(
+          `    need ${formatEther(required)}, have ${formatEther(balance)}` +
+            ` — short by ${formatEther(short)}`
+        );
+        console.error(`    send a little more to ${account.address} on ${name} and re-run`);
+        process.exit(1);
+      }
+    }
 
     let hash;
     try {
