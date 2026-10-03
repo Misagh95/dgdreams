@@ -13,6 +13,7 @@ import DailyTaskPanel, { CONTRACTS, canStillRunTask } from "@/components/DailyTa
 import { NetworkCube } from "@/components/NetworkCube";
 import { TaskCard3D, DAILY_MISSIONS } from "@/components/TaskCard3D";
 import DailyMissionDeck from "@/components/DailyMissionDeck";
+import FiveInOne from "@/components/FiveInOne";
 import { mainnetNetworks, testnetNetworks, NIKBASE_CONTRACTS, type NetworkConfig, getNetworkConfig } from "@/config/chains";
 import { cn } from "@/utils/cn";
 import { getNativeSymbol, shortenHash, getExplorerUrl } from "@/utils/transactions";
@@ -500,6 +501,18 @@ export default function TasksPage() {
         contextText={`Execute GM, CHECK and GN on ${heroName} — one transaction each, once per day.`}
         notice={deckNotice}
       />
+
+      {/* 5-in-1: GM + GN + Simple + Token + NFT in one click */}
+      <div className="mt-4">
+        <FiveInOne
+          network={connectedNetwork}
+          isConnected={isConnected && !isGen}
+          account={address}
+          onConnect={() => openConnectModal?.()}
+          doneTaskIds={onChainDoneIds}
+          onFinished={() => setProbeNonce((n) => n + 1)}
+        />
+      </div>
 
       {/* ─── SOULBOUND BADGE — mint after finishing all 3 daily missions ─── */}
       <div
