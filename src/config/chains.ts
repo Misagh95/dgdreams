@@ -289,6 +289,7 @@ export interface NetworkConfig {
   logo: string;
   color: string;
   isTestnet?: boolean;
+  status?: "operational" | "maintenance" | "coming-soon";
   /** Game2048 contract address on this network */
   game2048Contract?: `0x${string}`;
   /** NikBase contract address on this network */
@@ -374,6 +375,7 @@ function makeNetworkConfig(
     },
     logo: "",
     color: "#627eea",
+    status: "operational",
     game2048Contract: GAME2048_CONTRACTS[chain.id],
     nikBaseContract: NIKBASE_CONTRACTS[chain.id],
     ...overrides,
@@ -404,6 +406,7 @@ export const mainnetNetworks: NetworkConfig[] = [
   makeNetworkConfig(robinhoodChain, {
     shortName: "RH",
     color: "#00C805",
+    status: "coming-soon",
     logo: "/logos/robinhood.png",
   }),
   makeNetworkConfig(mainnet, {
@@ -414,6 +417,7 @@ export const mainnetNetworks: NetworkConfig[] = [
   makeNetworkConfig(inkChain, {
     shortName: "INK",
     color: "#0052FF",
+    status: "maintenance",
     logo: "/logos/ink.svg",
   }),
   makeNetworkConfig(arcMainnetChain, {
@@ -529,4 +533,9 @@ export const allChains = [
   simpleChain,
   arbitrumSepoliaChain,
   genlayerBradburyChain,
+];
+
+export const dashboardNetworks = [
+  ...mainnetNetworks,
+  ...testnetNetworks.filter((n) => n.id === 4221),
 ];

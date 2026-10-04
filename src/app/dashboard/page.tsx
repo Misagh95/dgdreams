@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { TaskCard3D, DAILY_MISSIONS } from "@/components/TaskCard3D";
-import { getNetworkConfig } from "@/config/chains";
+import { getNetworkConfig, dashboardNetworks } from "@/config/chains";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -30,19 +30,7 @@ const fadeUp = {
   transition: { duration: 0.5, ease: "easeOut" as const },
 };
 
-const networks = [
-  { name: "Ethereum", short: "ETH", color: "#627eea", logo: "/logos/ethereum.png", status: "operational" },
-  { name: "Base", short: "BASE", color: "#0052ff", logo: "/logos/base.svg", status: "operational" },
-  { name: "HyperEVM", short: "HYPE", color: "#FF6B6B", logo: "/logos/hyperliquid.png", status: "operational" },
-  { name: "Unichain", short: "UNI", color: "#FF007A", logo: "/logos/unichain.png", status: "operational" },
-  { name: "Tempo", short: "TMP", color: "#00D4AA", logo: "/logos/tempo.png", status: "operational" },
-  { name: "Ink", short: "INK", color: "#0052ff", logo: "/logos/ink.svg", status: "maintenance" },
-  { name: "Robinhood", short: "RH", color: "#00C805", logo: "/logos/robinhood.png", status: "coming-soon" },
-  { name: "Arc", short: "ARC", color: "#00D4AA", logo: "/logos/arc.png", status: "operational" },
-  { name: "BNB Chain", short: "BNB", color: "#F0B90B", logo: "/logos/bnb.svg", status: "operational" },
-  { name: "opBNB", short: "opBNB", color: "#00B2A9", logo: "/logos/opbnb.svg", status: "operational" },
-  { name: "GenLayer", short: "GEN", color: "#110FFF", logo: "/logos/genlayer.svg", status: "operational" },
-];
+const networks = dashboardNetworks;
 
 
 
@@ -380,7 +368,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2.5">
                     {networks.filter((n) => n.status === "operational").map((n) => (
-                      <div key={n.short}
+                      <div key={n.shortName || n.name}
                         className="flex items-center gap-1 px-1.5 py-0.5 rounded-md"
                         style={{
                           background: `color-mix(in srgb, ${n.color} 12%, transparent)`,
@@ -388,7 +376,7 @@ export default function DashboardPage() {
                         }}>
                         <Image src={n.logo} alt={n.name} width={10} height={10}
                           onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
-                        <span className="text-[8px] font-mono font-semibold" style={{ color: n.color }}>{n.short}</span>
+                        <span className="text-[8px] font-mono font-semibold" style={{ color: n.color }}>{n.shortName || n.name}</span>
                       </div>
                     ))}
                   </div>
@@ -413,7 +401,7 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
             {networks.map((chain) => (
-              <motion.div key={chain.short}
+              <motion.div key={chain.shortName || chain.name}
                 initial={reduced ? undefined : { opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + networks.indexOf(chain) * 0.04 }}>
