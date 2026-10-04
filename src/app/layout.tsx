@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import "@rainbow-me/rainbowkit/styles.css";
 import { Providers } from "./providers";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "DGDreams — On-Chain Activity Terminal",
@@ -22,7 +24,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="bg-[var(--bg-base)] text-[var(--text-primary)] antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Analytics />
+          <SpeedInsights />
+        </Providers>
       </body>
     </html>
   );

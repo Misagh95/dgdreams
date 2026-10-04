@@ -21,3 +21,6 @@ docs/.vercel/
 # machine-specific state that should stay out of the repo.
 deployer/deployments.json
 deployer/node_modules/
+build_errors.txt
+*.tsbuildinfo
+

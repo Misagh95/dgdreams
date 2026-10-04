@@ -1,2 +1,9 @@
 .freebuff
 /truthcourt
+contracts/
+genlayer-contracts/
+docs/
+*.log
+build_errors.txt
+*.tsbuildinfo
+.git/
