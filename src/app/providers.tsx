@@ -3,10 +3,11 @@
 import { type ReactNode } from "react";
 import { WagmiProvider, http, fallback, createConfig, type Transport } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { metaMaskWallet, walletConnectWallet, rainbowWallet, ledgerWallet } from "@rainbow-me/rainbowkit/wallets";
 import { allChains } from "@/config/chains";
+import { useIsLightTheme } from "@/hooks/useIsLightTheme";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,11 +68,20 @@ function createWagmiConfig() {
 
 const _wagmiConfig = createWagmiConfig();
 
+function DynamicRainbowKitProvider({ children }: { children: ReactNode }) {
+  const isLight = useIsLightTheme();
+  return (
+    <RainbowKitProvider theme={isLight ? lightTheme() : darkTheme()}>
+      {children}
+    </RainbowKitProvider>
+  );
+}
+
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={_wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={darkTheme()}>{children}</RainbowKitProvider>
+        <DynamicRainbowKitProvider>{children}</DynamicRainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
