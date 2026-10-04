@@ -4,6 +4,7 @@ import { predictionActivities } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { getAddressFromToken } from "@/lib/session";
+import { isValidAddress, sanitizeString } from "@/lib/validation";
 
 const POINTS: Record<string, number> = {
   create_market: 30,
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const wallet = searchParams.get("wallet");
-    if (!wallet) {
+    if (!wallet || !isValidAddress(wallet)) {
       return NextResponse.json({ activities: [] });
     }
     const data = await db
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
     );
   }
   try {
-    const body = await request.json() as {
+    const body = (await request.json()) as {
       walletAddress: string;
       action: string;
       question: string;
@@ -53,11 +54,27 @@ export async function POST(request: Request) {
       txHash?: string;
     };
 
-    if (!body.walletAddress || !body.action || !body.question) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (
+      !body.walletAddress ||
+      !isValidAddress(body.walletAddress) ||
+      !body.action ||
+      !body.question
+    ) {
+      return NextResponse.json(
+        { error: "Missing or invalid required fields" },
+        { status: 400 }
+      );
     }
     if (body.walletAddress.toLowerCase() !== address.toLowerCase()) {
       return NextResponse.json({ error: "Address mismatch" }, { status: 401 });
+    }
+
+    const question = sanitizeString(body.question, 500);
+    if (!question) {
+      return NextResponse.json(
+        { error: "Invalid question text" },
+        { status: 400 }
+      );
     }
 
     const points = POINTS[body.action] || 0;
@@ -67,7 +84,7 @@ export async function POST(request: Request) {
       .values({
         walletAddress: address.toLowerCase(),
         action: body.action,
-        question: body.question,
+        question,
         marketId: body.marketId ?? null,
         chain: body.chain ?? "genlayer",
         txHash: body.txHash ?? null,
@@ -78,6 +95,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ activity: inserted });
   } catch (error) {
     console.error("Failed to save prediction activity:", error);
-    return NextResponse.json({ error: "Failed to save activity" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to save activity" },
+      { status: 500 }
+    );
   }
 }

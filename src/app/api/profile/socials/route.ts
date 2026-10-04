@@ -4,13 +4,17 @@ import { walletSocials } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getAddressFromToken } from "@/lib/session";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
+import { isValidAddress, sanitizeString } from "@/lib/validation";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const address = searchParams.get("address");
 
-  if (!address) {
-    return NextResponse.json({ error: "address is required" }, { status: 400 });
+  if (!address || !isValidAddress(address)) {
+    return NextResponse.json(
+      { error: "A valid Ethereum address is required" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -43,13 +47,16 @@ export async function PUT(request: Request) {
   }
 
   try {
-    const body = await request.json() as {
+    const body = (await request.json()) as {
       address?: string;
       socials?: Record<string, string>;
     };
 
-    if (!body.address || !body.socials) {
-      return NextResponse.json({ error: "address and socials are required" }, { status: 400 });
+    if (!body.address || !isValidAddress(body.address) || !body.socials) {
+      return NextResponse.json(
+        { error: "Valid address and socials are required" },
+        { status: 400 }
+      );
     }
 
     const addr = body.address.toLowerCase();
@@ -62,15 +69,25 @@ export async function PUT(request: Request) {
 
     const upserted: { platform: string; handle: string }[] = [];
 
-    for (const [platform, handle] of Object.entries(body.socials)) {
+    for (const [rawPlatform, rawHandle] of Object.entries(body.socials)) {
+      const platform = sanitizeString(rawPlatform, 32);
+      if (!platform) continue;
+
+      const handle = typeof rawHandle === "string" ? sanitizeString(rawHandle, 128) : null;
+
       const existing = await db
         .select()
         .from(walletSocials)
-        .where(and(eq(walletSocials.walletAddress, addr), eq(walletSocials.platform, platform)))
+        .where(
+          and(
+            eq(walletSocials.walletAddress, addr),
+            eq(walletSocials.platform, platform)
+          )
+        )
         .limit(1);
 
-      // Empty handle deletes the link
-      if (!handle || typeof handle !== "string") {
+      // Empty or invalid handle deletes the link
+      if (!handle) {
         if (existing.length > 0) {
           await db
             .delete(walletSocials)
