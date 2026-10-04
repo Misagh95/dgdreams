@@ -2,7 +2,7 @@
   <img src="https://dgdreams.space/genlayer-spinner.svg" alt="GenLayer Spinner" width="80" />
   <h1 align="center">DGDreams — Web3 Space Terminal</h1>
   <p align="center">
-    Multi-chain daily task dashboard with <strong>17 networks</strong> • <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
+    Multi-chain daily task dashboard with <strong>20 networks</strong> • <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
   </p>
   <p align="center">
     <a href="https://dgdreams.space" target="_blank"><strong>🌐 Live Site</strong></a>
@@ -27,15 +27,16 @@
 
 ## Overview
 
-**DGDreams** is a unified dashboard where users connect their wallet once and execute daily on-chain tasks across **17 blockchain networks** — Ethereum, Base, HyperEVM, Unichain, Tempo, Robinhood, Ink, Arc, BNB Chain and opBNB on mainnet, plus testnets including **GenLayer Bradbury**, LitVM, GIWA, ARC, and SimpleChain.
+**DGDreams** is a unified dashboard where users connect their wallet once and execute daily on-chain tasks across **20 blockchain networks** — Ethereum, Base, Arbitrum One, OP Mainnet, HyperEVM, Unichain, Tempo, Robinhood, Ink, Arc, BNB Chain and opBNB on mainnet, plus testnets including **Arbitrum Sepolia**, **GenLayer Bradbury**, LitVM, GIWA, ARC, and SimpleChain.
 
 | Feature | Description |
 |---|---|
 | 🔁 **One wallet, many chains** | Connect with RainbowKit, switch networks seamlessly |
-| ✅ **3 daily tasks per network** | Check-in, GM, GN |
+| ✅ **3 daily tasks per network** | Check-in, GM, GN — a new day starts at **00:00 UTC** |
+| 🚀 **5-in-1 runner** | GM + GN plus three deploys in one click, ~**69% less gas** than the full-featured contracts |
 | <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" /> **GenLayer AI contracts** | Python-based Intelligent Contract using `genlayer-js` SDK |
 | 🏆 **Soulbound NFT streaks** | Mint tiered NFTs (Bronze → Legend) for 7+ day streaks |
-| 📊 **Real-time stats** | Per-network action counts, streak tracking, history |
+| 📊 **Wallet-owned streaks** | Read from the chain, keyed to your address — never self-reported |
 
 ---
 
@@ -50,6 +51,34 @@ Users can run the same 3 daily tasks on any supported network:
 3. **GN** — Night sign-off
 
 Each task writes to an on-chain contract that tracks streaks, action counts, and daily resets.
+
+The day rolls over at **00:00 UTC** — the same boundary for every user in every
+timezone, because the contract buckets days as `block.timestamp / 1 days`. The app
+mirrors that boundary exactly, so an open tab clears its "already done today"
+state at the same instant the contract does.
+
+### 🚀 5-in-1 Runner
+
+One button runs the two missions plus three deploys back to back:
+
+1. **GM** and **GN** on `NikBase`
+2. **DGDemo** — a greeter
+3. **DGLiteToken** — a minimal ERC-20
+4. **DGLiteNft** — a minimal ERC-721
+
+These are size-optimised editions from [`contracts/OneClick.sol`](contracts/OneClick.sol).
+Deployment gas is charged at **200 gas per byte of runtime code** plus calldata, so
+every function nobody calls is still paid for on every deployment. Stripping the
+one-click contracts down to only what the flow exercises cuts the cost from
+~2.78M to ~0.87M gas:
+
+```
+node scripts/measure-deploy-cost.mjs   # prints the per-contract bill
+```
+
+The card picks its **own network**, independent of the mission page, and reuses
+addresses it has already deployed on that network, so a second run costs almost
+nothing.
 
 ### <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="22" align="center" /> GenLayer Integration
 
@@ -78,20 +107,21 @@ src/
 │   ├── dashboard/       # Network grid overview
 │   ├── tasks/           # Daily task execution page
 │   ├── 2048/            # Binary milestone game
-│   ├── litevm/          # LiteVM playground
-│   ├── activity/        # Transaction history
-│   ├── profile/         # User profile & NFT view
+│   ├── deploy/          # Deploy the app's own contracts
 │   ├── faq/             # Help & documentation
 │   └── api/             # Backend API routes
 ├── components/
 │   ├── DailyTaskPanel   # Task execution modal (wagmi + genlayer-js)
-│   ├── WalletModal      # Wallet connection UI
+│   ├── FiveInOne        # 5-in-1 runner (missions + three deploys)
+│   ├── DailyMissionDeck # Mission cards with UTC-day state
 │   ├── Sidebar          # Navigation sidebar
 │   ├── DashboardLayout  # Shared layout wrapper
 │   └── ...
 ├── config/
-│   └── chains.ts        # All 17 chain definitions & NetworkConfig
+│   └── chains.ts        # All 20 chain definitions & NetworkConfig
 ├── lib/
+│   ├── utcDay.ts        # 00:00 UTC boundary shared by the whole app
+│   ├── sequence.ts      # Multi-step runner used by the 5-in-1 card
 │   ├── genlayer/
 │   │   ├── client.ts    # genlayer-js client factory
 │   │   └── tasks.ts     # Write/read helpers for GenLayer
@@ -142,6 +172,8 @@ User clicks "Start" → DailyTaskPanel opens
 | Arc | 5042 | USDC |
 | BNB Chain | 56 | BNB |
 | opBNB | 204 | BNB |
+| **Arbitrum One** | **42161** | **ETH** |
+| **OP Mainnet** | **10** | **ETH** |
 
 ### Testnet
 | Network | Chain ID | Currency |
@@ -153,6 +185,35 @@ User clicks "Start" → DailyTaskPanel opens
 | <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" /> **GenLayer Bradbury** | **4221** | **GEN** |
 | ARC Testnet | 5042002 | ARC |
 | SimpleChain | 1913 | SIM |
+| **Arbitrum Sepolia** | **421614** | **ETH** |
+
+> 💡 **Arbitrum and OP are the cheapest networks here** — a full 5-in-1 run costs
+> well under a cent, so they are the best place to start.
+
+---
+
+## Deploying the Contracts
+
+```bash
+forge build
+
+# preview: prints the per-contract gas bill, sends nothing
+npm run deploy:l2:dry
+
+# deploy NikBase + Game2048 + SoulboundStreak to Arbitrum One, OP Mainnet
+# and Arbitrum Sepolia, then wire the addresses into the app config
+npm run deploy:l2
+```
+
+Then verify on the explorers:
+
+```bash
+npm run verify:l2        # needs ARBITRUM_API_KEY / OPTIMISM_API_KEY
+```
+
+Both scripts read their target addresses back out of the app config, so a command
+can never be pointed at the wrong address. Add `--only <chainId>` to restrict to
+one network.
 
 ---
 
@@ -170,6 +231,8 @@ npm install
 cp .env.example .env.local
 # Add your WalletConnect Project ID to .env.local:
 # NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+# SESSION_SECRET=<openssl rand -hex 32>
+# DEPLOYER_PRIVATE_KEY=0x...        (only needed to deploy contracts)
 
 # Run development server
 npm run dev
@@ -180,6 +243,11 @@ npm run dev
 - **Node.js** >= 18
 - **WalletConnect Project ID** — get one at [cloud.walletconnect.com](https://cloud.walletconnect.com)
 - **MetaMask** browser extension (for EVM chains + GenLayer via genlayer-js)
+- **`SESSION_SECRET`** — signs the wallet-login tokens used to record streaks.
+  Generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+  and set it in `.env.local` **and** in your deployment platform's environment.
+  Without it the site still builds, but signing in and streak recording are
+  disabled.
 
 ---
 

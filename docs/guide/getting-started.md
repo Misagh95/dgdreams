@@ -14,10 +14,10 @@ npm install
 
 # 3. Set up environment variables
 cp .env.example .env.local
-# 4. Add your WalletConnect Project ID:
 #    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+#    SESSION_SECRET=<node -e "console.log(require('crypto').randomBytes(32).toString('hex'))">
 
-# 5. Start the dev server
+# 4. Start the dev server
 npm run dev
 ```
 
@@ -35,6 +35,16 @@ Open [`http://localhost:3000`](http://localhost:3000) and hit the dashboard. �
 ## 🎮 Your first mission
 
 1. Click **Connect Wallet** and approve with MetaMask.
-2. Pick a network from the grid — start with **Base** or **Ethereum**.
+2. Pick a network from the grid — start with **OP Mainnet** or **Arbitrum One**,
+   where a full run costs a fraction of a cent.
 3. Open the **Daily Task** panel and run your **Check-in**.
-4. Come back tomorrow. Build the streak. Mint your first **Bronze NFT**. 🏅
+4. Come back tomorrow. The day resets at **00:00 UTC**, so the streak boundary is
+   the same for everyone no matter where they are. Mint your first **Bronze NFT**
+   at 7 days. 🏅
+
+## 🚀 Try the 5-in-1 runner
+
+On the tasks page, the 5-in-1 card runs GM, GN and three contract deploys in one
+click — on whichever network you select in that card. It shows the estimated gas
+before you start, and reuses anything it has already deployed on that network, so
+running it a second time is almost free.

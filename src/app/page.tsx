@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "DGDreams — Multi-Chain On-Chain Activity Terminal",
   description:
-    "Connect your wallet, execute daily check-ins across 17 blockchain networks, build streaks, mint soulbound NFTs and climb the leaderboard. Supports Ethereum, Base, HyperEVM, BNB Chain, GenLayer and more.",
+    "Connect your wallet, execute daily check-ins across 20 blockchain networks, build streaks, mint soulbound NFTs and climb the leaderboard. Supports Ethereum, Base, HyperEVM, BNB Chain, GenLayer and more.",
   openGraph: {
     title: "DGDreams — Multi-Chain On-Chain Activity Terminal",
     description:
-      "Daily on-chain tasks across 17 networks. Build streaks, earn soulbound NFTs, play 2048 on-chain.",
+      "Daily on-chain tasks across 20 networks. Build streaks, earn soulbound NFTs, play 2048 on-chain.",
     url: "https://dgdreams.space",
     siteName: "DGDreams",
     type: "website",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "DGDreams — Multi-Chain On-Chain Activity Terminal",
     description:
-      "Daily on-chain tasks across 17 networks. Build streaks, earn soulbound NFTs.",
+      "Daily on-chain tasks across 20 networks. Build streaks, earn soulbound NFTs.",
     images: ["https://dgdreams.space/og-image.png"],
   },
   keywords: [

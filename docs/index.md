@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "DGDreams"
   text: "Web3 Space Terminal"
-  tagline: One wallet. Seventeen networks. Daily on-chain missions — streaks, AI contracts and soulbound NFTs.
+  tagline: One wallet. Twenty networks. Daily on-chain missions — streaks, AI contracts and soulbound NFTs.
   image:
     src: /logo.svg
     alt: DGDreams
@@ -22,10 +22,13 @@ hero:
 features:
   - icon: 🔁
     title: One wallet, many chains
-    details: Connect once with RainbowKit and switch across 17 networks — 16 EVM chains plus GenLayer — without ever leaving the dashboard.
+    details: Connect once with RainbowKit and switch across 20 networks — 19 EVM chains plus GenLayer — without ever leaving the dashboard.
   - icon: ✅
     title: 3 daily tasks per network
-    details: Check-in, GM and GN — each action enforced once per UTC day on-chain.
+    details: Check-in, GM and GN — each action enforced once per UTC day, with a new day starting at 00:00 UTC.
+  - icon: 🚀
+    title: 5-in-1 runner
+    details: Two missions and three contract deploys in one click, cut by ~69% through size-optimised contracts.
   - icon: 🧠
     title: GenLayer AI contracts
     details: Python-based Intelligent Contracts running on AI-validator consensus, orchestrated through the genlayer-js SDK.
@@ -33,11 +36,11 @@ features:
     title: Soulbound NFT streaks
     details: Mint and upgrade tiered soulbound NFTs — from Bronze to Legend — as your daily streak grows.
   - icon: 📊
-    title: Real-time stats
-    details: Per-network action counts, streak tracking and full on-chain history on your profile.
+    title: Wallet-owned streaks
+    details: Read straight from the NikBase contract for your address, never self-reported.
   - icon: 🛰️
     title: Built for space
-    details: A binary-themed 2048 milestone game, a LiteVM playground and a prediction market all ship in the terminal.
+    details: A binary-themed 2048 milestone game and a GenLayer prediction market ship in the terminal.
 ---
 
 <style>

@@ -10,20 +10,22 @@ src/
 │   ├── dashboard/       # Network grid overview
 │   ├── tasks/           # Daily task execution page
 │   ├── 2048/            # Binary milestone game
-│   ├── litevm/          # LiteVM playground
-│   ├── activity/        # Transaction history
-│   ├── profile/         # User profile & NFT view
+│   ├── deploy/          # Deploy the app's own contracts
+│   ├── leaderboard/     # Streak, score and points rankings
 │   ├── faq/             # Help & documentation
 │   └── api/             # Backend API routes
 ├── components/
 │   ├── DailyTaskPanel   # Task execution modal (wagmi + genlayer-js)
-│   ├── WalletModal      # Wallet connection UI
+│   ├── FiveInOne        # 5-in-1 runner (missions + three deploys)
+│   ├── DailyMissionDeck # Mission cards with UTC-day state
 │   ├── Sidebar          # Navigation sidebar
 │   ├── DashboardLayout  # Shared layout wrapper
 │   └── ...
 ├── config/
-│   └── chains.ts        # All 17 chain definitions & NetworkConfig
+│   └── chains.ts        # All 20 chain definitions & NetworkConfig
 ├── lib/
+│   ├── utcDay.ts        # 00:00 UTC boundary shared by the whole app
+│   ├── sequence.ts      # Multi-step runner used by the 5-in-1 card
 │   ├── genlayer/
 │   │   ├── client.ts    # genlayer-js client factory
 │   │   └── tasks.ts     # Write/read helpers for GenLayer

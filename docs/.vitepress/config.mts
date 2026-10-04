@@ -3,13 +3,13 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   lang: 'en-US',
   title: 'DGDreams',
-  description: 'The Web3 Space Terminal — execute daily on-chain tasks across 14 networks in one place.',
+  description: 'The Web3 Space Terminal — execute daily on-chain tasks across 20 networks in one place.',
   cleanUrls: true,
   ignoreDeadLinks: true,
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['meta', { property: 'og:title', content: 'DGDreams — Web3 Space Terminal' }],
-    ['meta', { property: 'og:description', content: 'Multi-chain daily task dashboard with 14 networks, GenLayer AI contracts and soulbound NFT streaks.' }],
+    ['meta', { property: 'og:description', content: 'Multi-chain daily task dashboard with 20 networks, GenLayer AI contracts and soulbound NFT streaks.' }],
     ['meta', { property: 'og:image', content: '/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#00d4ff' }],
   ],

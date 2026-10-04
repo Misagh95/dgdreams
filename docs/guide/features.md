@@ -1,18 +1,19 @@
 # Features
 
-DGDreams is a unified dashboard where you connect your wallet once and execute daily on-chain tasks across **14 blockchain networks**.
+DGDreams is a unified dashboard where you connect your wallet once and execute daily on-chain tasks across **20 blockchain networks**.
 
 ## ✨ At a glance
 
 | Feature | Description |
 |---|---|
 | 🔁 **One wallet, many chains** | Connect with RainbowKit, switch networks seamlessly |
-| ✅ **3 daily tasks per network** | Check-in, GM, GN |
+| ✅ **3 daily tasks per network** | Check-in, GM, GN — one new day at **00:00 UTC** |
+| 🚀 **5-in-1 runner** | Two missions plus three deploys in one click, ~69% less gas |
 | 🧠 **GenLayer AI contracts** | Python-based Intelligent Contracts using the `genlayer-js` SDK |
 | 🏆 **Soulbound NFT streaks** | Mint tiered NFTs (Bronze → Legend) for 7+ day streaks |
-| 📊 **Real-time stats** | Per-network action counts, streak tracking, full history |
+| 🔐 **Wallet-owned streaks** | Read from the chain, never self-reported |
 | 🎮 **2048 milestone game** | A binary-themed game that doubles as an engagement milestone |
-| ⚙️ **LiteVM playground** | Experimental runtime playground with points, tournaments and tasks |
+| 🛰️ **Prediction market** | A GenLayer market with AI-verified resolution |
 
 ## 🧠 GenLayer — AI-native contracts
 
@@ -34,4 +35,14 @@ Networks with a soulbound NFT contract support minting and upgrading:
 
 ## 📊 Real-time stats
 
-Every action writes to an on-chain contract that tracks streaks, action counts and daily resets. Your profile keeps a full, verifiable history across every network you touch.
+Every action writes to an on-chain contract that tracks streaks, action counts and daily resets. The leaderboard indexes those on-chain values per wallet and network, so the numbers there are verifiable rather than self-reported.
+
+## 🚀 5-in-1 runner
+
+One button runs GM, GN and three deploys (a demo contract, a minimal ERC-20 and a
+minimal ERC-721) back to back, on a network the card picks for itself.
+
+Those three come from `contracts/OneClick.sol`, deliberately stripped down. Deploy
+gas is charged at **200 gas per byte of runtime code**, so a function nobody calls
+still costs on every deployment — trimming them cut the run from ~2.78M to ~0.87M
+gas. The card also reuses addresses it has already deployed on that network.

@@ -24,3 +24,20 @@ These NFTs are **non-transferable** — no listings, no gifts, no escaping. They
 4. Keep going to upgrade the tier.
 
 Missing a day resets your streak — that's the game. The on-chain daily-reset logic won't let you cheat the clock, because it validates against real UTC time. ⏱️
+
+## 🕛 When does the day reset?
+
+At **00:00 UTC**, for everyone. The contract buckets days as
+`block.timestamp / 1 days`, so there is one global boundary rather than a
+per-user one — a streak never depends on where you happen to be.
+
+The app mirrors that same boundary (`src/lib/utcDay.ts`) so an open tab clears its
+"already done today" state at the exact moment the contract does, instead of
+staying locked until you hard-refresh.
+
+## 🔐 Where the streak lives
+
+Your streak belongs to your **wallet**. `NikBase` stores it against your address
+on-chain, and the app only keeps an index of it for the leaderboard — a value it
+re-reads from the contract rather than accepting from the browser. That means a
+streak cannot be inflated by editing a request.

@@ -1,6 +1,6 @@
 # Networks
 
-DGDreams supports **17 networks** — 10 mainnets and 7 testnets — all from one wallet.
+DGDreams supports **20 networks** — 12 mainnets and 8 testnets — all from one wallet.
 
 ## 🟢 Mainnet
 
@@ -16,6 +16,8 @@ DGDreams supports **17 networks** — 10 mainnets and 7 testnets — all from on
 | **Arc** | 5042 | USDC |
 | **BNB Chain** | 56 | BNB |
 | **opBNB** | 204 | BNB |
+| **Arbitrum One** | 42161 | ETH |
+| **OP Mainnet** | 10 | ETH |
 
 ## 🟡 Testnet
 
@@ -28,6 +30,22 @@ DGDreams supports **17 networks** — 10 mainnets and 7 testnets — all from on
 | **GenLayer Bradbury** | **4221** | **GEN** |
 | ARC Testnet | 5042002 | ARC |
 | SimpleChain | 1913 | SIM |
+| **Arbitrum Sepolia** | 421614 | ETH |
+
+## 💸 Cost
+
+Network choice matters a lot for the 5-in-1 runner, because deployment gas is
+charged at 200 gas per byte of contract code. Measured on Arbitrum One:
+
+| Contract | Gas |
+|---|---|
+| `NikBase` | ~1.7M |
+| `Game2048` | ~156K |
+| `SoulboundStreak` | ~2.2M |
+
+**OP Mainnet is by far the cheapest** — a full three-contract deploy there costs
+roughly $0.000004. Base and BNB are the most expensive. If you are trying the app
+for the first time, start on OP Mainnet.
 
 ## 🔀 Switching networks
 
