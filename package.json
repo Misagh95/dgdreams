@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "postinstall": "node scripts/create-x402-stubs.mjs",
+    "prebuild": "node scripts/create-x402-stubs.mjs",
+    "predev": "node scripts/create-x402-stubs.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
