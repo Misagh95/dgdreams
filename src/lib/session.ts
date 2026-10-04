@@ -1,18 +1,26 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
+/**
+ * Resolved lazily, per call, never at module load.
+ *
+ * `next build` evaluates route modules with NODE_ENV=production just to collect
+ * page data. Reading the secret at import time therefore aborted the whole
+ * production build whenever SESSION_SECRET was not already exported, so the
+ * site could not deploy at all. Evaluating it here means a build never needs
+ * the key, while actually minting or checking a token still refuses to run
+ * without one — which is the property that matters for security.
+ */
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET;
   if (secret) return secret;
   if (process.env.NODE_ENV === "production") {
     throw new Error(
-      "SESSION_SECRET is not set. Refusing to start with an insecure fallback secret in production."
+      "SESSION_SECRET is not set. Add it to .env.local and to the deployment environment."
     );
   }
   // Dev-only fallback: never used when NODE_ENV === "production".
   return "dgdreams-dev-secret-change-in-production";
 }
-
-const SECRET = getSecret();
 
 export interface SessionPayload {
   address: string;
@@ -24,6 +32,7 @@ export function createSessionToken(
   address: string,
   ttlMs = 7 * 24 * 60 * 60 * 1000
 ): string {
+  const SECRET = getSecret();
   const payload: SessionPayload = {
     address,
     iat: Date.now(),
@@ -38,7 +47,14 @@ export function verifySessionToken(token: string): SessionPayload | null {
   const [body, sig] = token.split(".");
   if (!body || !sig) return null;
 
-  const expected = createHmac("sha256", SECRET).update(body).digest("base64url");
+  // Resolved per call rather than at import; see getSecret().
+  let expected: string;
+  try {
+    expected = createHmac("sha256", getSecret()).update(body).digest("base64url");
+  } catch {
+    // No secret configured: refuse rather than fall back to a guessable key.
+    return null;
+  }
   const a = Buffer.from(sig);
   const b = Buffer.from(expected);
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
