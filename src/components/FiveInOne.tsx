@@ -259,6 +259,11 @@ export default function FiveInOne(props: FiveInOneProps) {
 
   const doneCount = results.filter((r) => r.status === "done" || r.status === "already").length;
   const loaded = Object.keys(artifacts).length === ARTIFACTS.length;
+  // Show why the run is blocked instead of leaving a dead button. A failed
+  // artifact fetch used to disable the button with no explanation, which reads
+  // as "the feature is broken" rather than "a CDN file is missing".
+  const missingArtifacts = ARTIFACTS.filter((a) => !artifacts[a.key]).map((a) => a.key);
+  const blockedByArtifacts = missingArtifacts.length > 0;
   const canRun = isConnected && !!target && !!nikBase && !running && loaded;
 
   // What a fresh run would cost: the three deployments plus two cheap mission
@@ -330,6 +335,13 @@ export default function FiveInOne(props: FiveInOneProps) {
           </button>
         </div>
       </div>
+
+      {blockedByArtifacts && (
+        <p className="text-[11px] mt-3" style={{ color: "#FFC24B" }}>
+          Could not load the deploy artifacts ({missingArtifacts.join(", ")}) - the run
+          is unavailable until they can be fetched.
+        </p>
+      )}
 
       {isConnected && !nikBase && (
         <p className="text-[11px] mt-3" style={{ color: "#FFC24B" }}>

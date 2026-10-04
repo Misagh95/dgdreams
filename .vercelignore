@@ -1,8 +1,12 @@
 .freebuff
 /truthcourt
-contracts/
-genlayer-contracts/
-docs/
+# Solidity sources are not needed at runtime — but this must stay anchored to
+# the repo root. An unanchored "contracts/" also matches public/contracts/, and
+# those JSON artifacts are what the browser downloads to deploy from, so
+# excluding them silently disabled the Deploy page and the 5-in-1 runner.
+/contracts
+/genlayer-contracts
+/docs
 *.log
 build_errors.txt
 *.tsbuildinfo
