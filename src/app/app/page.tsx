@@ -1,118 +1,98 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { ArrowDownUp, Rocket, Zap } from "lucide-react";
+import { ArrowDownUp } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { TasksSection } from "@/components/sections/TasksSection";
 import { SwapSection } from "@/components/sections/SwapSection";
-import { DeploySection } from "@/components/sections/DeploySection";
 
-/* ─────────────────────────────────────────────
-   /app — Daily tasks, swap and deploy on one
-   page, under fixed headers, with the network
-   chosen from the rail on the left edge.
-   ───────────────────────────────────────────── */
+/* -------------------------------------------------------------
+   /app - Terminal. Two cards across the top (daily check,
+   swap), then the work split in two columns: daily missions
+   on the wide side, swap on the narrow side.
+   ------------------------------------------------------------- */
 
-function SectionHeader({
+/** Narrow-column section: compact header + body. */
+function SideSection({
   id,
-  index,
   title,
-  subtitle,
   icon,
   color,
+  children,
 }: {
   id: string;
-  index: string;
   title: string;
-  subtitle: string;
   icon: ReactNode;
   color: string;
+  children: ReactNode;
 }) {
   return (
-    <div
+    <section
       id={id}
-      className="flex items-center gap-3 px-4 py-3 scroll-mt-24"
-      style={{
-        background: `linear-gradient(90deg, color-mix(in srgb, ${color} 12%, transparent) 0%, transparent 70%)`,
-        borderLeft: `3px solid ${color}`,
-        borderBottom: "1px solid var(--border-default)",
-      }}
+      className="rounded-2xl overflow-hidden scroll-mt-28"
+      style={{ border: "1px solid var(--border-default)" }}
     >
-      <span
-        className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+      <div
+        className="flex items-center gap-2.5 px-4 py-3"
         style={{
-          background: `color-mix(in srgb, ${color} 18%, transparent)`,
-          border: `1px solid color-mix(in srgb, ${color} 40%, transparent)`,
-          color,
+          background: `linear-gradient(90deg, color-mix(in srgb, ${color} 12%, transparent) 0%, transparent 70%)`,
+          borderLeft: `3px solid ${color}`,
+          borderBottom: "1px solid var(--border-default)",
         }}
       >
-        {icon}
-      </span>
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-[9px] font-mono" style={{ color: "var(--text-quaternary)" }}>
-            {index}
-          </span>
-          <h2 className="text-sm font-bold tracking-tight" style={{ color: "var(--text-bright)" }}>
-            {title}
-          </h2>
-        </div>
-        <p className="text-[10px] font-mono truncate" style={{ color: "var(--text-tertiary)" }}>
-          {subtitle}
-        </p>
+        <span
+          className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{
+            background: `color-mix(in srgb, ${color} 18%, transparent)`,
+            border: `1px solid color-mix(in srgb, ${color} 40%, transparent)`,
+            color,
+          }}
+        >
+          {icon}
+        </span>
+        <h2 className="text-sm font-bold tracking-tight" style={{ color: "var(--text-bright)" }}>
+          {title}
+        </h2>
       </div>
-    </div>
+      <div className="p-4">{children}</div>
+    </section>
   );
 }
 
+
+
 export default function AppPage() {
   return (
-    <DashboardLayout title="Terminal" subtitle="// daily tasks · swap · deploy — one page">
-      <div className="space-y-6 max-w-5xl">
-        {/* 01 — Daily tasks */}
-        <section className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border-default)" }}>
-          <SectionHeader
-            id="daily-tasks"
-            index="01"
-            title="Daily Tasks"
-            subtitle="GM · Check · GN once per UTC day, plus the soulbound badge"
-            icon={<Zap className="w-4 h-4" />}
-            color="#F59E0B"
-          />
-          <div className="p-4 lg:p-5">
-            <TasksSection />
+    <DashboardLayout title="Terminal" subtitle="// daily missions · swap — one page">
+      {/* Two columns: missions wide, swap narrow. The swap column is pinned to
+          the right by giving the grid a fixed side column, so both cards line
+          up at the same top edge and the same height. */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] gap-6 items-start">
+        <section id="daily-tasks" className="scroll-mt-28 space-y-6">
+          <div>
+            <h2
+              className="text-sm font-bold tracking-tight"
+              style={{ color: "var(--text-bright)" }}
+            >
+              Daily missions
+            </h2>
+            <p className="text-[10px] font-mono" style={{ color: "var(--text-tertiary)" }}>
+              Run GM · Check · GN, then mint your soulbound badge
+            </p>
           </div>
+          <TasksSection />
         </section>
 
-        {/* 02 — Swap */}
-        <section className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border-default)" }}>
-          <SectionHeader
+        <div className="space-y-6">
+          <SideSection
             id="swap"
-            index="02"
             title="Swap"
-            subtitle="Token exchange on the network picked in the left rail"
             icon={<ArrowDownUp className="w-4 h-4" />}
             color="#00D4AA"
-          />
-          <div className="p-4 lg:p-5">
+          >
             <SwapSection />
-          </div>
-        </section>
-
-        {/* 03 — Deploy */}
-        <section className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border-default)" }}>
-          <SectionHeader
-            id="deploy"
-            index="03"
-            title="Deploy"
-            subtitle="Put a contract on-chain from your own wallet"
-            icon={<Rocket className="w-4 h-4" />}
-            color="#F97316"
-          />
-          <div className="p-4 lg:p-5">
-            <DeploySection />
-          </div>
-        </section>
+          </SideSection>
+        </div>
       </div>
     </DashboardLayout>
   );

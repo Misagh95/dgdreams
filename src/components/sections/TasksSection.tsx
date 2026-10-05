@@ -7,15 +7,10 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { isAddress } from "viem";
 import Image from "next/image";
 import { Award, Loader2, Sparkles, Zap } from "lucide-react";
-import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 import DailyTaskPanel, { CONTRACTS, canStillRunTask } from "@/components/DailyTaskPanel";
-import { NetworkCube } from "@/components/NetworkCube";
-import { TaskCard3D, DAILY_MISSIONS } from "@/components/TaskCard3D";
-import DailyMissionDeck from "@/components/DailyMissionDeck";
 import FiveInOne from "@/components/FiveInOne";
-import { mainnetNetworks, testnetNetworks, NIKBASE_CONTRACTS, type NetworkConfig, getNetworkConfig } from "@/config/chains";
-import { cn } from "@/utils/cn";
+import { NIKBASE_CONTRACTS, type NetworkConfig, getNetworkConfig } from "@/config/chains";
 import { getNativeSymbol, shortenHash, getExplorerUrl } from "@/utils/transactions";
 import { genLayerReadContract, isGenLayer } from "@/lib/genlayer/tasks";
 import { useOptimisticTasks } from "@/hooks/useOptimisticTasks";
@@ -32,9 +27,9 @@ const SOULBOUND_ADDR: Record<number, `0x${string}` | ""> = {
   1913: "0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0",
    57073: "",
    5042: "0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0",
-// SoulboundStreak — verified; wired to this chain's NikBase (0x94e067F6…)
+// SoulboundStreak ? verified; wired to this chain's NikBase (0x94e067F6?)
   204: "0x92783e87c0F00c3B58597efee4F2743395e526af",
-// SoulboundStreak — verified; wired to this chain's NikBase (0x4AE47749…)
+// SoulboundStreak ? verified; wired to this chain's NikBase (0x4AE47749?)
   56: "0x7Ac043C44b4BCEac7ccd8FdD5906b2EF8B93ee05",
   421614: "0x344ad6a0d3aeb4baa8d853c932fbebeb4e798e3b",
   42161: "0x344ad6a0d3aeb4baa8d853c932fbebeb4e798e3b",
@@ -61,94 +56,12 @@ const NIKBASE_ABI = [
 ] as const;
 
 const TIER_INFO: Record<number, { label: string; icon: string }> = {
-  1: { label: "Bronze", icon: "ðŸ¥‰" },
-  2: { label: "Silver", icon: "ðŸ¥ˆ" },
-  3: { label: "Gold", icon: "ðŸ¥‡" },
-  4: { label: "Diamond", icon: "ðŸ’Ž" },
-  5: { label: "Legend", icon: "ðŸ†" },
+  1: { label: "Bronze", icon: "??" },
+  2: { label: "Silver", icon: "??" },
+  3: { label: "Gold", icon: "??" },
+  4: { label: "Diamond", icon: "??" },
+  5: { label: "Legend", icon: "??" },
 };
-
-function NetworkBlock({
-  network,
-  isConnected,
-  chainId,
-  connectedChain,
-  actionCount,
-  onStart,
-  isSelected,
-  isDisabled,
-  isEnabled,
-  onToggle,
-}: {
-  network: NetworkConfig;
-  isConnected: boolean;
-  chainId?: number;
-  connectedChain?: NetworkConfig;
-  actionCount: number;
-  onStart: () => void;
-  isSelected: boolean;
-  isDisabled: boolean;
-  isEnabled: boolean;
-  onToggle: (id: number) => void;
-}) {
-  const contractAddr = CONTRACTS[network.id];
-  const hasContract = !!contractAddr;
-  const completed = actionCount >= 3;
-  const canInteract = hasContract && !isDisabled && isEnabled;
-
-  return (
-    <div
-      onClick={canInteract ? onStart : undefined}
-      className={cn(
-        "p-2.5 rounded-lg transition-all duration-200 relative flex flex-col gap-2",
-        !isEnabled ? "opacity-40" : "",
-        canInteract ? "cursor-pointer hover:opacity-85" : "",
-        isSelected ? "ring-1" : ""
-      )}
-      style={{
-        background: "var(--bg-card)",
-        border: isSelected
-          ? `1px solid var(--accent)`
-          : `1px solid var(--border-default)`,
-        ...(isSelected ? { boxShadow: `0 0 10px color-mix(in srgb, var(--accent) 18%, transparent)` } : {}),
-      }}
-    >
-      <div className="flex items-center gap-2">
-        <div
-          className="w-6 h-6 rounded-md flex items-center justify-center overflow-hidden flex-shrink-0"
-          style={{ background: `color-mix(in srgb, ${network.color} 20%, transparent)` }}
-        >
-          <Image src={network.logo} alt={network.name} width={16} height={16}
-            style={{ objectFit: "contain" }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-[11px] font-semibold truncate leading-tight" style={{ color: "var(--text-bright)" }}>
-            {network.name}
-          </h3>
-        </div>
-        <span
-          className="text-[9px] font-mono px-1.5 py-0.5 rounded flex-shrink-0"
-          style={
-            completed
-              ? { background: "color-mix(in srgb, var(--success) 10%, transparent)", color: "var(--success)" }
-              : { background: "var(--bg-subtle)", color: "var(--text-secondary)" }
-          }
-        >
-          {completed ? "3/3 ✓" : `${actionCount}/3`}
-        </span>
-      </div>
-
-      {!hasContract ? (
-        <p className="text-[9px] font-mono" style={{ color: "var(--text-quaternary)" }}>Not deployed</p>
-      ) : completed ? (
-        <p className="text-[9px] font-mono" style={{ color: "var(--success)" }}>Completed today</p>
-      ) : (
-        <p className="text-[9px] font-mono" style={{ color: "var(--text-tertiary)" }}>Click to run GM · Check · GN</p>
-      )}
-    </div>
-  );
-}
 
 export function TasksSection() {
   const { address, isConnected, chainId } = useAccount();
@@ -160,7 +73,6 @@ export function TasksSection() {
   const [showPreview, setShowPreview] = useState(false);
   const [panelAutoStart, setPanelAutoStart] = useState(false);
   const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
-  const [executingNetworkId, setExecutingNetworkId] = useState<number | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [historyEvents, setHistoryEvents] = useState<
     { block: number; streak: number; date: string }[]
@@ -227,8 +139,8 @@ export function TasksSection() {
 
   // The contracts roll over at 00:00 UTC. Every cached "already done today"
   // flag is stale the moment that passes, so drop the whole per-day state and
-  // re-probe — otherwise an open tab would keep locking the user out until a
-  // hard refresh. `countdown` drives the "new day in …" label below.
+  // re-probe ? otherwise an open tab would keep locking the user out until a
+  // hard refresh. `countdown` drives the "new day in ?" label below.
   const { countdown } = useUtcDay(
     useCallback(() => {
       setOnChainDoneIds(new Set());
@@ -280,7 +192,7 @@ export function TasksSection() {
   const streak = isGen ? genStreak : (userData ? Number(userData[0]) : 0);
   const totalActions = isGen ? genTotalActions : (userData ? Number(userData[2]) : 0);
 
-  // ── Soulbound badge ────────────────────────────────────────────────
+  // -- Soulbound badge ------------------------------------------------
   // Lives on the wallet's current network; minting costs network gas only.
   const nftNetwork = chainId ? getNetworkConfig(chainId) : selectedNetwork;
   const nftAddress = nftNetwork
@@ -291,7 +203,7 @@ export function TasksSection() {
       ? (nftAddress as `0x${string}`)
       : undefined;
 
-  // Daily-mission completion on that same network (0..3) — unlocks the mint
+  // Daily-mission completion on that same network (0..3) ? unlocks the mint
   const nftNikBaseRaw = nftNetwork ? NIKBASE_CONTRACTS[nftNetwork.id] : undefined;
   const nftNikBase =
     nftNikBaseRaw && isAddress(nftNikBaseRaw)
@@ -394,13 +306,11 @@ export function TasksSection() {
     }
     setShowTaskPanel(true);
     setPanelAutoStart(true);
-    setExecutingNetworkId(selectedNetwork.id);
   }, [selectedNetwork, chainId, switchChainAsync]);
 
   const handleTaskComplete = useCallback(() => {
     refetchCounts();
     refetchUser();
-    setExecutingNetworkId(null);
     setProbeNonce((n) => n + 1); // re-probe which actions are done today
   }, [refetchCounts, refetchUser]);
 
@@ -430,13 +340,12 @@ export function TasksSection() {
     setShowPreview(false);
     setSelectedNetwork(null);
     setPanelAutoStart(false);
-    setExecutingNetworkId(null);
     setSelectedMissionId(null);
   }, []);
 
   const knownProgress = selectedNetwork && onRightChain ? actionCount : 0;
 
-  // Hero values — follow the wallet's currently connected network
+  // Hero values ? follow the wallet's currently connected network
   const connectedNetwork = chainId ? getNetworkConfig(chainId) : undefined;
 
   // Probe the active chain for the three actions: a reverted eth_call means
@@ -485,71 +394,18 @@ export function TasksSection() {
       cancelled = true;
     };
   }, [isConnected, validatedAddr, connectedNetwork, wagmiConfig, probeNonce]);
-  const heroNetwork = selectedNetwork ?? connectedNetwork ?? mainnetNetworks[0];
-  const heroName = heroNetwork.name;
-  const heroActionCount = (selectedNetwork ?? connectedNetwork) && onRightChain ? actionCount : 0;
-
-  // Clicking a mission card → open preview for the wallet's current network
-  // and remember which single task the user wants to run
-  const handleMissionClick = useCallback(
-    (missionId: string) => {
-      if (!isConnected) {
-        openConnectModal?.();
-        return;
-      }
-      // Already recorded on-chain today (UTC) — nothing to sign.
-      if (onChainDoneIds.has(missionId)) return;
-      const net = chainId ? getNetworkConfig(chainId) : undefined;
-      if (!net) return;
-      setSelectedMissionId(missionId);
-      handleOpenNetwork(net);
-    },
-    [isConnected, chainId, openConnectModal, handleOpenNetwork, onChainDoneIds]
-  );
-
-
   return (
     <>
-      <div className="flex flex-col items-center gap-4 mb-6">
-        <NetworkCube
-          logo={heroNetwork.logo}
-          color={heroNetwork.color}
-          name={heroNetwork.name}
-        />
-        <div className="text-[11px] font-mono" style={{ color: "var(--text-quaternary)" }}>
-          {connectedNetwork && isConnected
-            ? `Connected: ${heroNetwork.name} (Chain #${chainId})`
-            : "Wallet disconnected"}
-        </div>
-      </div>
-      <DailyMissionDeck
+      <FiveInOne
         network={connectedNetwork}
-        chainId={chainId}
-        isConnected={isConnected}
-        loading={isConnected && countsData === undefined && !isGen}
-        completedCount={optimistic.optimisticActionCount(
-          Math.max(heroActionCount, onChainDoneIds.size)
-        )}
-        completedTaskIds={optimistic.getOptimisticCompletedIds(onChainDoneIds)}
+        isConnected={isConnected && !isGen}
+        account={address}
         onConnect={() => openConnectModal?.()}
-        onMission={handleMissionClick}
-        contextText={`Execute GM, CHECK and GN on ${heroName} — one transaction each, once per day.`}
-        notice={deckNotice}
+        doneTaskIds={onChainDoneIds}
+        onFinished={() => setProbeNonce((n) => n + 1)}
       />
 
-      {/* 5-in-1: GM + GN + Simple + Token + NFT in one click */}
-      <div className="mt-4">
-        <FiveInOne
-          network={connectedNetwork}
-          isConnected={isConnected && !isGen}
-          account={address}
-          onConnect={() => openConnectModal?.()}
-          doneTaskIds={onChainDoneIds}
-          onFinished={() => setProbeNonce((n) => n + 1)}
-        />
-      </div>
-
-      {/* ─── SOULBOUND BADGE — mint after finishing all 3 daily missions ─── */}
+      {/* --- SOULBOUND BADGE ? mint after finishing all 3 daily missions --- */}
       <div
         className="mt-6 rounded-2xl p-5 sm:p-6"
         style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)" }}
@@ -573,7 +429,7 @@ export function TasksSection() {
                     className="ml-2 text-[10px] font-mono px-2 py-0.5 rounded-md align-middle"
                     style={{ background: "color-mix(in srgb, var(--success) 14%, transparent)", color: "var(--success)" }}
                   >
-                    {TIER_INFO[nftTier]?.label ?? "Minted"} · {nftStreak}d
+                    {TIER_INFO[nftTier]?.label ?? "Minted"} ? {nftStreak}d
                   </span>
                 )}
               </h3>
@@ -581,11 +437,11 @@ export function TasksSection() {
                 {!isConnected
                   ? "Connect your wallet to unlock your soulbound badge."
                   : !validatedNft
-                  ? `Soulbound badges aren't deployed on ${nftNetwork?.name ?? "this network"} yet — mint on Base, Ethereum, ARC or GIWA in the meantime.`
+                  ? `Soulbound badges aren't deployed on ${nftNetwork?.name ?? "this network"} yet ? mint on Base, Ethereum, ARC or GIWA in the meantime.`
                   : hasNft
                   ? `Badge minted on ${nftNetwork?.name}. Keep the streak alive and upgrade to the next tier.`
                   : nftUnlocked
-                  ? `All 3 daily missions done on ${nftNetwork?.name}. Mint your badge now — you only pay network gas.`
+                  ? `All 3 daily missions done on ${nftNetwork?.name}. Mint your badge now ? you only pay network gas.`
                   : `Finish GM + Check + GN on this network to unlock the mint (${Math.min(nftActionsDone, 3)}/3).`}
               </p>
             </div>
@@ -601,7 +457,7 @@ export function TasksSection() {
                 style={{ background: "var(--accent)", color: "#000" }}
               >
                 {mintPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                {mintPending ? "Minting…" : "Mint NFT"}
+                {mintPending ? "Minting?" : "Mint NFT"}
               </button>
             )}
             {isConnected && validatedNft && hasNft && (
@@ -612,7 +468,7 @@ export function TasksSection() {
                 style={{ background: "var(--bg-strong)", color: "var(--text-bright)", border: "1px solid var(--border-strong)" }}
               >
                 {upgradePending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                {upgradePending ? "Upgrading…" : "Upgrade tier"}
+                {upgradePending ? "Upgrading?" : "Upgrade tier"}
               </button>
             )}
             {!isConnected && (
@@ -639,44 +495,13 @@ export function TasksSection() {
               />
             </div>
             <p className="text-[10px] font-mono mt-2" style={{ color: "var(--text-quaternary)" }}>
-              {Math.min(nftActionsDone, 3)}/3 daily missions · gas-only mint, no fee
+              {Math.min(nftActionsDone, 3)}/3 daily missions ? gas-only mint, no fee
             </p>
           </div>
         )}
       </div>
 
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <span className="text-[10px] font-mono uppercase tracking-[0.2em]" style={{ color: "var(--text-tertiary)" }}>
-            Pick a network
-          </span>
-          <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
-            {[...mainnetNetworks, ...testnetNetworks].length} networks
-          </span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
-          {[...mainnetNetworks, ...testnetNetworks].map((n) => (
-            <NetworkBlock
-              key={n.id}
-              network={n}
-              isConnected={isConnected}
-              chainId={chainId}
-              connectedChain={connectedNetwork}
-              actionCount={0}
-              onStart={() => {
-                setSelectedMissionId(null);
-                handleOpenNetwork(n);
-              }}
-              isSelected={selectedNetwork?.id === n.id}
-              isDisabled={executingNetworkId !== null}
-              isEnabled={!!CONTRACTS[n.id]}
-              onToggle={() => {}}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Preview Modal â€” network selection before executing */}
+      {/* Preview Modal — network selection before executing */}
       {showPreview && selectedNetwork && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -728,15 +553,15 @@ export function TasksSection() {
                 <span>Recorded streak</span>
                 <span style={{ color: walletStreak ? "var(--success)" : "var(--text-bright)" }}>
                   {streakSyncing
-                    ? "verifying…"
+                    ? "verifying?"
                     : walletStreak
                       ? `${walletStreak.streak}d on ${walletStreak.chainName}`
-                      : "—"}
+                      : "?"}
                 </span>
               </div>
               {walletStreak && (
                 <p className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
-                  One record per wallet, read from NikBase. Signed in once — no
+                  One record per wallet, read from NikBase. Signed in once ? no
                   re-signing on another network.
                 </p>
               )}

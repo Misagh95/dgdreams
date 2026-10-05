@@ -6,6 +6,7 @@ import { isAddress } from "viem";
 import { Rocket, CheckCircle2, XCircle, SkipForward, Loader2, ExternalLink, Zap } from "lucide-react";
 import { runSequence, type SequenceStepDef, type StepResult, type StepStatus } from "@/lib/sequence";
 import NetworkSelect from "@/components/NetworkSelect";
+import { NetworkTile } from "@/components/NetworkTile";
 import { useUtcDay } from "@/hooks/useUtcDay";
 import {
   NIKBASE_CONTRACTS,
@@ -322,6 +323,7 @@ export default function FiveInOne(props: FiveInOneProps) {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-40"
             style={{ background: "var(--accent)", color: "#000" }}
           >
+
           {running ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
@@ -333,6 +335,35 @@ export default function FiveInOne(props: FiveInOneProps) {
               ? "Run all 5"
               : "Connect wallet"}
           </button>
+        </div>
+      </div>
+
+      {/* Network grid ? this card owns network choice now, so the grid lives here.
+          Selecting a tile sets the chain the runner deploys to and sends GM/GN
+          to, replacing the small dropdown above for anything but a quick pick. */}
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-2.5 px-1">
+          <span
+            className="text-[10px] font-mono uppercase tracking-[0.2em]"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            Pick a network
+          </span>
+          <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+            {networkOptions.length} networks
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+          {networkOptions.map((n) => (
+            <NetworkTile
+              key={n.id}
+              network={n}
+              isSelected={target?.id === n.id}
+              isDisabled={running || !isConnected}
+              hasContract={!!NIKBASE_CONTRACTS[n.id]}
+              onSelect={() => setPickedNetworkId(n.id)}
+            />
+          ))}
         </div>
       </div>
 
