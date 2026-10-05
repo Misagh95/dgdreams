@@ -19,10 +19,12 @@ import {
   BarChart3,
   ArrowDownUp,
   Rocket,
+  Terminal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
+  { href: "/app", icon: Terminal, label: "Terminal", badge: "All", color: "#00D4FF" },
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", badge: null, color: "#6F75E5" },
   { href: "/tasks", icon: Zap, label: "Daily Tasks", badge: "14", color: "#F59E0B" },
   { href: "/swap", icon: ArrowDownUp, label: "Swap", badge: "New", color: "#00D4AA" },

@@ -19,10 +19,12 @@ import {
   Globe,
   ArrowDownUp,
   Rocket,
+  Terminal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
+  { href: "/app", icon: Terminal, label: "Terminal", color: "#00D4FF" },
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", color: "#6F75E5" },
   { href: "/tasks", icon: Zap, label: "Daily Tasks", color: "#F59E0B" },
   { href: "/swap", icon: ArrowDownUp, label: "Swap", color: "#00D4AA" },
