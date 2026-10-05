@@ -11,6 +11,7 @@ import {
   ArrowDownUp,
   Terminal,
   Gamepad2,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSwitcher from "./ThemeSwitcher";
@@ -31,6 +32,7 @@ const navItems = [
   { href: "/truthcourt", icon: Terminal, label: "TruthCourt", badge: "AI", color: "#A78BFA" },
   { href: "/leaderboard", icon: Trophy, label: "Leaderboard", badge: null, color: "#FFB020" },
   { href: "/2048", icon: Gamepad2, label: "2048", badge: null, color: "#FF6B6B" },
+  { href: "/sybil", icon: ShieldCheck, label: "Risk", badge: null, color: "#00B17E" },
 ];
 
 export default function TopNav() {

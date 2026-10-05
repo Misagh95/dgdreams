@@ -20,6 +20,7 @@ import {
   ArrowDownUp,
   Rocket,
   Terminal,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,7 @@ const navItems = [
   { href: "/truthcourt", icon: Scale, label: "TruthCourt", color: "#A78BFA" },
   { href: "/leaderboard", icon: Trophy, label: "Leaderboard", color: "#FFB020" },
   { href: "/2048", icon: Gamepad2, label: "2048 Game", color: "#FF6B6B" },
+  { href: "/sybil", icon: ShieldCheck, label: "Risk Score", color: "#00B17E" },
 ];
 
 const bottomLinks = [
