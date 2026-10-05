@@ -46,33 +46,42 @@ export async function GET(request: NextRequest) {
       // Read from wallet_streaks, which only ever holds values the server read
       // off NikBase for a wallet that signed in. The old litevm_stats.streak
       // column was client-reported and could be inflated by a crafted request.
-      const where = isAll ? undefined : eq(walletStreaks.chainId, parseInt(chain, 10));
-      const [data, agg] = await Promise.all([
-        db
-          .select()
-          .from(walletStreaks)
-          .where(where)
-          .orderBy(desc(walletStreaks.streak))
-          .limit(limit),
-        db
-          .select({
-            totalPlayers: count(),
-            totalValue: sum(walletStreaks.streak),
-            avgValue: avg(walletStreaks.streak),
-          })
-          .from(walletStreaks)
-          .where(where),
-      ]);
-      rows = data.map((s) => ({
+      //
+      // There is one row per wallet, but a database written before that change
+      // can still hold several, so the best row per address is picked here
+      // rather than showing the same wallet more than once.
+      const rowsByWallet = await db
+        .select()
+        .from(walletStreaks)
+        .orderBy(desc(walletStreaks.streak))
+        .limit(500);
+
+      const best = new Map<string, (typeof rowsByWallet)[number]>();
+      for (const s of rowsByWallet) {
+        const key = s.walletAddress.toLowerCase();
+        const current = best.get(key);
+        if (!current || (s.streak ?? 0) > (current.streak ?? 0)) best.set(key, s);
+      }
+
+      // The page filters by network *name*, so compare names, not chain ids.
+      const matching = isAll
+        ? [...best.values()]
+        : [...best.values()].filter(
+            (s) => (s.chainName || "").toLowerCase() === filter
+          );
+
+      rows = matching.map((s) => ({
         walletAddress: s.walletAddress,
         value: s.streak ?? 0,
         secondary: `${s.totalActions ?? 0} actions · ${s.totalCheckIns ?? 0} check-ins`,
         network: s.chainName || ALL_NETWORKS,
       }));
+
+      const totalValue = rows.reduce((acc, m) => acc + m.value, 0);
       stats = {
-        totalPlayers: agg[0]?.totalPlayers ?? 0,
-        totalValue: Number(agg[0]?.totalValue ?? 0),
-        avgValue: Number(agg[0]?.avgValue ?? 0),
+        totalPlayers: rows.length,
+        totalValue,
+        avgValue: rows.length > 0 ? totalValue / rows.length : 0,
       };
     } else if (category === "game2048") {
       const [scores, tourn] = await Promise.all([

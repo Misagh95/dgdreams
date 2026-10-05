@@ -114,8 +114,8 @@ export const litevmStats = pgTable("litevm_stats", {
 });
 
 /**
- * One row per wallet per network, mirroring what the NikBase contract already
- * records on-chain.
+ * One row per wallet, mirroring what the NikBase contract already records
+ * on-chain.
  *
  * The wallet proves ownership by signing in (see lib/session.ts) before its
  * address is written here, and the server re-reads the streak straight from the
@@ -128,9 +128,10 @@ export const walletStreaks = pgTable(
   {
     id: serial("id").primaryKey(),
     walletAddress: text("wallet_address").notNull(),
-    chainId: integer("chain_id").notNull(),
     chainName: text("chain_name"),
-    /** streak as reported by NikBase.getUserData on this chain */
+    /** network the streak was last verified on — the row is per wallet, not per network */
+    chainId: integer("chain_id").notNull(),
+    /** streak as reported by NikBase.getUserData for the wallet */
     streak: integer("streak").default(0),
     totalCheckIns: integer("total_check_ins").default(0),
     totalActions: integer("total_actions").default(0),
@@ -140,10 +141,10 @@ export const walletStreaks = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => ({
-    walletChainIdx: uniqueIndex("wallet_streak_chain_idx").on(
-      table.walletAddress,
-      table.chainId
-    ),
+    // One row per wallet: the network is data on the row, not part of its key,
+    // so a wallet is never listed twice on the leaderboard for playing on a
+    // second network.
+    walletIdx: uniqueIndex("wallet_streak_wallet_idx").on(table.walletAddress),
   })
 );
 

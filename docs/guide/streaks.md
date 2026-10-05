@@ -41,3 +41,8 @@ Your streak belongs to your **wallet**. `NikBase` stores it against your address
 on-chain, and the app only keeps an index of it for the leaderboard — a value it
 re-reads from the contract rather than accepting from the browser. That means a
 streak cannot be inflated by editing a request.
+
+The app keeps **one record per wallet**, whichever network it was verified on.
+You sign in once (a free signature, no transaction), and after that the check is
+silent — switching networks updates the same record instead of adding a new one,
+so you are never listed twice on the leaderboard.

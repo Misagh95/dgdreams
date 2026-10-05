@@ -10,13 +10,17 @@ import { getAddressFromToken } from "@/lib/session";
 import { utcDayNumber } from "@/lib/utcDay";
 
 /**
- * Wallet streak index.
+ * Wallet streak index — one record per wallet.
  *
  * The streak itself lives in the NikBase contract, keyed by wallet address, and
  * rolls over at 00:00 UTC. This endpoint never accepts a streak from the
  * client. It requires a session token (proving the caller owns the address) and
  * then reads the real value off the chain, so what lands in the database is
  * chain truth rather than a self-reported score.
+ *
+ * The network is *not* part of the key: the wallet signs in once (the token is
+ * cached client-side) and every later verification rewrites that single row, so
+ * playing on a second network updates the record instead of duplicating it.
  */
 
 /** NikBase.getUserData — (streak, totalCheckIns, totalActions) */
@@ -77,7 +81,7 @@ async function readStreakOnChain(wallet: `0x${string}`, chainId: number) {
   };
 }
 
-/** GET — the caller's own rows, best streak first. Requires a signed-in wallet. */
+/** GET — the caller's own record. Requires a signed-in wallet. */
 export async function GET(request: NextRequest) {
   await ensureTables();
   const address = getAddressFromToken(request);
@@ -88,27 +92,32 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { searchParams } = new URL(request.url);
-  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "50", 10) || 50, 1), 100);
-
   const rows = await db
     .select()
     .from(walletStreaks)
     .where(eq(walletStreaks.walletAddress, address.toLowerCase()))
     .orderBy(desc(walletStreaks.streak))
-    .limit(limit);
+    // One row per wallet by construction; the limit is just a guard.
+    .limit(1);
 
-  return NextResponse.json({ streaks: rows });
+  return NextResponse.json({ streak: rows[0] ?? null });
+}
+
+/** Every network that can answer a streak read, in config order. */
+function chainIdsWithNikBase(): number[] {
+  return Object.keys(NIKBASE_CONTRACTS)
+    .map((id) => parseInt(id, 10))
+    .filter((id) => Number.isSafeInteger(id) && isAddress(NIKBASE_CONTRACTS[id]));
 }
 
 /**
- * POST — verify a wallet's streak on one or more networks.
+ * POST — verify a wallet's streak and store it as the wallet's single record.
  *
- * Body: { chainIds?: number[] }. Defaults to the networks this wallet already
- * has rows for, so a plain "refresh" re-verifies what it knows.
+ * Body: { chainId?: number }. Optional; when absent the network the streak was
+ * last verified on is reused, so a plain "refresh" re-reads the same place.
  *
  * Nothing in the body is trusted as a value: the streak always comes from the
- * chain read. Only the list of networks to check is client-supplied.
+ * chain read. Only *which* network to read is client-supplied.
  */
 export async function POST(request: NextRequest) {
   await ensureTables();
@@ -125,47 +134,66 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let chainIds: number[] = [];
+  const addr = address.toLowerCase() as `0x${string}`;
+
+  let requestedChainId: number | undefined;
   try {
-    const body = (await request.json().catch(() => ({}))) as { chainIds?: unknown };
-    if (Array.isArray(body.chainIds)) {
-      chainIds = body.chainIds
-        .filter((c): c is number => typeof c === "number" && Number.isSafeInteger(c))
-        // bound the work per request; a caller cannot fan out across every chain
-        .slice(0, 10);
+    const body = (await request.json().catch(() => ({}))) as { chainId?: unknown };
+    if (typeof body.chainId === "number" && Number.isSafeInteger(body.chainId)) {
+      requestedChainId = body.chainId;
     }
   } catch {
-    // no body is fine, we fall back to the caller's known chains below
+    // no body is fine, we fall back to the wallet's known chain below
   }
 
-  if (chainIds.length === 0) {
-    const known = await db
-      .select({ chainId: walletStreaks.chainId })
-      .from(walletStreaks)
-      .where(eq(walletStreaks.walletAddress, address.toLowerCase()));
-    chainIds = known.map((k) => k.chainId).slice(0, 10);
+  // The one row this wallet already owns, if any. Reading it first lets us
+  // reuse its chain instead of asking the client which network to look at.
+  const existing = await db
+    .select()
+    .from(walletStreaks)
+    .where(eq(walletStreaks.walletAddress, addr))
+    .limit(1);
+
+  const previous = existing[0];
+
+  const candidates = chainIdsWithNikBase();
+  const chainId =
+    requestedChainId && candidates.includes(requestedChainId)
+      ? requestedChainId
+      : // Fall back to the network already on file, then to the first that has
+        // a NikBase. A sync never fans out across networks any more.
+        candidates.includes(previous?.chainId as number)
+        ? (previous?.chainId as number)
+        : candidates[0];
+
+  if (chainId === undefined) {
+    return NextResponse.json({ streak: previous ?? null, synced: 0 });
   }
 
-  if (chainIds.length === 0) {
-    return NextResponse.json({ streaks: [], synced: 0 });
-  }
-
-  const addr = address.toLowerCase() as `0x${string}`;
   const day = utcDayNumber();
   const now = new Date();
 
-  const results = await Promise.all(
-    chainIds.map(async (chainId) => {
-      try {
-        const onChain = await readStreakOnChain(addr, chainId);
-        if (!onChain) return null;
+  try {
+    const onChain = await readStreakOnChain(addr, chainId);
 
-        // Upsert on (wallet, chain). The unique index makes this safe against
-        // two syncs landing at once: the loser updates, it does not duplicate.
-        await db
-          .insert(walletStreaks)
-          .values({
-            walletAddress: addr,
+    if (onChain) {
+      // Upsert on wallet alone. The unique index makes this safe against two
+      // syncs landing at once, and it is what keeps a wallet to a single row.
+      await db
+        .insert(walletStreaks)
+        .values({
+          walletAddress: addr,
+          chainId,
+          chainName: onChain.chainName,
+          streak: onChain.streak,
+          totalCheckIns: onChain.totalCheckIns,
+          totalActions: onChain.totalActions,
+          day,
+          syncedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: walletStreaks.walletAddress,
+          set: {
             chainId,
             chainName: onChain.chainName,
             streak: onChain.streak,
@@ -173,31 +201,23 @@ export async function POST(request: NextRequest) {
             totalActions: onChain.totalActions,
             day,
             syncedAt: now,
-          })
-          .onConflictDoUpdate({
-            target: [walletStreaks.walletAddress, walletStreaks.chainId],
-            set: {
-              chainName: onChain.chainName,
-              streak: onChain.streak,
-              totalCheckIns: onChain.totalCheckIns,
-              totalActions: onChain.totalActions,
-              day,
-              syncedAt: now,
-            },
-          });
+          },
+        });
+    }
+  } catch {
+    // A flaky RPC must not fail the request: the stored row, if any, stands.
+  }
 
-        return { chainId, ...onChain };
-      } catch {
-        // A single flaky RPC must not fail the whole sync.
-        return null;
-      }
-    })
-  );
+  const stored = await db
+    .select()
+    .from(walletStreaks)
+    .where(eq(walletStreaks.walletAddress, addr))
+    .limit(1);
 
-  const synced = results.filter((r) => r !== null);
+  const row = stored[0] ?? null;
   return NextResponse.json({
-    streaks: synced,
-    synced: synced.length,
-    requested: chainIds.length,
+    streak: row,
+    synced: row ? 1 : 0,
+    chainId,
   });
 }

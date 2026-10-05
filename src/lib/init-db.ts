@@ -81,8 +81,9 @@ export async function ensureTables() {
     // Add chain column to existing score tables (migration for live DBs).
     await db.execute(sql`ALTER TABLE game_scores ADD COLUMN IF NOT EXISTS chain TEXT`);
     await db.execute(sql`ALTER TABLE litevm_stats ADD COLUMN IF NOT EXISTS chain TEXT`);
-    // Streaks indexed per wallet + network. The unique index is what makes the
-    // sync an upsert rather than an ever-growing log.
+    // One row per wallet. The streak is read straight off NikBase for the
+    // network the wallet is on, so the network is only recorded as "where it
+    // was last verified" — the row itself is unique per address.
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS wallet_streaks (
         id SERIAL PRIMARY KEY,
@@ -95,9 +96,24 @@ export async function ensureTables() {
         day INTEGER,
         synced_at TIMESTAMP DEFAULT NOW(),
         created_at TIMESTAMP DEFAULT NOW(),
-        CONSTRAINT wallet_streak_chain_idx UNIQUE (wallet_address, chain_id)
+        CONSTRAINT wallet_streak_wallet_idx UNIQUE (wallet_address)
       )
     `);
+    // Migration for live DBs written while the index was (wallet, chain): keep
+    // the best row per wallet, drop the rest, then re-key the index so a wallet
+    // can never accumulate one row per network again.
+    await db.execute(sql`
+      DELETE FROM wallet_streaks a
+      USING wallet_streaks b
+      WHERE a.wallet_address = b.wallet_address
+        AND (
+          COALESCE(a.streak, 0) < COALESCE(b.streak, 0)
+          OR (COALESCE(a.streak, 0) = COALESCE(b.streak, 0) AND a.id < b.id)
+        )
+    `);
+    await db.execute(sql`ALTER TABLE wallet_streaks DROP CONSTRAINT IF EXISTS wallet_streak_chain_idx`);
+    await db.execute(sql`DROP INDEX IF EXISTS wallet_streak_chain_idx`);
+    await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS wallet_streak_wallet_idx ON wallet_streaks (wallet_address)`);
     initialized = true;
   } catch (e) {
     initialized = false;

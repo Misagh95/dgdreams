@@ -13,12 +13,14 @@ export interface WalletStreak {
 }
 
 /**
- * Records a wallet's streak against the chain that actually holds it.
+ * Records a wallet's streak as a single record, against the chain that holds it.
  *
- * The wallet signs in once (a signature, no transaction, no gas), and the
- * server then reads the streak straight out of the NikBase contract for that
- * address. The client never sends a streak number — it only says *which
- * networks to check* — so what gets stored is chain truth, owned by the wallet.
+ * The wallet signs in once (a signature, no transaction, no gas) and the token is
+ * cached, so later syncs are silent. The server then reads the streak straight
+ * out of the NikBase contract for that address and rewrites the one row it
+ * owns. The client never sends a streak number — only the network it is on — so
+ * what gets stored is chain truth, owned by the wallet, and playing on a second
+ * network updates the record rather than adding another one.
  *
  * @param address connected wallet address
  * @param chainId  network the user just completed missions on
@@ -33,17 +35,10 @@ export function useWalletStreak(address?: string) {
       if (!address) return null;
       setSyncing(true);
       try {
+        // Reuses the cached token when there is one, so this is a no-op
+        // signature-wise after the wallet's first sign-in.
         const token = await getSessionToken(address);
         if (!token) return null;
-
-        // Only networks that actually have a NikBase can answer.
-        const chainIds =
-          chainId && NIKBASE_CONTRACTS[chainId]
-            ? [chainId]
-            : Object.keys(NIKBASE_CONTRACTS)
-                .map((id) => parseInt(id, 10))
-                .filter((id) => NIKBASE_CONTRACTS[id])
-                .slice(0, 10);
 
         const res = await fetch("/api/streaks", {
           method: "POST",
@@ -51,18 +46,16 @@ export function useWalletStreak(address?: string) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ chainIds }),
+          // Only the network to read; the server keeps one row per wallet.
+          body: JSON.stringify(
+            chainId && NIKBASE_CONTRACTS[chainId] ? { chainId } : {}
+          ),
         });
         if (!res.ok) return null;
 
-        const data = (await res.json()) as { streaks: WalletStreak[] };
-        // The best streak across the networks just verified.
-        const best = data.streaks.reduce<WalletStreak | null>(
-          (acc, s) => (!acc || s.streak > acc.streak ? s : acc),
-          null
-        );
-        setStreak(best);
-        return best;
+        const data = (await res.json()) as { streak: WalletStreak | null };
+        setStreak(data.streak ?? null);
+        return data.streak ?? null;
       } catch {
         return null;
       } finally {
