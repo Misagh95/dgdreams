@@ -62,18 +62,30 @@ const ARTIFACTS = [
  *   21,000 intrinsic + 200 per byte of runtime code (the code deposit)
  *   + 16 per non-zero calldata byte (4 per zero byte) on the init code.
  *
- * The constructor's own execution is not modelled — it is a rounding error
+ * Init-code calldata includes the constructor arguments appended to the
+ * creation bytecode, so the estimate must count those bytes too: a user
+ * string like "Demo Token" adds hundreds of bytes (~16 gas each). The
+ * constructor's own execution is not modelled — it is a rounding error
  * next to the code deposit — so this is a lower bound, and close enough to
  * compare options. Shown in the UI because "what will this cost me" is the
  * first question anyone asks before clicking a button that spends their money.
  * Ground truth for these numbers: scripts/measure-deploy-cost.mjs.
  */
-function estimateDeployGas(artifact: DeployArtifact | undefined): number {
+function estimateDeployGas(artifact: DeployArtifact | undefined, ctorArgs: unknown[] = []): number {
   const bytecode = artifact?.bytecode;
   if (!bytecode || bytecode.length < 3) return 0;
   const hex = bytecode.startsWith("0x") ? bytecode.slice(2) : bytecode;
-  const zeros = (hex.match(/00/g) || []).length;
-  const calldataGas = (hex.length / 2 - zeros) * 16 + zeros * 4;
+  let payloadBytes = hex.length / 2;
+  for (const a of ctorArgs) {
+    if (typeof a === "string") {
+      // ABI-encoded as 32-byte offset + 32-byte length + padded string
+      payloadBytes += 64 + Math.ceil(a.length / 32) * 32;
+    } else {
+      // numbers / bigints / bools / addresses: one 32-byte word
+      payloadBytes += 32;
+    }
+  }
+  const calldataGas = payloadBytes * 16; // worst case: all non-zero (upper bound)
   // runtimeBytes is exact when the exporter recorded it, otherwise fall back to
   // the (smaller) init code as a rough stand-in
   const runtimeBytes = artifact?.runtimeBytes ?? Math.round(hex.length / 2 / 1.6);
@@ -292,7 +304,7 @@ export default function FiveInOne(props: FiveInOneProps) {
   // calls. Contracts already deployed on this network are free, which is the
   // whole point of the cached-address reuse.
   const deployGas = ARTIFACTS.reduce(
-    (sum, a) => sum + (deployed[a.key] ? 0 : estimateDeployGas(artifacts[a.key])),
+    (sum, a) => sum + (deployed[a.key] ? 0 : estimateDeployGas(artifacts[a.key], a.args)),
     0
   );
   const MISSION_GAS_EACH = 30_000;
