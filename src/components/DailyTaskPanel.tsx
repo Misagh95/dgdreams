@@ -9,63 +9,15 @@ import type { NetworkConfig } from "@/config/chains";
 import { parseTxError, getExplorerUrl, getNativeSymbol, shortenHash } from "@/utils/transactions";
 import { genLayerWriteTask, isGenLayer, GENLAYER_CONTRACT } from "@/lib/genlayer/tasks";
 
-const NIKBASE_ABI = [
-  { inputs: [], name: "dailyCheckIn", outputs: [{ name: "newStreak", type: "uint256" }], stateMutability: "nonpayable", type: "function" },
-  { inputs: [], name: "gm", outputs: [], stateMutability: "nonpayable", type: "function" },
-  { inputs: [], name: "gn", outputs: [], stateMutability: "nonpayable", type: "function" },
-] as const;
+import {
+  NIKBASE_TASKS_ABI,
+  PREFLIGHT_TIMEOUT_MS,
+  canStillRunTask,
+} from "@/lib/preflight";
 
-export { NIKBASE_ABI };
+const NIKBASE_ABI = NIKBASE_TASKS_ABI;
 
-/**
- * Upper bound for the pre-flight eth_call. It runs between the user's click
- * and the wallet popup, so anything slower than this is worse than skipping
- * the check entirely: past the cap we fail OPEN (send the tx) and let the
- * wallet's own simulation decide. The check only exists to label an
- * already-done task, not to gate the transaction.
- */
-export const PREFLIGHT_TIMEOUT_MS = 800;
-
-/**
- * The NikBase contract accepts each action only once per UTC day. Calling an
- * action twice makes the call revert, and wallets simulate before signing —
- * which surfaces as "Simulation Failed (execution revert)" and the tx never
- * reaches the chain.
- *
- * This preflight runs the same `eth_call` the wallet would, but from our own
- * RPC, so we can label the step "already done today" instead of erroring.
- */
-export async function canStillRunTask(
-  pubClient: { call: (args: { account?: `0x${string}`; to: `0x${string}`; data: `0x${string}` }) => Promise<unknown> },
-  opts: { account: `0x${string}`; contract: `0x${string}`; method: "dailyCheckIn" | "gm" | "gn" }
-): Promise<boolean> {
-  try {
-    const data = encodeFunctionData({ abi: NIKBASE_ABI, functionName: opts.method, args: [] });
-    await Promise.race([
-      pubClient.call({ account: opts.account, to: opts.contract, data }),
-      // Hard cap: this preflight sits between the click and the wallet popup,
-      // so a slow RPC must never stall the user. Past the cap we optimistically
-      // allow the transaction — the wallet's own simulation is still the final
-      // guard, it just loses the friendly "already done today" label.
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("preflight timeout")), PREFLIGHT_TIMEOUT_MS)
-      ),
-    ]);
-    return true;
-  } catch (e: any) {
-    const name: string = e?.name || "";
-    const msg: string = `${e?.shortMessage || ""} ${e?.message || ""}`.toLowerCase();
-    // A real execution revert means "already done today". RPC hiccups
-    // (HTTP/timeout errors) must NOT block the transaction — let the wallet
-    // decide in that case.
-    const isRevert =
-      name === "ContractFunctionExecutionError" ||
-      name === "CallExecutionError" ||
-      name === "ExecutionRevertedError" ||
-      msg.includes("revert");
-    return !isRevert;
-  }
-}
+export { NIKBASE_ABI, NIKBASE_TASKS_ABI, PREFLIGHT_TIMEOUT_MS, canStillRunTask };
 
 export const CONTRACTS: Record<number, `0x${string}` | ""> = {
   8453: "0xbB123f450822A42AeDa8e71aF3534d7dc84627F7",
