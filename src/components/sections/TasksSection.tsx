@@ -382,7 +382,10 @@ export function TasksSection() {
             contract: contract as `0x${string}`,
             method: t.method,
           });
-          if (!ok) done.add(t.id);
+          // Chain-qualified: FiveInOne targets its own network via its picker,
+          // so a bare taskId from THIS chain's probe must never match a run on
+          // another chain (that was the false "already done" in the runner).
+          if (!ok) done.add(`${connectedNetwork.id}:${t.id}`);
         })
       );
       if (!cancelled) {

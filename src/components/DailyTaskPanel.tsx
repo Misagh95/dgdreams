@@ -200,7 +200,11 @@ export default function DailyTaskPanel({
           //   - knownDoneIds has it -> already done today, skip it locally
           //   - probe fresh + not in knownDoneIds -> provably runnable, no
           //     need for a second eth_call before the wallet popup
-          const isKnownDone = knownDoneIds?.has(step.id) ?? false;
+          // The probe hands over chain-qualified ids ("<chainId>:<taskId>")
+          // because the sibling 5-in-1 runner targets its own network — here
+          // we are on `network.id`, so only that chain's entries count.
+          const isKnownDone =
+            knownDoneIds?.has(`${network.id}:${step.id}`) ?? false;
           // Evaluated at click time: a probe younger than 15s already told us
           // this task is runnable (it is absent from knownDoneIds), so the
           // second eth_call would only repeat the same answer.

@@ -131,12 +131,26 @@ export default function FiveInOne(props: FiveInOneProps) {
   const abort = useRef({ aborted: false });
   const locallyDone = useRef<Set<string>>(new Set());
 
+  const target: NetworkConfig | undefined = pickedNetworkId
+    ? (ALL_NETWORKS.find((n) => n.id === pickedNetworkId) ?? network)
+    : network;
+
   // GM/GN are once per UTC day, so the "already done" markers we collected in
   // this session stop being true the moment the UTC day rolls over.
   useUtcDay(useCallback(() => {
     locallyDone.current = new Set();
     setResults([]);
   }, []));
+
+  // Session + probe memory is per-network: switching the runner's target
+  // network must not inherit the previous network's "already done" markers.
+  // (Kept after `target` is declared — it is referenced below.)
+  const lastTargetId = useRef<number | undefined>(undefined);
+  if (lastTargetId.current !== target?.id) {
+    lastTargetId.current = target?.id;
+    locallyDone.current = new Set();
+    setResults([]);
+  }
 
   /** addresses already deployed on this network, from the local store */
   const refreshFromStore = useCallback((chainId: number) => {
@@ -148,10 +162,6 @@ export default function FiveInOne(props: FiveInOneProps) {
     }
     return out;
   }, []);
-
-  const target: NetworkConfig | undefined = pickedNetworkId
-    ? (ALL_NETWORKS.find((n) => n.id === pickedNetworkId) ?? network)
-    : network;
 
   /** list shown in the card's own picker; always contains the current target */
   const networkOptions = useMemo(() => {
@@ -183,9 +193,18 @@ export default function FiveInOne(props: FiveInOneProps) {
   }, []);
 
   const nikBase = target ? NIKBASE_CONTRACTS[target.id] : undefined;
+  /**
+   * Per-network mission memory. The page-level probe runs against the
+   * WALLET's chain, while this runner can target a DIFFERENT chain via its
+   * own picker — so the parent hands over chain-qualified ids
+   * ("<chainId>:<taskId>") and a bare id must never match here, or missions
+   * done on one chain would falsely show "already done" everywhere.
+   */
   const isDone = useCallback(
-    (id: string) => locallyDone.current.has(id) || !!doneTaskIds?.has(id),
-    [doneTaskIds]
+    (id: string) =>
+      locallyDone.current.has(`${target?.id ?? "?"}:${id}`) ||
+      (target ? !!doneTaskIds?.has(`${target.id}:${id}`) : false),
+    [doneTaskIds, target]
   );
 
   const start = useCallback(async () => {
@@ -232,7 +251,9 @@ export default function FiveInOne(props: FiveInOneProps) {
           const res = await switchChainAsync({ chainId: chainIdTo });
           return (res as { chainId?: number } | undefined)?.chainId;
         },
-        done: { isDone, mark: (id) => locallyDone.current.add(id) },
+        // Session memory is per-network: a mission done on chain A must not
+        // mark the same mission on chain B as done in this run.
+        done: { isDone, mark: (id) => locallyDone.current.add(`${target.id}:${id}`) },
         onUpdate: (res, i) => {
           setResults(res);
           setCurrent(i);
