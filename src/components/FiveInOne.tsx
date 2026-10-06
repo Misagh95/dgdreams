@@ -9,6 +9,12 @@ import NetworkSelect from "@/components/NetworkSelect";
 import { NetworkTile } from "@/components/NetworkTile";
 import { useUtcDay } from "@/hooks/useUtcDay";
 import {
+  deploymentCacheKey,
+  deployedAddressesFor,
+  readDeployStore,
+  writeDeployStore,
+} from "@/lib/deployStore";
+import {
   NIKBASE_CONTRACTS,
   mainnetNetworks,
   testnetNetworks,
@@ -102,30 +108,13 @@ const STATUS_STYLE: Record<StepStatus, { color: string; icon: typeof CheckCircle
 };
 
 /**
- * Deployed addresses, kept per chain so a second run reuses them instead of
- * paying for the same contract again. The runner re-checks the code on chain
- * before trusting a stored address, so a stale entry can never silently
- * satisfy a step.
+ * Deployed addresses, kept per chain AND per wallet so a second run reuses
+ * them instead of paying for the same contract again. Shape + access live in
+ * `@/lib/deployStore` (v2 keys are `<chainId>:<wallet>:<artifact>` and each
+ * entry records its deployer; legacy v1 keys are never read back). The runner
+ * re-checks the code on chain before trusting a stored address, so a stale
+ * entry can never silently satisfy a step.
  */
-const STORE_KEY = "dgdreams-deployments-v1";
-type DeployMap = Record<string, string>;
-
-function readStore(): DeployMap {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(localStorage.getItem(STORE_KEY) || "{}") as DeployMap;
-  } catch {
-    return {};
-  }
-}
-
-function writeStore(map: DeployMap) {
-  try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(map));
-  } catch {
-    /* private mode / quota */
-  }
-}
 
 export default function FiveInOne(props: FiveInOneProps) {
   const { network, isConnected, account, onConnect, doneTaskIds, onFinished } = props;
@@ -137,7 +126,8 @@ export default function FiveInOne(props: FiveInOneProps) {
   const [current, setCurrent] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
   const [redeploy, setRedeploy] = useState(false);
-  const [deployed, setDeployed] = useState<DeployMap>({});
+  /** addresses THIS wallet deployed (per chain), for display + default reuse */
+  const [deployed, setDeployed] = useState<Record<string, string>>({});
   /** network chosen inside this card; null = follow the connected wallet chain */
   const [pickedNetworkId, setPickedNetworkId] = useState<number | null>(null);
   const abort = useRef({ aborted: false });
@@ -164,16 +154,18 @@ export default function FiveInOne(props: FiveInOneProps) {
     setResults([]);
   }
 
-  /** addresses already deployed on this network, from the local store */
-  const refreshFromStore = useCallback((chainId: number) => {
-    const store = readStore();
-    const out: DeployMap = {};
-    for (const a of ARTIFACTS) {
-      const v = store[`${chainId}:${a.key}`];
-      if (v) out[a.key] = v;
-    }
-    return out;
-  }, []);
+  /** addresses THIS wallet already deployed on this network, from the local store */
+  const refreshFromStore = useCallback(
+    (chainId: number, wallet?: string) => {
+      if (!wallet) return {};
+      return deployedAddressesFor(
+        chainId,
+        wallet,
+        ARTIFACTS.map((a) => a.key)
+      );
+    },
+    []
+  );
 
   /** list shown in the card's own picker; always contains the current target */
   const networkOptions = useMemo(() => {
@@ -182,12 +174,12 @@ export default function FiveInOne(props: FiveInOneProps) {
     return base;
   }, [target]);
 
-  // show what is already deployed whenever the network changes
+  // show what THIS wallet already deployed whenever the network (or wallet) changes
   useEffect(() => {
     setResults([]);
     setRedeploy(false);
-    setDeployed(target ? refreshFromStore(target.id) : {});
-  }, [target?.id, refreshFromStore]); // eslint-disable-line react-hooks/exhaustive-deps
+    setDeployed(target ? refreshFromStore(target.id, account) : {});
+  }, [target?.id, account, refreshFromStore]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     (async () => {
@@ -226,13 +218,19 @@ export default function FiveInOne(props: FiveInOneProps) {
     setResults([]);
     setCurrent(null);
 
-    const store = readStore();
+    const store = readDeployStore();
     const steps: SequenceStepDef[] = [
       { id: "gm", label: "GM", kind: "mission", method: "gm", available: !!nikBase },
       { id: "gn", label: "GN", kind: "mission", method: "gn", available: !!nikBase },
       ...ARTIFACTS.map((a) => {
-        const key = `${target.id}:${a.key}`;
-        const cached = redeploy ? undefined : store[key];
+        const key = deploymentCacheKey(target.id, account, a.key);
+        const entry = redeploy ? undefined : store[key];
+        // Only THIS wallet's own entry counts: an address stored by another
+        // wallet on this browser must not mark the step as already deployed.
+        const cached =
+          entry && entry.deployer.toLowerCase() === account.toLowerCase()
+            ? entry.address
+            : undefined;
         return {
           id: a.key,
           label: a.label,
@@ -273,17 +271,22 @@ export default function FiveInOne(props: FiveInOneProps) {
         signal: abort.current,
       });
 
-      // remember freshly deployed addresses so the next run reuses them
-      const next = readStore();
+      // remember freshly deployed addresses so the next run reuses them —
+      // keyed by chain + wallet, with the deployer recorded
+      const next = readDeployStore();
       let changed = false;
       for (const r of out) {
         if (r.address) {
-          next[`${target.id}:${r.id}`] = r.address;
+          next[deploymentCacheKey(target.id, account, r.id)] = {
+            address: r.address,
+            deployer: account,
+            ...(r.hash ? { txHash: r.hash } : {}),
+          };
           changed = true;
         }
       }
-      if (changed) writeStore(next);
-      setDeployed(refreshFromStore(target.id));
+      if (changed) writeDeployStore(next);
+      setDeployed(refreshFromStore(target.id, account));
       onFinished?.(out);
     } finally {
       setRunning(false);
