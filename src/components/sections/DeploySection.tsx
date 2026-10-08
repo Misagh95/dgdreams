@@ -30,7 +30,7 @@ const NAMES = [
   "Game2048",
   "LitePrediction",
   // One-click editions: same shapes, but small enough that deploying them
-  // costs ~1/3 of the gas. Used by the 5-in-1 runner.
+  // costs ~1/3 of the gas. Used by the 6-in-1 runner.
   "DGDemo",
   "DGLiteToken",
   "DGLiteNft",

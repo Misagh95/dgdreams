@@ -6,8 +6,8 @@ import type { NetworkConfig } from "@/config/chains";
 /**
  * One network tile in the "pick a network" grid.
  *
- * Lives on the 5-in-1 card: picking a network here sets the chain the runner
- * deploys to and sends the GM/GN missions to. A network with no NikBase cannot
+ * Lives on the 6-in-1 card: picking a network here sets the chain the runner
+ * deploys to and sends the Check-In/GM/GN missions to. A network with no NikBase cannot
  * take the missions, so it is dimmed and says so rather than looking clickable.
  */
 export function NetworkTile({
@@ -20,7 +20,7 @@ export function NetworkTile({
   network: NetworkConfig;
   isSelected: boolean;
   isDisabled: boolean;
-  /** a NikBase on this chain, so GM/GN can land there */
+  /** a NikBase on this chain, so Check-In/GM/GN can land there */
   hasContract: boolean;
   onSelect: () => void;
 }) {

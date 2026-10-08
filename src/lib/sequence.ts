@@ -1,10 +1,10 @@
 /**
- * 5-in-1 runner: GM + GN + Simple + Token + NFT on a single network.
+ * 6-in-1 runner: Check-In + GM + GN + Simple + Token + NFT on a single network.
  *
  * Design mirrors the reference implementation:
  *   - steps run strictly one after another, each waiting for its own receipt
  *   - a failed step does NOT abort the run; it is marked failed and the rest
- *     continue, so one bad network state never costs the user the other four
+ *     continue, so one bad network state never costs the user the other five
  *   - missions already done today are skipped without touching the wallet
  *   - deploys are raw contract-creation transactions, so no factory contract
  *     is needed on any network

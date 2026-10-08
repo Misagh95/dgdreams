@@ -33,7 +33,7 @@
 |---|---|
 | 🔁 **One wallet, many chains** | Connect with RainbowKit, switch networks seamlessly |
 | ✅ **3 daily tasks per network** | Check-in, GM, GN — a new day starts at **00:00 UTC** |
-| 🚀 **5-in-1 runner** | GM + GN plus three deploys in one click, ~**69% less gas** than the full-featured contracts |
+| 🚀 **6-in-1 runner** | Check-In + GM + GN plus three deploys in one click, ~**69% less gas** than the full-featured contracts |
 | <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" /> **GenLayer AI contracts** | Python-based Intelligent Contract using `genlayer-js` SDK |
 | 🏆 **Soulbound NFT streaks** | Mint tiered NFTs (Bronze → Legend) for 7+ day streaks |
 | 📊 **Wallet-owned streaks** | Read from the chain, keyed to your address — never self-reported |
@@ -57,11 +57,11 @@ timezone, because the contract buckets days as `block.timestamp / 1 days`. The a
 mirrors that boundary exactly, so an open tab clears its "already done today"
 state at the same instant the contract does.
 
-### 🚀 5-in-1 Runner
+### 🚀 6-in-1 Runner
 
-One button runs the two missions plus three deploys back to back:
+One button runs the three missions plus three deploys back to back:
 
-1. **GM** and **GN** on `NikBase`
+1. **Daily Check-In**, **GM** and **GN** on `NikBase`
 2. **DGDemo** — a greeter
 3. **DGLiteToken** — a minimal ERC-20
 4. **DGLiteNft** — a minimal ERC-721
@@ -112,7 +112,7 @@ src/
 │   └── api/             # Backend API routes
 ├── components/
 │   ├── DailyTaskPanel   # Task execution modal (wagmi + genlayer-js)
-│   ├── FiveInOne        # 5-in-1 runner (missions + three deploys)
+│   ├── FiveInOne        # 6-in-1 runner (missions + three deploys)
 │   ├── DailyMissionDeck # Mission cards with UTC-day state
 │   ├── Sidebar          # Navigation sidebar
 │   ├── DashboardLayout  # Shared layout wrapper
@@ -121,7 +121,7 @@ src/
 │   └── chains.ts        # All 20 chain definitions & NetworkConfig
 ├── lib/
 │   ├── utcDay.ts        # 00:00 UTC boundary shared by the whole app
-│   ├── sequence.ts      # Multi-step runner used by the 5-in-1 card
+│   ├── sequence.ts      # Multi-step runner used by the 6-in-1 card
 │   ├── genlayer/
 │   │   ├── client.ts    # genlayer-js client factory
 │   │   └── tasks.ts     # Write/read helpers for GenLayer
@@ -187,7 +187,7 @@ User clicks "Start" → DailyTaskPanel opens
 | SimpleChain | 1913 | SIM |
 | **Arbitrum Sepolia** | **421614** | **ETH** |
 
-> 💡 **Arbitrum and OP are the cheapest networks here** — a full 5-in-1 run costs
+> 💡 **Arbitrum and OP are the cheapest networks here** — a full 6-in-1 run costs
 > well under a cent, so they are the best place to start.
 
 ---

@@ -34,7 +34,7 @@ DGDreams supports **20 networks** — 12 mainnets and 8 testnets — all from on
 
 ## 💸 Cost
 
-Network choice matters a lot for the 5-in-1 runner, because deployment gas is
+Network choice matters a lot for the 6-in-1 runner, because deployment gas is
 charged at 200 gas per byte of contract code. Measured on Arbitrum One:
 
 | Contract | Gas |

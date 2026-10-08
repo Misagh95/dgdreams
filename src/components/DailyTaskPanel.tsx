@@ -201,7 +201,7 @@ export default function DailyTaskPanel({
           //   - probe fresh + not in knownDoneIds -> provably runnable, no
           //     need for a second eth_call before the wallet popup
           // The probe hands over chain-qualified ids ("<chainId>:<taskId>")
-          // because the sibling 5-in-1 runner targets its own network — here
+          // because the sibling 6-in-1 runner targets its own network — here
           // we are on `network.id`, so only that chain's entries count.
           const isKnownDone =
             knownDoneIds?.has(`${network.id}:${step.id}`) ?? false;

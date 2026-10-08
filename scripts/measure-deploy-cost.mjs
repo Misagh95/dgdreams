@@ -28,19 +28,19 @@ const CODE_DEPOSIT_GAS_PER_BYTE = 200;
 const TX_BASE_GAS = 21_000;
 
 /**
- * what the 5-in-1 runner deploys, and what it deployed before the trim
+ * what the 6-in-1 runner deploys, and what it deployed before the trim
  *
  * The one-click group is measured from the "slim" build, which is what actually
  * ships to the browser — see foundry.toml for why that build exists.
  */
 const GROUPS = [
   {
-    title: "5-in-1 runner (current, OneClick.sol, slim build)",
+    title: "6-in-1 runner (current, OneClick.sol, slim build)",
     profile: "slim",
     contracts: ["DGDemo", "DGLiteToken", "DGLiteNft"],
   },
   {
-    title: "5-in-1 runner (before the trim)",
+    title: "6-in-1 runner (before the trim)",
     profile: "default",
     contracts: ["LitePrediction", "SimpleToken", "SimpleNft"],
   },

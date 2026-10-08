@@ -3,15 +3,19 @@ pragma solidity ^0.8.20;
 
 /**
  * @title DGFiveInOne
- * @notice On-chain counterpart of the "5-in-1" button in the DGDreams UI: it
- *         records that a wallet completed each of the five steps (GM, GN,
- *         Simple, Token, NFT), so the run is provable without trusting the UI.
+ * @notice On-chain counterpart of the "6-in-1" button in the DGDreams UI: it
+ *         records that a wallet completed each of the six steps (Check-in, GM,
+ *         GN, Simple, Token, NFT), so the run is provable without trusting the UI.
  *
  * Deliberately dependency-free — deployer/deploy-all.mjs compiles each
  * contract as a single-file standard-json input with no import resolver.
  *
  * Every step is idempotent per wallet per UTC day, so re-running the sequence
  * costs gas but cannot double-count. Uses no post-Paris opcodes.
+ *
+ * History: shipped as 5 steps (GM, GN, Simple, Token, NFT). Check-in was
+ * appended as STEP_CHECKIN = 5 (STEP_COUNT 5 -> 6); existing indices 0-4 are
+ * unchanged so data recorded by the old version keeps its meaning.
  */
 contract DGFiveInOne {
     address public deployer;
@@ -26,7 +30,8 @@ contract DGFiveInOne {
     uint8 public constant STEP_SIMPLE = 2;
     uint8 public constant STEP_TOKEN = 3;
     uint8 public constant STEP_NFT = 4;
-    uint8 public constant STEP_COUNT = 5;
+    uint8 public constant STEP_CHECKIN = 5;
+    uint8 public constant STEP_COUNT = 6;
 
     event Step(address indexed wallet, uint8 indexed step, uint256 indexed day);
     event AllDone(address indexed wallet, uint256 indexed day);
@@ -55,13 +60,17 @@ contract DGFiveInOne {
         _mark(msg.sender, STEP_NFT);
     }
 
+    function checkIn() external {
+        _mark(msg.sender, STEP_CHECKIN);
+    }
+
     /// Record a step by index, for callers that prefer one entry point.
     function mark(uint8 step) external {
         require(step < STEP_COUNT, "bad step");
         _mark(msg.sender, step);
     }
 
-    /// How many of the five steps this wallet has completed today (UTC day).
+    /// How many of the six steps this wallet has completed today (UTC day).
     // Public, not external: allDoneToday() and _mark() call this and stepsDoneOn()
     // from inside the contract, and an external function is not reachable by a
     // plain name internally — it would need a `this.` call plus a gas-hungry hop.

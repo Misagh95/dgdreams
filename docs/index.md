@@ -27,8 +27,8 @@ features:
     title: 3 daily tasks per network
     details: Check-in, GM and GN — each action enforced once per UTC day, with a new day starting at 00:00 UTC.
   - icon: 🚀
-    title: 5-in-1 runner
-    details: Two missions and three contract deploys in one click, cut by ~69% through size-optimised contracts.
+    title: 6-in-1 runner
+    details: Three missions and three contract deploys in one click, cut by ~69% through size-optimised contracts.
   - icon: 🧠
     title: GenLayer AI contracts
     details: Python-based Intelligent Contracts running on AI-validator consensus, orchestrated through the genlayer-js SDK.
