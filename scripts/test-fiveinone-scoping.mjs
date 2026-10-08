@@ -1,4 +1,4 @@
-// Regression test for: 5-in-1 runner skipped missions as "already done"
+// Regression test for: 6-in-1 runner skipped missions as "already done"
 // on chain B because the page probe had seen them done on chain A.
 // Run: node scripts/test-fiveinone-scoping.mjs
 import { strict as assert } from "node:assert";
@@ -27,7 +27,7 @@ console.log("case: probe-done ids belong to chain A (8453), runner targets chain
     },
   };
   // doneTaskIds qualified for 8453 only — target chain 1 must be unaffected
-  const parentDone = new Set(["8453:gm", "8453:gn"]);
+  const parentDone = new Set(["8453:checkIn", "8453:gm", "8453:gn"]);
   const seen = [];
   const done = {
     // mirrors FiveInOne.isDone after the fix
@@ -36,6 +36,7 @@ console.log("case: probe-done ids belong to chain A (8453), runner targets chain
   };
   const results = await runSequence({
     steps: [
+      { id: "checkIn", label: "Check-In", kind: "mission", method: "dailyCheckIn" },
       { id: "gm", label: "GM", kind: "mission", method: "gm" },
       { id: "gn", label: "GN", kind: "mission", method: "gn" },
     ],
@@ -48,9 +49,10 @@ console.log("case: probe-done ids belong to chain A (8453), runner targets chain
     onUpdate: () => {},
     signal: { aborted: false },
   });
-  assert.equal(results[0].status !== "already", true, "gm must not be skipped as already");
-  assert.equal(results[1].status !== "already", true, "gn must not be skipped as already");
-  assert.equal(sent.length, 2, "both missions must attempt a transaction");
+  assert.equal(results[0].status !== "already", true, "checkIn must not be skipped as already");
+  assert.equal(results[1].status !== "already", true, "gm must not be skipped as already");
+  assert.equal(results[2].status !== "already", true, "gn must not be skipped as already");
+  assert.equal(sent.length, 3, "all three missions must attempt a transaction");
   ok("chain-A dones do not skip chain-B missions");
   void RPCCLIENT;
 }
@@ -64,13 +66,14 @@ console.log("case: same-chain probe dones still skip (no useless wallet popup)")
       return "0x" + "ab".repeat(32);
     },
   };
-  const parentDone = new Set(["1:gm", "1:gn"]);
+  const parentDone = new Set(["1:checkIn", "1:gm", "1:gn"]);
   const done = {
     isDone: (id) => parentDone.has(`1:${id}`),
     mark: () => {},
   };
   const results = await runSequence({
     steps: [
+      { id: "checkIn", label: "Check-In", kind: "mission", method: "dailyCheckIn" },
       { id: "gm", label: "GM", kind: "mission", method: "gm" },
       { id: "gn", label: "GN", kind: "mission", method: "gn" },
     ],
@@ -85,9 +88,10 @@ console.log("case: same-chain probe dones still skip (no useless wallet popup)")
   });
   assert.equal(results[0].status, "already");
   assert.equal(results[1].status, "already");
+  assert.equal(results[2].status, "already");
   assert.equal(sent.length, 0, "no transaction attempted for done missions");
   ok("same-chain dones still skip");
 }
 
-console.log("\nAll 5-in-1 scoping tests passed.");
+console.log("\nAll 6-in-1 scoping tests passed.");
 process.exit(0);

@@ -16,7 +16,7 @@ src/
 │   └── api/             # Backend API routes
 ├── components/
 │   ├── DailyTaskPanel   # Task execution modal (wagmi + genlayer-js)
-│   ├── FiveInOne        # 5-in-1 runner (missions + three deploys)
+│   ├── FiveInOne        # 6-in-1 runner (missions + three deploys)
 │   ├── DailyMissionDeck # Mission cards with UTC-day state
 │   ├── Sidebar          # Navigation sidebar
 │   ├── DashboardLayout  # Shared layout wrapper
@@ -25,7 +25,7 @@ src/
 │   └── chains.ts        # All 20 chain definitions & NetworkConfig
 ├── lib/
 │   ├── utcDay.ts        # 00:00 UTC boundary shared by the whole app
-│   ├── sequence.ts      # Multi-step runner used by the 5-in-1 card
+│   ├── sequence.ts      # Multi-step runner used by the 6-in-1 card
 │   ├── genlayer/
 │   │   ├── client.ts    # genlayer-js client factory
 │   │   └── tasks.ts     # Write/read helpers for GenLayer

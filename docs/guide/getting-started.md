@@ -42,9 +42,9 @@ Open [`http://localhost:3000`](http://localhost:3000) and hit the dashboard. �
    the same for everyone no matter where they are. Mint your first **Bronze NFT**
    at 7 days. 🏅
 
-## 🚀 Try the 5-in-1 runner
+## 🚀 Try the 6-in-1 runner
 
-On the tasks page, the 5-in-1 card runs GM, GN and three contract deploys in one
+On the tasks page, the 6-in-1 card runs Check-In, GM, GN and three contract deploys in one
 click — on whichever network you select in that card. It shows the estimated gas
 before you start, and reuses anything it has already deployed on that network, so
 running it a second time is almost free.

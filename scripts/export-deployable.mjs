@@ -81,7 +81,7 @@ const DEPLOYABLE = [
     tag: "market",
     glyph: "◐",
   },
-  // One-click editions used by the 5-in-1 runner. Same idea, but stripped to
+  // One-click editions used by the 6-in-1 runner. Same idea, but stripped to
   // the functions that flow actually calls, because deployment gas is charged
   // per byte of code and every unused function is paid for on every run.
   {

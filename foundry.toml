@@ -19,7 +19,7 @@ remappings = [
 # browser and never verifies — for them the ~11k gas it costs is pure waste.
 #
 #   forge build                                # verifiable artifacts
-#   FOUNDRY_PROFILE=slim forge build           # lean artifacts for the 5-in-1
+#   FOUNDRY_PROFILE=slim forge build           # lean artifacts for the 6-in-1
 #
 # See scripts/export-deployable.mjs, which reads from both output dirs.
 [profile.slim]

@@ -20,9 +20,9 @@ You need a bit of **native gas** on whichever network you're running tasks on â€
 
 Fair play. Each action type is validated against **real UTC time** on-chain and limited to once per UTC day, so nobody can spam the same mission. The day changes at **00:00 UTC** for everyone, regardless of timezone.
 
-### What is the 5-in-1 button?
+### What is the 6-in-1 button?
 
-One click runs GM and GN plus three contract deploys (a demo contract, a minimal ERC-20 and a minimal ERC-721) on the network you pick in that card. It reuses addresses it has already deployed, so a second run on the same network costs almost nothing.
+One click runs Check-In, GM and GN plus three contract deploys (a demo contract, a minimal ERC-20 and a minimal ERC-721) on the network you pick in that card. It reuses addresses it has already deployed, so a second run on the same network costs almost nothing.
 
 ### What are soulbound NFTs?
 
@@ -44,7 +44,7 @@ Your streak is owned by your wallet, not by our database. `NikBase` records it o
 
 Check that you have native gas for that network (on Arc mainnet the gas token is **USDC**), that the wallet is switched to the right chain, and that you haven't already run that task today (UTC).
 
-### The Run all 5 button is greyed out
+### The Run all 6 button is greyed out
 
 It stays disabled when the card cannot run yet. Most often the three deploy
 artifacts failed to load, or the selected network has no `NikBase` deployed. The

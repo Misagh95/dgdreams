@@ -1,5 +1,5 @@
 /**
- * Per-wallet deployment cache for the 5-in-1 runner's three deployables.
+ * Per-wallet deployment cache for the 6-in-1 runner's three deployables.
  *
  * Plain `.ts` (no JSX) so Node scripts can import it for tests.
  *

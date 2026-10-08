@@ -1,6 +1,6 @@
 /**
- * Runs the full 5-in-1 sequence against a local anvil node with a fake
- * EIP-1193 provider, proving all five steps land on-chain in order.
+ * Runs the full 6-in-1 sequence against a local anvil node with a fake
+ * EIP-1193 provider, proving all six steps land on-chain in order.
  */
 import { readFileSync } from "node:fs";
 import { createWalletClient, createPublicClient, http, encodeDeployData, encodeFunctionData } from "viem";
@@ -42,6 +42,7 @@ const art = (n) => {
 };
 
 const steps = [
+  { id: "checkIn", label: "Check-In", kind: "mission", method: "dailyCheckIn" },
   { id: "gm", label: "GM", kind: "mission", method: "gm" },
   { id: "gn", label: "GN", kind: "mission", method: "gn" },
   { id: "simple", label: "Simple", kind: "deploy", artifact: art("LitePrediction") },
@@ -98,8 +99,8 @@ for (const r of results) {
 }
 
 console.log("\n── on-chain verification ──");
-// GM/GN do not touch the streak; only dailyCheckIn increments it, and this
-// run only does GM+GN. So assert the mission markers instead: gmDone/gnDone.
+// This run does Check-In + GM + GN. Check-In bumps the streak via _bumpStreak;
+// GM/GN only set their own markers. So assert all three markers plus streak 1.
 const flags = await pub.readContract({
   address: nikAddr,
   abi: [{
@@ -110,9 +111,9 @@ const flags = await pub.readContract({
   args: [account.address],
 });
 console.log(`  NikBase getFlags (checkIn,reception,gm,gn): ${flags.join(",")}`);
-const gmOn = flags[2] === true && flags[3] === true;
-if (!gmOn) { failures++; console.log("  FAIL GM/GN not recorded on chain"); }
-else console.log("  PASS GM and GN recorded on chain");
+const missionsOn = flags[0] === true && flags[2] === true && flags[3] === true;
+if (!missionsOn) { failures++; console.log("  FAIL Check-In/GM/GN not recorded on chain"); }
+else console.log("  PASS Check-In, GM and GN recorded on chain");
 
 const userData = await pub.readContract({
   address: nikAddr,
@@ -121,6 +122,8 @@ const userData = await pub.readContract({
   args: [account.address],
 });
 console.log(`  NikBase getUserData (streak,checkIns,totalAct): ${userData.join(",")}`);
+if (userData[0] !== 1n) { failures++; console.log("  FAIL streak should be 1 after Check-In"); }
+else console.log("  PASS streak is 1 after Check-In");
 
 const deployed = results.filter((r) => r.kind === "deploy" || r.address);
 for (const r of results.filter((x) => x.address)) {
@@ -130,7 +133,7 @@ for (const r of results.filter((x) => x.address)) {
   console.log(`  ${live ? "PASS" : "FAIL"}  ${r.label} deployed at ${r.address} (${c ? (c.length - 2) / 2 : 0}B)`);
 }
 
-// second run must skip GM/GN without sending anything
+// second run must skip Check-In/GM/GN without sending anything
 const before = order.length;
 const second = await runSequence({
   steps,
@@ -142,11 +145,11 @@ const second = await runSequence({
   done: { isDone: (id) => done.has(id), mark: (id) => done.add(id) },
   onUpdate: () => {},
 });
-const missionStates = second.slice(0, 2).map((r) => r.status);
+const missionStates = second.slice(0, 3).map((r) => r.status);
 const skippedOk = missionStates.every((s) => s === "already");
 if (!skippedOk) failures++;
-console.log(`\n  ${skippedOk ? "PASS" : "FAIL"}  rerun marks GM/GN as already: ${missionStates.join(",")}`);
+console.log(`\n  ${skippedOk ? "PASS" : "FAIL"}  rerun marks Check-In/GM/GN as already: ${missionStates.join(",")}`);
 console.log(`  extra sends on rerun: ${order.length - before} (mission steps should add 0)`);
 
-console.log(`\n${failures === 0 ? "SEQUENCE OK - all five steps" : `${failures} CHECK(S) FAILED`}`);
+console.log(`\n${failures === 0 ? "SEQUENCE OK - all six steps" : `${failures} CHECK(S) FAILED`}`);
 process.exit(failures === 0 ? 0 : 1);

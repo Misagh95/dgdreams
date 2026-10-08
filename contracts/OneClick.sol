@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /**
- * One-click edition of the 5-in-1 runner's three deployables.
+ * One-click edition of the 6-in-1 runner's three deployables.
  *
  * These are intentionally NOT the full-featured SimpleToken / SimpleNft /
  * LitePrediction contracts. Deployment cost is dominated by code size, at
@@ -15,7 +15,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title DGDemo
- * @notice The "Simple" step of the 5-in-1 runner: a greeter that counts calls.
+ * @notice The "Simple" step of the 6-in-1 runner: a greeter that counts calls.
  * @dev Dependency-free and 639 bytes at deploy time. No owner, no admin
  *      functions, no revert strings, nothing that would be billed on every run.
  */
@@ -38,7 +38,7 @@ contract DGDemo {
 
 /**
  * @title DGLiteToken
- * @notice The "Token" step of the 5-in-1 runner: a minimal ERC-20.
+ * @notice The "Token" step of the 6-in-1 runner: a minimal ERC-20.
  * @dev Own, transfer, approve, transferFrom, nothing else. Custom errors
  *      instead of revert strings, and unchecked arithmetic on the hot paths.
  *      Constructor shape: (string name, string symbol, uint256 initialSupply).
@@ -106,7 +106,7 @@ contract DGLiteToken {
 
 /**
  * @title DGLiteNft
- * @notice The "NFT" step of the 5-in-1 runner: a minimal ERC-721.
+ * @notice The "NFT" step of the 6-in-1 runner: a minimal ERC-721.
  * @dev The single biggest byte saver here is dropping the on-chain tokenURI
  *      string building, and the uint-to-string helper it drags in with it.
  *      Metadata is served off-chain instead, so this contract only tracks

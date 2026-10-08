@@ -7,6 +7,7 @@ import { Rocket, CheckCircle2, XCircle, SkipForward, Loader2, ExternalLink, Zap 
 import { runSequence, type SequenceStepDef, type StepResult, type StepStatus } from "@/lib/sequence";
 import NetworkSelect from "@/components/NetworkSelect";
 import { NetworkTile } from "@/components/NetworkTile";
+import { DeployedContractActions } from "@/components/DeployedContractActions";
 import { useUtcDay } from "@/hooks/useUtcDay";
 import {
   deploymentCacheKey,
@@ -21,7 +22,7 @@ import {
   type NetworkConfig,
 } from "@/config/chains";
 
-/** every EVM network the 5-in-1 runner may target, for its own picker */
+/** every EVM network the 6-in-1 runner may target, for its own picker */
 const ALL_NETWORKS: NetworkConfig[] = [...mainnetNetworks, ...testnetNetworks];
 
 type DeployArtifact = NonNullable<SequenceStepDef["artifact"]> & {
@@ -137,7 +138,7 @@ export default function FiveInOne(props: FiveInOneProps) {
     ? (ALL_NETWORKS.find((n) => n.id === pickedNetworkId) ?? network)
     : network;
 
-  // GM/GN are once per UTC day, so the "already done" markers we collected in
+  // GM/GN/Check-In are once per UTC day, so the "already done" markers we collected in
   // this session stop being true the moment the UTC day rolls over.
   useUtcDay(useCallback(() => {
     locallyDone.current = new Set();
@@ -220,6 +221,7 @@ export default function FiveInOne(props: FiveInOneProps) {
 
     const store = readDeployStore();
     const steps: SequenceStepDef[] = [
+      { id: "checkIn", label: "Check-In", kind: "mission", method: "dailyCheckIn", available: !!nikBase },
       { id: "gm", label: "GM", kind: "mission", method: "gm", available: !!nikBase },
       { id: "gn", label: "GN", kind: "mission", method: "gn", available: !!nikBase },
       ...ARTIFACTS.map((a) => {
@@ -303,7 +305,7 @@ export default function FiveInOne(props: FiveInOneProps) {
   const blockedByArtifacts = missingArtifacts.length > 0;
   const canRun = isConnected && !!target && !!nikBase && !running && loaded;
 
-  // What a fresh run would cost: the three deployments plus two cheap mission
+  // What a fresh run would cost: the three deployments plus three cheap mission
   // calls. Contracts already deployed on this network are free, which is the
   // whole point of the cached-address reuse.
   const deployGas = ARTIFACTS.reduce(
@@ -311,7 +313,7 @@ export default function FiveInOne(props: FiveInOneProps) {
     0
   );
   const MISSION_GAS_EACH = 30_000;
-  const estimatedGas = deployGas + 2 * MISSION_GAS_EACH;
+  const estimatedGas = deployGas + 3 * MISSION_GAS_EACH;
   const reusedCount = ARTIFACTS.filter((a) => deployed[a.key]).length;
 
   return (
@@ -337,10 +339,10 @@ export default function FiveInOne(props: FiveInOneProps) {
           </span>
           <div>
             <h3 className="text-sm font-semibold" style={{ color: "var(--text-bright)" }}>
-              5-in-1
+              6-in-1
             </h3>
             <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>
-              GM + GN + Simple + Token + NFT on {target?.name ?? "your network"}, one click
+              Check-In + GM + GN + Simple + Token + NFT on {target?.name ?? "your network"}, one click
             </p>
           </div>
         </div>
@@ -366,16 +368,16 @@ export default function FiveInOne(props: FiveInOneProps) {
             <Rocket className="w-3.5 h-3.5" />
           )}
           {running
-            ? `Step ${(current ?? 0) + 1}/5...`
+            ? `Step ${(current ?? 0) + 1}/6...`
             : isConnected
-              ? "Run all 5"
+              ? "Run all 6"
               : "Connect wallet"}
           </button>
         </div>
       </div>
 
       {/* Network grid ? this card owns network choice now, so the grid lives here.
-          Selecting a tile sets the chain the runner deploys to and sends GM/GN
+          Selecting a tile sets the chain the runner deploys to and sends Check-In/GM/GN
           to, replacing the small dropdown above for anything but a quick pick. */}
       <div className="mt-4">
         <div className="flex items-center justify-between mb-2.5 px-1">
@@ -412,7 +414,7 @@ export default function FiveInOne(props: FiveInOneProps) {
 
       {isConnected && !nikBase && (
         <p className="text-[11px] mt-3" style={{ color: "#FFC24B" }}>
-          No NikBase contract on {target?.name ?? "this network"} - the two missions would be skipped.
+          No NikBase contract on {target?.name ?? "this network"} - the three missions would be skipped.
         </p>
       )}
 
@@ -455,6 +457,10 @@ export default function FiveInOne(props: FiveInOneProps) {
         </div>
       )}
 
+      {isConnected && account && (
+        <DeployedContractActions target={target} account={account} deployed={deployed} />
+      )}
+
       {results.length > 0 && (
         <div className="mt-4 space-y-2">
           <div className="flex items-center gap-2">
@@ -465,13 +471,13 @@ export default function FiveInOne(props: FiveInOneProps) {
               <div
                 className="h-full rounded-full transition-all duration-300"
                 style={{
-                  width: `${(doneCount / 5) * 100}%`,
+                  width: `${(doneCount / 6) * 100}%`,
                   background: "linear-gradient(90deg, var(--accent), var(--success))",
                 }}
               />
             </div>
             <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
-              {doneCount}/5
+              {doneCount}/6
             </span>
           </div>
 
@@ -527,7 +533,7 @@ export default function FiveInOne(props: FiveInOneProps) {
       )}
 
       <p className="text-[10px] font-mono mt-3" style={{ color: "var(--text-quaternary)" }}>
-        5 separate transactions, one after another - your wallet signs each one. Gas is charged per
+        6 separate transactions, one after another - your wallet signs each one. Gas is charged per
         step, and a failed step does not stop the rest.
       </p>
 
