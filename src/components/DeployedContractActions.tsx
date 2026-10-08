@@ -212,5 +212,6 @@ export function DeployedContractActions({
       ))}
     </div>
   );
+}
 
 export default DeployedContractActions;
