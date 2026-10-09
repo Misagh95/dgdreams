@@ -305,6 +305,28 @@ export default function DashboardPage() {
                 </div>
               </div>
 
+              {!isConnected && (
+                <div
+                  className="mb-4 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  style={{ background: "var(--bg-subtle)", border: "1px dashed var(--border-strong)" }}
+                >
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: "var(--text-bright)" }}>
+                      Connect a wallet to see your progress
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
+                      Your streak, points and today&apos;s missions show up here once a wallet is connected.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => openConnectModal?.()}
+                    className="btn-primary text-xs px-4 py-2 self-start sm:self-auto"
+                  >
+                    Connect wallet
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Streak */}
                 <motion.div 
@@ -323,8 +345,8 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black leading-none" style={{ color: "var(--warning)", textShadow: "0 0 30px color-mix(in srgb, var(--warning) 30%, transparent)" }}>
-                      0
+                    <span className="text-4xl font-black leading-none" style={{ color: isConnected ? "var(--warning)" : "var(--text-faint)", textShadow: isConnected ? "0 0 30px color-mix(in srgb, var(--warning) 30%, transparent)" : "none" }}>
+                      {isConnected ? "0" : "—"}
                     </span>
                     <span className="text-xs font-mono" style={{ color: "var(--text-faint)" }}>/ 7 days</span>
                   </div>
@@ -361,8 +383,8 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black leading-none" style={{ color: "var(--accent)", textShadow: "0 0 30px color-mix(in srgb, var(--accent) 25%, transparent)" }}>
-                      0
+                    <span className="text-4xl font-black leading-none" style={{ color: isConnected ? "var(--accent)" : "var(--text-faint)", textShadow: isConnected ? "0 0 30px color-mix(in srgb, var(--accent) 25%, transparent)" : "none" }}>
+                      {isConnected ? "0" : "—"}
                     </span>
                     <span className="text-xs font-mono" style={{ color: "var(--text-faint)" }}>pts</span>
                   </div>
@@ -397,8 +419,8 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black leading-none" style={{ color: "#8b5cf6", textShadow: "0 0 30px color-mix(in srgb, #8b5cf6 25%, transparent)" }}>
-                      0
+                    <span className="text-4xl font-black leading-none" style={{ color: isConnected ? "#8b5cf6" : "var(--text-faint)", textShadow: isConnected ? "0 0 30px color-mix(in srgb, #8b5cf6 25%, transparent)" : "none" }}>
+                      {isConnected ? "0" : "—"}
                     </span>
                     <span className="text-xs font-mono" style={{ color: "var(--text-faint)" }}>/ 9</span>
                   </div>
