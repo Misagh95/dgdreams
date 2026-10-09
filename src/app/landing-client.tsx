@@ -161,7 +161,7 @@ export default function LandingPage() {
           <br />
           <motion.span
             style={{
-              background: "linear-gradient(90deg, #D0FF94 0%, #6F75E5 25%, #FF68F0 50%, #D0FF94 75%, #6F75E5 100%)",
+              background: "linear-gradient(90deg, var(--accent) 0%, #6F75E5 25%, #FF68F0 50%, var(--accent) 75%, #6F75E5 100%)",
               backgroundSize: "200% 100%",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
