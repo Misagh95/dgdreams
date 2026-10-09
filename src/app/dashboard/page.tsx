@@ -39,14 +39,21 @@ function ChainCard({ chain }: { chain: (typeof networks)[number] }) {
   const label = chain.status === "operational" ? "Live" : chain.status === "maintenance" ? "Maint." : "Soon";
   const dim = chain.status !== "operational";
   return (
-    <div
-      className="rounded-xl p-3 flex items-center gap-3 transition-all duration-300"
+    <motion.div
+      className="rounded-xl p-3 flex items-center gap-3"
       style={{
         background: "var(--bg-card)",
         border: "1px solid var(--border-default)",
         opacity: dim ? 0.45 : 1,
         filter: dim ? "grayscale(0.6)" : "none",
       }}
+      whileHover={!dim ? {
+        scale: 1.05,
+        boxShadow: `0 4px 20px -4px color-mix(in srgb, ${chain.color} 35%, transparent)`,
+        borderColor: `color-mix(in srgb, ${chain.color} 30%, transparent)`,
+      } : undefined}
+      whileTap={!dim ? { scale: 0.98 } : undefined}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
       <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
         style={{
@@ -67,7 +74,7 @@ function ChainCard({ chain }: { chain: (typeof networks)[number] }) {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -170,13 +177,17 @@ export default function DashboardPage() {
       <div className="max-w-full space-y-4 sm:space-y-5">
 
         {/* ─────── 1. FLOATING GLASS HEADER ─────── */}
-        <motion.div {...fadeUp}>
+        <motion.div 
+          {...fadeUp}
+          whileHover={{ y: -2 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div
-            className="rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden"
+            className="rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden card-shimmer"
             style={{
               background: "var(--bg-card)",
               border: "1px solid var(--border-default)",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.03) inset",
             }}
           >
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -236,7 +247,11 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* ─────── 2. MISSION CONTROL CARD (Airdrop Hub) ─────── */}
-        <motion.div {...fadeUp} transition={{ delay: 0.04 }}>
+        <motion.div 
+          {...fadeUp} 
+          transition={{ delay: 0.04 }}
+          whileHover={{ scale: 1.005 }}
+        >
           <div
             className="rounded-2xl p-5 sm:p-6 relative overflow-hidden"
             style={{
@@ -268,7 +283,15 @@ export default function DashboardPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Streak */}
-                <div className="rounded-xl p-4" style={{ background: "var(--bg-subtle)" }}>
+                <motion.div 
+                  className="rounded-xl p-4 stat-card" 
+                  style={{ background: "var(--bg-subtle)" }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 8px 30px -8px color-mix(in srgb, var(--warning) 40%, transparent)",
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
                   <div className="flex items-center gap-1.5 mb-2">
                     <Flame className="w-3.5 h-3.5" style={{ color: "var(--warning)" }} />
                     <span className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--text-quaternary)" }}>
@@ -295,10 +318,18 @@ export default function DashboardPage() {
                   <div className="text-[9px] font-mono mt-1.5" style={{ color: "var(--text-faint)" }}>
                     0/30 for Monthly Badge
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Total Points */}
-                <div className="rounded-xl p-4" style={{ background: "var(--bg-subtle)" }}>
+                <motion.div 
+                  className="rounded-xl p-4 stat-card" 
+                  style={{ background: "var(--bg-subtle)" }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 8px 30px -8px color-mix(in srgb, var(--accent) 40%, transparent)",
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
                   <div className="flex items-center gap-1.5 mb-2">
                     <Star className="w-3.5 h-3.5" style={{ color: "var(--accent)" }} />
                     <span className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--text-quaternary)" }}>
@@ -323,10 +354,18 @@ export default function DashboardPage() {
                       <span className="text-[9px] font-mono" style={{ color: "var(--accent)" }}>0 pts earn</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Tasks Progress */}
-                <div className="rounded-xl p-4" style={{ background: "var(--bg-subtle)" }}>
+                <motion.div 
+                  className="rounded-xl p-4 stat-card" 
+                  style={{ background: "var(--bg-subtle)" }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 8px 30px -8px color-mix(in srgb, #8b5cf6 40%, transparent)",
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
                   <div className="flex items-center gap-1.5 mb-2">
                     <Target className="w-3.5 h-3.5" style={{ color: "#8b5cf6" }} />
                     <span className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--text-quaternary)" }}>
@@ -350,10 +389,18 @@ export default function DashboardPage() {
                   <div className="text-[9px] font-mono mt-1.5" style={{ color: "var(--text-faint)" }}>
                     0/375 pts earned
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Active Chains */}
-                <div className="rounded-xl p-4" style={{ background: "var(--bg-subtle)" }}>
+                <motion.div 
+                  className="rounded-xl p-4 stat-card" 
+                  style={{ background: "var(--bg-subtle)" }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 8px 30px -8px color-mix(in srgb, var(--success) 40%, transparent)",
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
                   <div className="flex items-center gap-1.5 mb-2">
                     <Globe className="w-3.5 h-3.5" style={{ color: "var(--success)" }} />
                     <span className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--text-quaternary)" }}>
@@ -380,7 +427,7 @@ export default function DashboardPage() {
                       </div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>

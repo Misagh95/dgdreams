@@ -120,15 +120,25 @@ export default function LandingPage() {
           style={{ color: "var(--text-bright)" }}
         >
           Your On-Chain{" "}
-          <span
+          <motion.span
             style={{
-              background: "var(--theme-gradient)",
+              background: "linear-gradient(90deg, #D0FF94 0%, #6F75E5 25%, #FF68F0 50%, #D0FF94 75%, #6F75E5 100%)",
+              backgroundSize: "200% 100%",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+            animate={{
+              backgroundPosition: ["0% 0%", "200% 0%"],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "linear",
             }}
           >
             Activity Hub
-          </span>
+          </motion.span>
         </motion.h1>
 
         <motion.p
@@ -222,7 +232,12 @@ export default function LandingPage() {
                   initial={reduced ? undefined : { opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.15 + i * 0.08 }}
-                  className="glass-card glass-panel-hover spotlight rounded-2xl p-6"
+                  className="glass-card glass-panel-hover spotlight rounded-2xl p-6 enhanced-card"
+                  whileHover={reduced ? undefined : { 
+                    scale: 1.03,
+                    boxShadow: `0 20px 60px -15px color-mix(in srgb, ${f.color} 35%, transparent)`,
+                  }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
