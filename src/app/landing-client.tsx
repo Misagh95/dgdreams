@@ -226,10 +226,11 @@ export default function LandingPage() {
         <p className="kicker text-center mb-5" style={{ color: "var(--text-tertiary)" }}>
           Supported networks
         </p>
+        <div className="marquee-wrap">
         <div
-          className="flex gap-3 w-max"
+          className="marquee-track"
           style={{
-            animation: reduced ? undefined : "marquee 40s linear infinite",
+            animation: reduced ? undefined : "marquee 90s linear infinite",
           }}
         >
           {[...networks, ...networks].map((n, i) => (
@@ -256,7 +257,21 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
-        <style>{`@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+        </div>
+        <style>{`
+          .marquee-wrap {
+            overflow: hidden;
+            mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+          }
+          .marquee-track {
+            display: flex;
+            gap: 12px;
+            width: max-content;
+          }
+          .marquee-wrap:hover .marquee-track { animation-play-state: paused !important; }
+          @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(calc(-50% - 6px)); } }
+        `}</style>
       </section>
 
       {/* Bento features */}
