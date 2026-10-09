@@ -876,6 +876,42 @@
   }
 }
 
+/* ─────────── MODERN SHELL (shared) ─────────── */
+@layer components {
+  /* Solid, readable surface used for nav bars, drawers and section headers. */
+  .surface {
+    background: color-mix(in srgb, var(--bg-card) 86%, transparent);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-inset);
+  }
+
+  /* Small uppercase label above a heading. */
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* Hairline gradient divider used between sections. */
+  .hairline {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+  }
+
+  /* Pill-shaped segmented control container. */
+  .segmented {
+    display: inline-flex;
+    padding: 4px;
+    gap: 2px;
+    border-radius: 999px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-default);
+  }
+}
+
 /* ─────────── WEB3-LIGHT OVERRIDES ─────────── */
 [data-theme="web3-light"] body::after { opacity: .015; }
 

@@ -101,14 +101,20 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
         >
           <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6"
+            className="inline-flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full text-xs font-medium mb-7"
             style={{
-              background: "color-mix(in srgb, var(--accent) 12%, transparent)",
-              border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
-              color: "var(--accent)",
+              background: "var(--bg-card)",
+              border: "1px solid var(--border-default)",
+              color: "var(--text-secondary)",
+              boxShadow: "var(--shadow-sm)",
             }}
           >
-            <Zap className="w-3.5 h-3.5" />
+            <span
+              className="inline-flex items-center justify-center w-5 h-5 rounded-full"
+              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            >
+              <Zap className="w-3 h-3" />
+            </span>
             Multi-chain daily activity terminal
           </div>
         </motion.div>
@@ -168,6 +174,29 @@ export default function LandingPage() {
             </button>
           </Link>
         </motion.div>
+      </section>
+
+      {/* Stats strip */}
+      <section className="relative z-10 px-6 -mt-2 pb-4">
+        <div className="max-w-4xl mx-auto grid grid-cols-3 gap-3 sm:gap-4">
+          {[
+            { value: "20", label: "Networks" },
+            { value: "3", label: "Daily tasks" },
+            { value: "7d", label: "Streak to first NFT" },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="surface text-center py-4 px-2"
+            >
+              <div className="text-2xl sm:text-3xl font-black" style={{ color: "var(--text-bright)" }}>
+                {s.value}
+              </div>
+              <div className="kicker mt-1 !text-[0.6rem] sm:!text-[0.68rem]" style={{ color: "var(--text-tertiary)" }}>
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* Supported Networks */}

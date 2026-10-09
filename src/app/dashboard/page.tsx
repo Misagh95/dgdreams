@@ -176,6 +176,30 @@ export default function DashboardPage() {
     <DashboardLayout title="Mission Control" subtitle="// daily on-chain activity terminal">
       <div className="max-w-full space-y-4 sm:space-y-5">
 
+        {/* ─────── 0. PAGE HEADER ─────── */}
+        <motion.div {...fadeUp} className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <p className="kicker mb-1.5">Mission control</p>
+            <h1 className="text-2xl sm:text-3xl font-black" style={{ color: "var(--text-bright)" }}>
+              {isConnected ? "Welcome back" : "Start your streak"}
+            </h1>
+            <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+              {isConnected
+                ? "Run today's missions to keep your streak alive."
+                : "Connect a wallet to run your daily on-chain tasks."}
+            </p>
+          </div>
+          {!isConnected && (
+            <button
+              onClick={() => openConnectModal?.()}
+              className="btn-primary text-sm px-5 py-2.5 self-start sm:self-auto"
+            >
+              <Zap className="w-4 h-4" />
+              Connect wallet
+            </button>
+          )}
+        </motion.div>
+
         {/* ─────── 1. FLOATING GLASS HEADER ─────── */}
         <motion.div 
           {...fadeUp}
@@ -183,11 +207,11 @@ export default function DashboardPage() {
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
           <div
-            className="rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden card-shimmer"
+            className="rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden"
             style={{
               background: "var(--bg-card)",
               border: "1px solid var(--border-default)",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.03) inset",
+              boxShadow: "var(--shadow-md)",
             }}
           >
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none"

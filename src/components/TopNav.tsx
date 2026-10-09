@@ -40,7 +40,7 @@ export default function TopNav() {
 
   return (
     <div
-      className="flex items-center gap-3 px-4 lg:px-5 h-14"
+      className="flex items-center gap-3 px-3 lg:px-4 h-16"
       style={{ borderBottom: "1px solid var(--border-default)" }}
     >
       {/* Logo */}
@@ -73,8 +73,8 @@ export default function TopNav() {
 
       {/* Links — scroll horizontally rather than wrapping on narrow screens */}
       <nav
-        className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0"
-        style={{ scrollbarWidth: "none" }}
+        className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0 py-1"
+        style={{ scrollbarWidth: "none", maskImage: "linear-gradient(90deg, #000 88%, transparent)" }}
       >
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -85,7 +85,7 @@ export default function TopNav() {
               href={item.href}
               aria-current={active}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex-shrink-0",
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 hover:bg-[var(--bg-strong)]",
                 active ? "" : "opacity-75 hover:opacity-100"
               )}
               style={
