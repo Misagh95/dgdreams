@@ -64,22 +64,22 @@ function SideSection({
 export default function AppPage() {
   return (
     <DashboardLayout title="Terminal" subtitle="// daily missions · swap — one page">
+      <div className="space-y-5">
+        <div>
+          <p className="kicker mb-1.5">Terminal</p>
+          <h1 className="text-2xl sm:text-3xl font-black" style={{ color: "var(--text-bright)" }}>
+            Daily missions &amp; swap
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+            Run GM · Check · GN, mint your soulbound badge, and swap, all on one page.
+          </p>
+        </div>
+
       {/* Two columns: missions wide, swap narrow. The swap column is pinned to
           the right by giving the grid a fixed side column, so both cards line
           up at the same top edge and the same height. */}
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] gap-6 items-start">
         <section id="daily-tasks" className="scroll-mt-28 space-y-6">
-          <div>
-            <h2
-              className="text-sm font-bold tracking-tight"
-              style={{ color: "var(--text-bright)" }}
-            >
-              Daily missions
-            </h2>
-            <p className="text-[10px] font-mono" style={{ color: "var(--text-tertiary)" }}>
-              Run GM · Check · GN, then mint your soulbound badge
-            </p>
-          </div>
           <TasksSection />
         </section>
 
@@ -93,6 +93,7 @@ export default function AppPage() {
             <SwapSection />
           </SideSection>
         </div>
+      </div>
       </div>
     </DashboardLayout>
   );
