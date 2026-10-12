@@ -34,6 +34,8 @@ export const CONTRACTS: Record<number, `0x${string}` | ""> = {
    1913: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
    57073: "0x68bb9775B11551310D7A37Aae52e6505A0E1e733",
    5042: "0x344Ad6A0D3aEb4bAA8d853C932fBeBeB4e798E3B",
+  // Soneium — deploy with: node scripts/deploy-l2.mjs --only 1868
+  1868: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
   // NikBase v3.0.0 — verified on bscscan / opbnb.bscscan
   56: "0x4AE47749254CA48e950067057e7EEaaDD1498cdb",
   204: "0x94e067F69BC5C1d2F58C91EC0f1C03469452Eec9",

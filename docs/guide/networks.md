@@ -1,6 +1,6 @@
 # Networks
 
-DGDreams supports **20 networks** — 12 mainnets and 8 testnets — all from one wallet.
+DGDreams supports **21 networks** — 13 mainnets and 8 testnets — all from one wallet.
 
 ## 🟢 Mainnet
 
@@ -18,6 +18,7 @@ DGDreams supports **20 networks** — 12 mainnets and 8 testnets — all from on
 | **opBNB** | 204 | BNB |
 | **Arbitrum One** | 42161 | ETH |
 | **OP Mainnet** | 10 | ETH |
+| **Soneium** | 1868 | ETH |
 
 ## 🟡 Testnet
 

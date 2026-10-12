@@ -249,6 +249,25 @@ export const optimismChain = /*#__PURE__*/ defineChain({
   },
 });
 
+/** Soneium — Sony's OP-Stack L2 (Superchain). ETH gas, Blockscout explorer. */
+export const soneiumChain = /*#__PURE__*/ defineChain({
+  id: 1868,
+  name: "Soneium",
+  nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
+  rpcUrls: {
+    // official node first, public nodes as automatic fallback
+    default: {
+      http: ["https://rpc.soneium.org", "https://soneium.drpc.org", "https://soneium-rpc.publicnode.com"],
+    },
+    public: {
+      http: ["https://rpc.soneium.org", "https://soneium.drpc.org", "https://soneium-rpc.publicnode.com"],
+    },
+  },
+  blockExplorers: {
+    default: { name: "Blockscout", url: "https://soneium.blockscout.com" },
+  },
+});
+
 /** Arbitrum Sepolia — testnet, for trying the flow before mainnet gas. */
 export const arbitrumSepoliaChain = /*#__PURE__*/ defineChain({
   id: 421614,
@@ -327,6 +346,8 @@ export const GAME2048_CONTRACTS: Record<number, `0x${string}`> = {
   42161: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
   421614: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
   10: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
+  // Soneium — deploy with: node scripts/deploy-l2.mjs --only 1868
+  1868: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
 };
 
 export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
@@ -350,6 +371,8 @@ export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
   42161: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
   421614: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
   10: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
+  // Soneium — deploy with: node scripts/deploy-l2.mjs --only 1868
+  1868: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
 };
 
 function makeNetworkConfig(
@@ -445,6 +468,11 @@ export const mainnetNetworks: NetworkConfig[] = [
     color: "#FF0420",
     logo: "/logos/optimism.png",
   }),
+  makeNetworkConfig(soneiumChain, {
+    shortName: "SONEIUM",
+    color: "#1B2CFF",
+    logo: "/logos/soneium.svg",
+  }),
 ];
 
 export const testnetNetworks: NetworkConfig[] = [
@@ -525,6 +553,7 @@ export const allChains = [
   opBnbChain,
   arbitrumChain,
   optimismChain,
+  soneiumChain,
   sepolia,
   baseSepolia,
   giwaSepoliaChain,

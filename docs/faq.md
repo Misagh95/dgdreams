@@ -2,7 +2,7 @@
 
 ### What is DGDreams?
 
-A **Web3 Space Terminal** — a multi-chain dashboard where you connect once and run daily on-chain missions across 20 networks, build streaks, mint soulbound NFTs and play with AI contracts.
+A **Web3 Space Terminal** — a multi-chain dashboard where you connect once and run daily on-chain missions across 21 networks, build streaks, mint soulbound NFTs and play with AI contracts.
 
 ### Do I need an account?
 
@@ -10,7 +10,7 @@ No. Your **wallet is your identity**. Connect with MetaMask and you're in.
 
 ### Which networks are supported?
 
-20 total: Ethereum, Base, Arbitrum One, OP Mainnet, HyperEVM, Unichain, Tempo, Robinhood, Ink, Arc, BNB Chain and opBNB on mainnet, plus Sepolia, Base Sepolia, GIWA Sepolia, Arbitrum Sepolia, LitVM Liteforge, GenLayer Bradbury, ARC Testnet and SimpleChain.
+21 total: Ethereum, Base, Arbitrum One, OP Mainnet, Soneium, HyperEVM, Unichain, Tempo, Robinhood, Ink, Arc, BNB Chain and opBNB on mainnet, plus Sepolia, Base Sepolia, GIWA Sepolia, Arbitrum Sepolia, LitVM Liteforge, GenLayer Bradbury, ARC Testnet and SimpleChain.
 
 ### Do I need money to use it?
 

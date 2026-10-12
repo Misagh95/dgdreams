@@ -27,6 +27,8 @@ const SOULBOUND_ADDR: Record<number, `0x${string}` | ""> = {
   1913: "0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0",
    57073: "",
    5042: "0xAf1F1Ec78F94bf9B6FACf876C77A51562B7EbaB0",
+// Soneium — deploy with: node scripts/deploy-l2.mjs --only 1868
+  1868: "0x344ad6a0d3aeb4baa8d853c932fbebeb4e798e3b",
 // SoulboundStreak ? verified; wired to this chain's NikBase (0x94e067F6?)
   204: "0x92783e87c0F00c3B58597efee4F2743395e526af",
 // SoulboundStreak ? verified; wired to this chain's NikBase (0x4AE47749?)
@@ -291,7 +293,7 @@ export function TasksSection() {
   const unsupportedChainId =
     isConnected && chainId && !getNetworkConfig(chainId) ? chainId : undefined;
   const deckNotice = unsupportedChainId
-    ? `Your wallet is on Chain #${unsupportedChainId}, which isn't supported yet. Switch to one of the 15 supported networks in your wallet, then press the mission button again.`
+    ? `Your wallet is on Chain #${unsupportedChainId}, which isn't supported yet. Switch to one of the 16 supported networks in your wallet, then press the mission button again.`
     : undefined;
 
   const handleStartExecution = useCallback(async () => {

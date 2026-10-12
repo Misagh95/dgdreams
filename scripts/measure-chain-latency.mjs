@@ -10,7 +10,7 @@ import { allChains } from "../src/config/chains.ts";
 const CHAINS = [
   [1, "Ethereum"], [8453, "Base"], [56, "BNB Chain"], [204, "opBNB"],
   [5042, "Arc"], [999, "HyperEVM"], [130, "Unichain"], [4217, "Tempo"],
-  [4663, "Robinhood"], [57073, "Ink"],
+  [4663, "Robinhood"], [57073, "Ink"], [1868, "Soneium"],
   [4441, "LITVM Liteforge"], [4221, "GenLayer Bradbury"],
   [1913, "SimpleChain"], [5042002, "ARC Testnet"], [1913, "SimpleChain"],
 ];

@@ -35,6 +35,7 @@ const only = valuesOf("--only").map(String);
 const TARGETS = [
   { id: 42161, name: "Arbitrum One" },
   { id: 10, name: "OP Mainnet" },
+  { id: 1868, name: "Soneium" },
   { id: 421614, name: "Arbitrum Sepolia" },
 ]
   .filter((t) => only.length === 0 || only.includes(String(t.id)))
@@ -69,7 +70,7 @@ const CONTRACTS = [
     name: "SoulboundStreak",
     artifact: "out/SoulboundStreak.sol/SoulboundStreak.json",
     args: (onChain, deployer) => [onChain.NikBase, deployer],
-    maps: [{ file: "src/app/tasks/page.tsx", anchor: "const SOULBOUND_ADDR" }],
+    maps: [{ file: "src/components/sections/TasksSection.tsx", anchor: "const SOULBOUND_ADDR" }],
   },
 ].filter((c) => !(has("--skip-nft") && c.name === "SoulboundStreak"));
 

@@ -45,7 +45,7 @@ function asEpochMs(value: Date | string | null | undefined): number | null {
 /**
  * Dustiness of a native balance, normalised to 0..1.
  *
- * Comparing across 20 chains in raw wei is meaningless — $0.0001 is dust on
+ * Comparing across 21 chains in raw wei is meaningless — $0.0001 is dust on
  * Arbitrum and a fortune on a low-decimals token. This converts to the native
  * unit first, then measures against a small absolute threshold, so "barely
  * funded" means the same thing on every network.

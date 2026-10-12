@@ -2,7 +2,7 @@
   <img src="https://dgdreams.space/genlayer-spinner.svg" alt="GenLayer Spinner" width="80" />
   <h1 align="center">DGDreams — Web3 Space Terminal</h1>
   <p align="center">
-    Multi-chain daily task dashboard with <strong>20 networks</strong> • <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
+    Multi-chain daily task dashboard with <strong>21 networks</strong> • <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
   </p>
   <p align="center">
     <a href="https://dgdreams.space" target="_blank"><strong>🌐 Live Site</strong></a>
@@ -27,7 +27,7 @@
 
 ## Overview
 
-**DGDreams** is a unified dashboard where users connect their wallet once and execute daily on-chain tasks across **20 blockchain networks** — Ethereum, Base, Arbitrum One, OP Mainnet, HyperEVM, Unichain, Tempo, Robinhood, Ink, Arc, BNB Chain and opBNB on mainnet, plus testnets including **Arbitrum Sepolia**, **GenLayer Bradbury**, LitVM, GIWA, ARC, and SimpleChain.
+**DGDreams** is a unified dashboard where users connect their wallet once and execute daily on-chain tasks across **21 blockchain networks** — Ethereum, Base, Arbitrum One, OP Mainnet, Soneium, HyperEVM, Unichain, Tempo, Robinhood, Ink, Arc, BNB Chain and opBNB on mainnet, plus testnets including **Arbitrum Sepolia**, **GenLayer Bradbury**, LitVM, GIWA, ARC, and SimpleChain.
 
 | Feature | Description |
 |---|---|
@@ -174,6 +174,7 @@ User clicks "Start" → DailyTaskPanel opens
 | opBNB | 204 | BNB |
 | **Arbitrum One** | **42161** | **ETH** |
 | **OP Mainnet** | **10** | **ETH** |
+| **Soneium** | **1868** | **ETH** |
 
 ### Testnet
 | Network | Chain ID | Currency |

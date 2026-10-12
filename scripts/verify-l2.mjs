@@ -3,8 +3,9 @@
  * out of the app config so the command can never be pointed at the wrong one.
  *
  *   1) forge build
- *   2) set ARBITRUM_API_KEY (arbiscan.io) and OPTIMISM_API_KEY
- *      (optimistic.etherscan.io) in .env.local — free Etherscan-family keys
+ *   2) set ARBITRUM_API_KEY (arbiscan.io), OPTIMISM_API_KEY
+ *      (optimistic.etherscan.io) and SONEIUM_API_KEY (soneium.blockscout.com)
+ *      in .env.local — free Etherscan-family keys (Blockscout needs any value)
  *   3) node scripts/verify-l2.mjs
  *
  * Flags:
@@ -40,13 +41,14 @@ const CONTRACTS = [
 const ADDRESS_MAP = {
   NikBase: { file: "src/config/chains.ts", anchor: "export const NIKBASE_CONTRACTS" },
   Game2048: { file: "src/config/chains.ts", anchor: "export const GAME2048_CONTRACTS" },
-  SoulboundStreak: { file: "src/app/tasks/page.tsx", anchor: "const SOULBOUND_ADDR" },
+  SoulboundStreak: { file: "src/components/sections/TasksSection.tsx", anchor: "const SOULBOUND_ADDR" },
 };
 
 /** chainId -> the explorer alias configured in foundry.toml */
 const NETWORKS = [
   { id: 42161, alias: "arbitrum", name: "Arbitrum One", key: "ARBITRUM_API_KEY" },
   { id: 10, alias: "optimism", name: "OP Mainnet", key: "OPTIMISM_API_KEY" },
+  { id: 1868, alias: "soneium", name: "Soneium", key: "SONEIUM_API_KEY" },
   { id: 421614, alias: "arbitrum_sepolia", name: "Arbitrum Sepolia", key: "ARBITRUM_API_KEY" },
 ].filter((n) => only.length === 0 || only.includes(String(n.id)));
 
@@ -78,9 +80,12 @@ function explorerKey(envName) {
 }
 
 /** forge exit codes: 0 verified / already fine, non-zero means it did not work. */
-function run(args) {
+function run(args, extraEnv) {
   try {
-    execSync(`forge ${args}`, { stdio: dryRun ? "pipe" : "inherit" });
+    execSync(`forge ${args}`, {
+      stdio: dryRun ? "pipe" : "inherit",
+      env: extraEnv ? { ...process.env, ...extraEnv } : process.env,
+    });
     return 0;
   } catch (e) {
     return typeof e.status === "number" ? e.status : 1;
@@ -119,7 +124,10 @@ for (const net of NETWORKS) {
       continue;
     }
 
-    const code = run(args);
+    // forge resolves [etherscan] keys from the environment, so hand it the key
+    // the script already loaded — otherwise a custom chain like soneium fails
+    // with a misleading "ARBITRUM_API_KEY not found".
+    const code = run(args, key ? { [net.key]: key, ETHERSCAN_API_KEY: key } : undefined);
     if (code === 0) {
       console.log(`  v ${contract.name} verified`);
       verified++;
