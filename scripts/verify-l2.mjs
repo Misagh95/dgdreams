@@ -50,7 +50,18 @@ const NETWORKS = [
   { id: 42161, alias: "arbitrum", name: "Arbitrum One", key: "ARBITRUM_API_KEY" },
   { id: 10, alias: "optimism", name: "OP Mainnet", key: "OPTIMISM_API_KEY" },
   { id: 1868, alias: "soneium", name: "Soneium", key: "SONEIUM_API_KEY" },
-  { id: 450815, alias: "maroo_testnet", name: "Maroo Testnet", key: "MAROO_API_KEY" },
+  {
+    id: 450815,
+    alias: "maroo_testnet",
+    // forge's --chain only accepts a builtin chain NAME or the numeric EIP-155
+    // id — a custom [etherscan] key like "maroo_testnet" is rejected by clap.
+    // A custom chain therefore verifies by id plus an explicit Blockscout URL.
+    chainFlag: "450815",
+    verifier: "blockscout",
+    verifierUrl: "https://explorer-testnet.maroo.io/blockscout/api",
+    name: "Maroo Testnet",
+    key: "MAROO_API_KEY",
+  },
   { id: 421614, alias: "arbitrum_sepolia", name: "Arbitrum Sepolia", key: "ARBITRUM_API_KEY" },
 ].filter((n) => only.length === 0 || only.includes(String(n.id)));
 
@@ -79,6 +90,29 @@ function explorerKey(envName) {
     if (m) return m[1];
   }
   return undefined;
+}
+
+/**
+ * forge resolves EVERY `${VAR}` in foundry.toml while it builds the verify
+ * command — including the keys and RPCs of chains we are not touching. One
+ * unset variable there aborts the whole run with a misleading message
+ * ("environment variable ARBITRUM_API_KEY not found" while verifying Maroo),
+ * so fill the gaps with inert placeholders. The chain actually being verified
+ * keeps its real key, injected below.
+ */
+function foundryEnv() {
+  const env = { ...process.env };
+  let src = "";
+  try {
+    src = readFileSync("foundry.toml", "utf8");
+  } catch {
+    return env;
+  }
+  for (const m of src.matchAll(/\$\{([A-Za-z0-9_]+)\}/g)) {
+    if (env[m[1]]) continue;
+    env[m[1]] = /_URL$/.test(m[1]) ? "http://127.0.0.1:8545" : "placeholder";
+  }
+  return env;
 }
 
 /** forge exit codes: 0 verified / already fine, non-zero means it did not work. */
@@ -120,7 +154,11 @@ for (const net of NETWORKS) {
     // and it defaults to that anyway. --watch polls until the explorer has
     // actually processed the submission instead of returning "pending" and
     // leaving the contract unverified in the UI.
-    const args = `verify-contract ${address} ${contract.source} --chain ${net.alias} --verifier etherscan --watch`;
+    const args =
+      `verify-contract ${address} ${contract.source}` +
+      ` --chain ${net.chainFlag || net.alias}` +
+      ` --verifier ${net.verifier || "etherscan"} --watch` +
+      (net.verifierUrl ? ` --verifier-url ${net.verifierUrl}` : "");
     if (dryRun) {
       console.log(`  would run: forge ${args}`);
       continue;
@@ -129,7 +167,11 @@ for (const net of NETWORKS) {
     // forge resolves [etherscan] keys from the environment, so hand it the key
     // the script already loaded — otherwise a custom chain like soneium fails
     // with a misleading "ARBITRUM_API_KEY not found".
-    const code = run(args, key ? { [net.key]: key, ETHERSCAN_API_KEY: key } : undefined);
+    // forge resolves every ${VAR} in foundry.toml here — see foundryEnv().
+    const code = run(args, {
+      ...foundryEnv(),
+      ...(key ? { [net.key]: key, ETHERSCAN_API_KEY: key } : {}),
+    });
     if (code === 0) {
       console.log(`  v ${contract.name} verified`);
       verified++;
