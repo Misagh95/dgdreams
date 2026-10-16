@@ -1,6 +1,6 @@
 # Networks
 
-DGDreams supports **21 networks** — 13 mainnets and 8 testnets — all from one wallet.
+DGDreams supports **22 networks** — 13 mainnets and 9 testnets — all from one wallet.
 
 ## 🟢 Mainnet
 
@@ -32,6 +32,7 @@ DGDreams supports **21 networks** — 13 mainnets and 8 testnets — all from on
 | ARC Testnet | 5042002 | ARC |
 | SimpleChain | 1913 | SIM |
 | **Arbitrum Sepolia** | 421614 | ETH |
+| **Maroo Testnet** | 450815 | tOKRW |
 
 ## 💸 Cost
 
@@ -65,4 +66,33 @@ official node `https://rpc.mainnet.arc.io` first, with the public Arcscan node
 Transactions link to the official explorer `https://explorer.arc.io` (an independent
 [Arcscan](https://arc-scan.org) explorer is also listed on the chain config).
 
-> 💡 Each network needs **native gas** for writes. Check the currency column above — that's what you need in your wallet for that chain. On Arc mainnet that means **USDC**.
+### Maroo testnet
+
+Maroo is a compliant, EVM-compatible sovereign **Layer 1** for the Korean Won economy
+(built by Hashed Open Finance). DGDreams tracks it as a **testnet** — mainnet (chain `815`)
+has not launched yet, so only the testnet endpoints exist:
+
+| Field | Value |
+|---|---|
+| Chain ID (EVM) | `450815` (`0x6e0ff`) |
+| Cosmos chain-id | `maroo-testnet-1` |
+| RPC | `https://rpc-testnet.maroo.io` |
+| WebSocket | `wss://ws-testnet.maroo.io` |
+| Explorer | https://explorer-testnet.maroo.io |
+| Faucet | https://faucet.maroo.io |
+| Native gas | **tOKRW** (testnet OKRW, 18 decimals) |
+
+Two gas rules are different from a normal EVM chain:
+
+1. **Never send a fixed 21,000 gas limit.** Every transaction runs compliance (PCL) and agent
+   checks — a plain transfer costs ~104,000 gas, and at least half of the gas limit is charged
+   even when less is used (`min_gas_multiplier = 0.5`). Let the wallet estimate (`eth_estimateGas`).
+2. **tOKRW is the native coin, not an ERC-20.** It moves as `msg.value`; there is no token
+   contract to approve.
+
+DGDreams has not deployed `NikBase` / `Game2048` / `SoulboundStreak` there yet, so the mission
+button shows *Not deployed* for this network. To ship them: grab tOKRW from the faucet, then run
+`node scripts/deploy-l2.mjs --only 450815` (RPC: `MAROO_RPC_URL`) and record the addresses in
+[`config/chains.ts`](https://github.com/Misagh95/dgdreams/blob/master/src/config/chains.ts).
+
+> 💡 Each network needs **native gas** for writes. Check the currency column above — that's what you need in your wallet for that chain. On Arc mainnet that means **USDC**, on Maroo Testnet it means **tOKRW** from the faucet.

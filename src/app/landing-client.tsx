@@ -27,7 +27,7 @@ import SpaceBackground from "@/components/SpaceBackground";
 const features = [
   {
     icon: Globe,
-    title: "21 networks, one dashboard",
+    title: "22 networks, one dashboard",
     desc: "Run the same daily tasks on Ethereum, Base, Arbitrum, BNB Chain, GenLayer and more without switching apps.",
     color: "#6F75E5",
     span: "lg:col-span-2",
@@ -84,6 +84,7 @@ const networks = [
   { name: "Arc", logo: "/logos/arc.png" },
   { name: "GenLayer", logo: "/logos/genlayer.svg" },
   { name: "Tempo", logo: "/logos/tempo.png" },
+  { name: "Maroo", logo: "/logos/maroo.png" },
 ];
 
 const fadeUp = {
@@ -180,7 +181,7 @@ export default function LandingPage() {
           className="text-base sm:text-lg max-w-2xl mb-10 leading-relaxed"
           style={{ color: "var(--text-secondary)" }}
         >
-          Connect once. Check in, say GM and GN across 21 networks, build a streak and
+          Connect once. Check in, say GM and GN across 22 networks, build a streak and
           unlock soulbound badges. Takes about a minute a day.
         </motion.p>
 

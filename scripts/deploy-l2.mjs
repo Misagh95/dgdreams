@@ -37,6 +37,7 @@ const TARGETS = [
   { id: 10, name: "OP Mainnet" },
   { id: 1868, name: "Soneium" },
   { id: 421614, name: "Arbitrum Sepolia" },
+  { id: 450815, name: "Maroo Testnet" },
 ]
   .filter((t) => only.length === 0 || only.includes(String(t.id)))
   .map((t) => ({

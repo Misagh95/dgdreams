@@ -298,6 +298,37 @@ export const genlayerBradburyChain = /*#__PURE__*/ defineChain({
   },
 });
 
+/**
+ * Maroo Testnet — Hashed Open Finance's EVM-compatible sovereign L1 for the
+ * Korean Won economy (Cosmos SDK + EVM module, Bech32 `maroo1…` for
+ * validator/governance addresses, standard BIP-44 coin type 60).
+ *
+ * Live-verified: eth_chainId returns 0x6e0ff (450815). Gas is tOKRW — a native
+ * coin, NOT an ERC-20 — and every transfer runs compliance (PCL) checks, so a
+ * fixed 21,000 gas limit is mined, fails and is still charged: always let the
+ * wallet estimate. Mainnet (chain 815) has not launched; its endpoints are
+ * planned to drop the `-testnet` segment (e.g. rpc.maroo.io).
+ */
+export const marooTestnetChain = /*#__PURE__*/ defineChain({
+  id: 450815,
+  name: "Maroo Testnet",
+  nativeCurrency: { decimals: 18, name: "Testnet OKRW", symbol: "tOKRW" },
+  rpcUrls: {
+    default: {
+      http: ["https://rpc-testnet.maroo.io"],
+      webSocket: ["wss://ws-testnet.maroo.io"],
+    },
+    public: {
+      http: ["https://rpc-testnet.maroo.io"],
+      webSocket: ["wss://ws-testnet.maroo.io"],
+    },
+  },
+  blockExplorers: {
+    default: { name: "Maroo Explorer", url: "https://explorer-testnet.maroo.io" },
+  },
+  testnet: true,
+});
+
 export interface NetworkConfig {
   id: number;
   name: string;
@@ -348,6 +379,8 @@ export const GAME2048_CONTRACTS: Record<number, `0x${string}`> = {
   10: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
   // Soneium — deploy with: node scripts/deploy-l2.mjs --only 1868
   1868: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
+  // Maroo Testnet (450815) — not deployed yet; fund the wallet from
+  // https://faucet.maroo.io then run: node scripts/deploy-l2.mjs --only 450815
 };
 
 export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
@@ -373,6 +406,8 @@ export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
   10: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
   // Soneium — deploy with: node scripts/deploy-l2.mjs --only 1868
   1868: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
+  // Maroo Testnet (450815) — not deployed yet; fund the wallet from
+  // https://faucet.maroo.io then run: node scripts/deploy-l2.mjs --only 450815
 };
 
 function makeNetworkConfig(
@@ -532,6 +567,12 @@ export const testnetNetworks: NetworkConfig[] = [
     isTestnet: true,
     logo: "/logos/arbitrum.png",
   }),
+  makeNetworkConfig(marooTestnetChain, {
+    shortName: "MAROO",
+    color: "#0096AA",
+    isTestnet: true,
+    logo: "/logos/maroo.png",
+  }),
 ];
 
 export function getNetworkConfig(chainId: number): NetworkConfig | undefined {
@@ -562,6 +603,7 @@ export const allChains = [
   simpleChain,
   arbitrumSepoliaChain,
   genlayerBradburyChain,
+  marooTestnetChain,
 ];
 
 export const dashboardNetworks = [

@@ -4,8 +4,9 @@
  *
  *   1) forge build
  *   2) set ARBITRUM_API_KEY (arbiscan.io), OPTIMISM_API_KEY
- *      (optimistic.etherscan.io) and SONEIUM_API_KEY (soneium.blockscout.com)
- *      in .env.local — free Etherscan-family keys (Blockscout needs any value)
+ *      (optimistic.etherscan.io), SONEIUM_API_KEY (soneium.blockscout.com) and
+ *      MAROO_API_KEY (explorer-testnet.maroo.io) in .env.local — free
+ *      Etherscan-family keys (Blockscout needs any value)
  *   3) node scripts/verify-l2.mjs
  *
  * Flags:
@@ -49,6 +50,7 @@ const NETWORKS = [
   { id: 42161, alias: "arbitrum", name: "Arbitrum One", key: "ARBITRUM_API_KEY" },
   { id: 10, alias: "optimism", name: "OP Mainnet", key: "OPTIMISM_API_KEY" },
   { id: 1868, alias: "soneium", name: "Soneium", key: "SONEIUM_API_KEY" },
+  { id: 450815, alias: "maroo_testnet", name: "Maroo Testnet", key: "MAROO_API_KEY" },
   { id: 421614, alias: "arbitrum_sepolia", name: "Arbitrum Sepolia", key: "ARBITRUM_API_KEY" },
 ].filter((n) => only.length === 0 || only.includes(String(n.id)));
 

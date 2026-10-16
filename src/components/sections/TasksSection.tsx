@@ -293,7 +293,7 @@ export function TasksSection() {
   const unsupportedChainId =
     isConnected && chainId && !getNetworkConfig(chainId) ? chainId : undefined;
   const deckNotice = unsupportedChainId
-    ? `Your wallet is on Chain #${unsupportedChainId}, which isn't supported yet. Switch to one of the 16 supported networks in your wallet, then press the mission button again.`
+    ? `Your wallet is on Chain #${unsupportedChainId}, which isn't supported yet. Switch to one of the 17 supported networks in your wallet, then press the mission button again.`
     : undefined;
 
   const handleStartExecution = useCallback(async () => {
