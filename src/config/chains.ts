@@ -379,8 +379,7 @@ export const GAME2048_CONTRACTS: Record<number, `0x${string}`> = {
   10: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
   // Soneium — deploy with: node scripts/deploy-l2.mjs --only 1868
   1868: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
-  // Maroo Testnet (450815) — not deployed yet; fund the wallet from
-  // https://faucet.maroo.io then run: node scripts/deploy-l2.mjs --only 450815
+  // Maroo Testnet — verified on explorer-testnet.maroo.io (Blockscout)
   450815: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
 };
 
@@ -407,8 +406,7 @@ export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
   10: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
   // Soneium — deploy with: node scripts/deploy-l2.mjs --only 1868
   1868: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
-  // Maroo Testnet (450815) — not deployed yet; fund the wallet from
-  // https://faucet.maroo.io then run: node scripts/deploy-l2.mjs --only 450815
+  // Maroo Testnet — verified on explorer-testnet.maroo.io (Blockscout)
   450815: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
 };
 

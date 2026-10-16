@@ -90,9 +90,17 @@ Two gas rules are different from a normal EVM chain:
 2. **tOKRW is the native coin, not an ERC-20.** It moves as `msg.value`; there is no token
    contract to approve.
 
-DGDreams has not deployed `NikBase` / `Game2048` / `SoulboundStreak` there yet, so the mission
-button shows *Not deployed* for this network. To ship them: grab tOKRW from the faucet, then run
-`node scripts/deploy-l2.mjs --only 450815` (RPC: `MAROO_RPC_URL`) and record the addresses in
-[`config/chains.ts`](https://github.com/Misagh95/dgdreams/blob/master/src/config/chains.ts).
+All three DGDreams contracts are **live and verified** on Maroo Testnet:
+
+| Contract | Address |
+|---|---|
+| `NikBase` | [`0x68bb9775…1e733`](https://explorer-testnet.maroo.io/address/0x68bb9775b11551310d7a37aae52e6505a0e1e733) |
+| `Game2048` | [`0xaf1f1ec7…7ebab0`](https://explorer-testnet.maroo.io/address/0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0) |
+| `SoulboundStreak` | [`0x344ad6a0…798e3b`](https://explorer-testnet.maroo.io/address/0x344ad6a0d3aeb4baa8d853c932fbebeb4e798e3b) |
+
+Maintenance: `node scripts/deploy-l2.mjs --only 450815` re-runs safely (recorded
+addresses are skipped unless you pass `--force`) and
+`node scripts/verify-l2.mjs --only 450815` re-verifies them — custom chains are
+verified by numeric chain id against the Blockscout API.
 
 > 💡 Each network needs **native gas** for writes. Check the currency column above — that's what you need in your wallet for that chain. On Arc mainnet that means **USDC**, on Maroo Testnet it means **tOKRW** from the faucet.
