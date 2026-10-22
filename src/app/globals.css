@@ -968,92 +968,89 @@
   }
 }
 /* ==========================================================================
-   DGDreams — Theme Layer v3  ·  PHASE 1
+   DGDreams — Ritual Theme  ·  PHASE A
    Paste at the very END of app/globals.css
-   Nothing to uncomment. Nothing else to edit here.
+   Light-first. One accent. No glows. No gradients.
    ========================================================================== */
 
 
 /* ==========================================================================
-   1 · DARK  —  now the default. Requires data-theme="web3" on <html>
+   1 · LIGHT  —  default (data-theme="web3-light")
    ========================================================================== */
 :root,
-:root[data-theme="web3"] {
-  color-scheme: dark;
+:root[data-theme="web3-light"] {
+  color-scheme: light;
 
   /* surfaces */
-  --bg-base:         #0b0f14;
-  --bg-subtle:       #080b0f;
-  --bg-elevated:     #12161d;
-  --bg-card:         #171c24;
-  --bg-strong:       #1e242e;
-  --bg-strong-hover: #262e3a;
+  --bg-base:         #f7f5f2;
+  --bg-subtle:       #f1eee9;
+  --bg-elevated:     #ffffff;
+  --bg-card:         #ffffff;
+  --bg-strong:       #ede9e3;
+  --bg-strong-hover: #e4dfd7;
 
-  /* borders */
-  --border-default: #ffffff1f;
-  --border-strong:  #ffffff2e;
-  --border-hover:   #d0ff9459;
-  --border-focus:   #8b90ee;
+  /* hairlines */
+  --border-default: #e5e0d9;
+  --border-strong:  #d6d0c6;
+  --border-hover:   #c6c0b4;
+  --border-focus:   #12100e;
 
   /* text ramp — every tier clears 4.5:1 on --bg-base */
-  --text-bright:     #ffffff;
-  --text-primary:    #e6ebf5;
-  --text-secondary:  #a9b4c9;
-  --text-tertiary:   #8b97ae;
-  --text-faint:      #75819a;
+  --text-bright:     #0a0908;
+  --text-primary:    #12100e;
+  --text-secondary:  #46413a;
+  --text-tertiary:   #5e584f;
+  --text-faint:      #6f6960;
   --text-quaternary: var(--text-tertiary);
 
-  /* accent — indigo = structure, lime = energy */
-  --accent:          #8b90ee;
-  --accent-hover:    #a3a7f4;
-  --accent-muted:    #8b90ee1f;
-  --accent-contrast: #0b0f14;
-
-  --accent-hot:      #d0ff94;
-  --accent-hot-soft: #d0ff9424;
-  --accent-hot-text: #d0ff94;
+  /* THE accent — lime, fills and highlights only */
+  --accent:          #c6f24e;
+  --accent-hover:    #d3f76f;
+  --accent-soft:     #e8f5be;
+  --accent-text:     #5a6b14;   /* when lime must be text */
+  --accent-contrast: #12100e;   /* text sitting ON lime */
+  --accent-muted:    var(--accent-soft);
 
   /* status */
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger:  #ff7a7a;
-  --info:    #8b90ee;
-  --reward:  #ff8ef0;
+  --success: #1f7a4d;
+  --warning: #8a6a12;
+  --danger:  #b4443a;
 
-  /* gradients / ambience */
-  --theme-gradient: linear-gradient(135deg, #8b90ee 0%, #d0ff94 100%);
-  --ambient-1: #8b90ee1a;
-  --ambient-2: #d0ff9412;
+  /* gradients are gone — the token now holds a flat colour */
+  --theme-gradient: #c6f24e;
+  --ambient-1: #c6f24e1f;
+  --ambient-2: #12100e08;
 
   /* radii */
   --r-sm: 10px;
   --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 28px;
+  --r-lg: 18px;
+  --r-xl: 24px;
 
-  /* elevation */
-  --shadow-sm: 0 1px 2px #0000004d;
-  --shadow-md: 0 6px 20px -8px #000000a6;
-  --shadow-lg: 0 20px 48px -16px #000000cc;
-  --shadow-inset: inset 0 1px 0 #ffffff0d;
+  /* elevation — barely there */
+  --shadow-sm: 0 1px 2px #12100e0a;
+  --shadow-md: 0 2px 6px -2px #12100e12, 0 14px 34px -14px #12100e1c;
+  --shadow-lg: 0 4px 12px -4px #12100e14, 0 28px 60px -24px #12100e24;
+  --shadow-inset: inset 0 1px 0 #ffffffcc;
 
   /* motion */
   --ease: cubic-bezier(.4, 0, .2, 1);
   --ease-out: cubic-bezier(.16, 1, .3, 1);
 
-  /* type scale — 5 steps, the 8px/9px tier is gone */
-  --fs-micro:   0.6875rem;   /* 11px */
-  --fs-label:   0.8125rem;   /* 13px */
-  --fs-body:    0.9375rem;   /* 15px */
-  --fs-title:   1.375rem;    /* 22px */
-  --fs-display: clamp(2rem, 4vw, 2.75rem);
-  --lh-tight: 1.15;
-  --lh-snug:  1.35;
+  /* type scale — six steps, nothing under 11px */
+  --fs-micro:   0.75rem;     /* 12px */
+  --fs-label:   0.875rem;    /* 14px */
+  --fs-body:    1rem;        /* 16px */
+  --fs-title:   1.25rem;     /* 20px */
+  --fs-h2:      2rem;        /* 32px */
+  --fs-display: 4.5rem;      /* 72px */
+  --lh-tight: 1.08;
+  --lh-snug:  1.3;
   --lh-body:  1.6;
 
   /* spacing rhythm */
   --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
-  --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+  --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px;
 
   /* legacy aliases */
   --bg: var(--bg-base);
@@ -1066,196 +1063,242 @@
 
 
 /* ==========================================================================
-   2 · LIGHT  —  a real translation of the dark identity, not a stripped copy
+   2 · DARK  —  warm near-black, same single accent
    ========================================================================== */
-:root[data-theme="web3-light"] {
-  color-scheme: light;
+:root[data-theme="web3"] {
+  color-scheme: dark;
 
-  --bg-base:         #eef1f6;
-  --bg-subtle:       #e6eaf1;
-  --bg-elevated:     #ffffff;
-  --bg-card:         #ffffff;
-  --bg-strong:       #e9ecf2;
-  --bg-strong-hover: #dfe3ea;
+  --bg-base:         #0d0c0b;
+  --bg-subtle:       #080807;
+  --bg-elevated:     #171513;
+  --bg-card:         #171513;
+  --bg-strong:       #201d1a;
+  --bg-strong-hover: #2a2622;
 
-  --border-default: #0b0f141f;
-  --border-strong:  #0b0f142e;
-  --border-hover:   #5a61d659;
-  --border-focus:   #5a61d6;
+  --border-default: #ffffff1a;
+  --border-strong:  #ffffff2e;
+  --border-hover:   #ffffff42;
+  --border-focus:   #c6f24e;
 
-  --text-bright:     #0f1219;
-  --text-primary:    #1c1f28;
-  --text-secondary:  #4a5468;
-  --text-tertiary:   #5d687e;
-  --text-faint:      #64708a;
+  --text-bright:     #ffffff;
+  --text-primary:    #f5f2ee;
+  --text-secondary:  #c9c2b8;
+  --text-tertiary:   #9a938a;
+  --text-faint:      #867f76;
   --text-quaternary: var(--text-tertiary);
 
-  --accent:          #5a61d6;
-  --accent-hover:    #6f75e5;
-  --accent-muted:    #5a61d614;
-  --accent-contrast: #ffffff;
+  --accent:          #c6f24e;
+  --accent-hover:    #d3f76f;
+  --accent-soft:     #c6f24e1f;
+  --accent-text:     #d4f86a;
+  --accent-contrast: #0d0c0b;
+  --accent-muted:    var(--accent-soft);
 
-  --accent-hot:      #b8f06a;
-  --accent-hot-soft: #d0ff9438;
-  --accent-hot-text: #567318;
+  --success: #5fd39a;
+  --warning: #e3c05c;
+  --danger:  #e8837a;
 
-  --success: #0f9d6b;
-  --warning: #b45309;
-  --danger:  #cf4a4a;
-  --info:    #5a61d6;
-  --reward:  #c026b8;
+  --theme-gradient: #c6f24e;
+  --ambient-1: #c6f24e14;
+  --ambient-2: #ffffff08;
 
-  --theme-gradient: linear-gradient(135deg, #5a61d6 0%, #b8f06a 100%);
-  --ambient-1: #5a61d614;
-  --ambient-2: #d0ff9420;
-
-  --shadow-sm: 0 1px 2px #0b0f140f;
-  --shadow-md: 0 6px 20px -8px #0b0f1424;
-  --shadow-lg: 0 20px 48px -16px #0b0f142e;
-  --shadow-inset: inset 0 1px 0 #ffffffcc;
+  --shadow-sm: 0 1px 2px #00000066;
+  --shadow-md: 0 2px 6px -2px #00000080, 0 14px 34px -14px #000000cc;
+  --shadow-lg: 0 4px 12px -4px #0000008c, 0 28px 60px -24px #000000e6;
+  --shadow-inset: inset 0 1px 0 #ffffff0f;
 }
 
 
 /* ==========================================================================
-   3 · TYPE SCALE  —  nothing renders below 11px any more
+   3 · TYPE SCALE  —  raise the illegible floor
    ========================================================================== */
 [class~="text-[8px]"],
-[class~="text-[9px]"],
-[class~="text-[10px]"] {
+[class~="text-[9px]"] {
   font-size: var(--fs-micro);
-  line-height: 1.4;
+  line-height: 1.35;
+}
+[class~="text-[10px]"] {
+  font-size: 0.75rem;
+  line-height: 1.35;
 }
 [class~="text-[11px]"],
 [class~="text-xs"] {
-  font-size: var(--fs-label);
-  line-height: 1.45;
+  font-size: 0.8125rem;
+  line-height: 1.4;
 }
 [class~="text-sm"] {
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
+  font-size: 0.9375rem;
+  line-height: 1.5;
 }
 
 
 /* ==========================================================================
-   4 · HARDCODED COLOUR REMAP
-   Lets theme switching reach the colours that were written as literals.
+   4 · KILL THE COSMIC LAYER  —  no canvas, no grain, no vignette
+   ========================================================================== */
+.space-bg-canvas,
+.cosmic-vignette,
+.cosmic-grain {
+  display: none !important;
+}
+
+
+/* ==========================================================================
+   5 · FLATTEN THE LEGACY COMPONENT CLASSES
    ========================================================================== */
 
-/* --- Daily Check  rgb(0,255,136)  ->  lime --- */
-[style*="rgb(0, 255, 136) 25%"] {
-  border-color: color-mix(in srgb, var(--accent-hot) 25%, transparent) !important;
-}
-[style*="rgb(0, 255, 136) 12%"] {
-  background:    color-mix(in srgb, var(--accent-hot) 12%, transparent) !important;
-  border-color:  color-mix(in srgb, var(--accent-hot) 35%, transparent) !important;
-}
-[style*="rgb(0, 255, 136) 10%"] {
-  background: color-mix(in srgb, var(--accent-hot) 10%, transparent) !important;
-  color:      var(--accent-hot-text) !important;
-}
-[style*="background: rgb(0, 255, 136)"] {
-  background:   var(--accent-hot) !important;
-  border-color: var(--accent-hot) !important;
-  color:        #0b0f14 !important;
+/* glass -> plain card */
+.glass-panel,
+.glass-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--r-xl) !important;
+  backdrop-filter: none !important;
 }
 
-/* --- GM  rgb(255,170,0)  ->  warning --- */
-[style*="rgb(255, 170, 0) 25%"] {
-  border-color: color-mix(in srgb, var(--warning) 25%, transparent) !important;
+/* primary button -> lime fill, ink text, no glow, pill */
+.btn-primary {
+  background: var(--accent) !important;
+  color: var(--accent-contrast) !important;
+  border: 1px solid var(--accent) !important;
+  border-radius: 999px !important;
+  padding: 12px 22px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  box-shadow: none !important;
 }
-[style*="rgb(255, 170, 0) 12%"] {
-  background:    color-mix(in srgb, var(--warning) 12%, transparent) !important;
-  border-color:  color-mix(in srgb, var(--warning) 35%, transparent) !important;
-}
-[style*="rgb(255, 170, 0) 10%"] {
-  background: color-mix(in srgb, var(--warning) 10%, transparent) !important;
-  color:      var(--warning) !important;
-}
-[style*="background: rgb(255, 170, 0)"] {
-  background:   var(--warning) !important;
-  border-color: var(--warning) !important;
-  color:        #0b0f14 !important;
+.btn-primary:hover { background: var(--accent-hover) !important; }
+
+/* kicker -> quiet mono, not lime */
+.kicker {
+  color: var(--text-tertiary) !important;
+  font-size: 0.75rem !important;
+  letter-spacing: .1em !important;
+  font-weight: 500 !important;
 }
 
-/* --- GN  rgb(129,140,248)  ->  accent --- */
+/* badges -> soft lime chip, no border */
+.badge-cyan {
+  background: var(--accent-soft) !important;
+  border: 1px solid transparent !important;
+  color: var(--accent-text) !important;
+  border-radius: 999px !important;
+  font-size: 0.75rem !important;
+}
+
+/* progress -> flat lime */
+.progress-bar {
+  background: var(--bg-strong) !important;
+  border-radius: 999px !important;
+  height: 6px !important;
+}
+.progress-fill {
+  background: var(--accent) !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+/* stat cards -> clean white cards, hover glow off */
+.stat-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--r-lg) !important;
+}
+.stat-card::before,
+.stat-card::after { opacity: 0 !important; }
+.stat-value { letter-spacing: -0.04em !important; }
+.stat-label { color: var(--text-tertiary) !important; font-size: 0.75rem !important; }
+
+/* gradient text -> plain ink */
+.text-gradient {
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+  color: var(--text-bright) !important;
+}
+
+/* animated gradient border -> hairline */
+.gradient-border {
+  border: 1px solid var(--border-default) !important;
+  animation: none !important;
+}
+
+
+/* ==========================================================================
+   6 · HARDCODED COLOUR REMAP  —  everything collapses onto one accent
+   ========================================================================== */
+
+/* --- task card borders -> hairline --- */
+[style*="rgb(0, 255, 136) 25%"],
+[style*="rgb(255, 170, 0) 25%"],
 [style*="rgb(129, 140, 248) 25%"] {
-  border-color: color-mix(in srgb, var(--accent) 25%, transparent) !important;
+  border-color: var(--border-default) !important;
 }
+
+/* --- task icon tiles -> soft lime --- */
+[style*="rgb(0, 255, 136) 12%"],
+[style*="rgb(255, 170, 0) 12%"],
 [style*="rgb(129, 140, 248) 12%"] {
-  background:    color-mix(in srgb, var(--accent) 12%, transparent) !important;
-  border-color:  color-mix(in srgb, var(--accent) 35%, transparent) !important;
+  background: var(--accent-soft) !important;
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent) !important;
 }
+
+/* --- task meta chips --- */
+[style*="rgb(0, 255, 136) 10%"],
+[style*="rgb(255, 170, 0) 10%"],
 [style*="rgb(129, 140, 248) 10%"] {
-  background: color-mix(in srgb, var(--accent) 10%, transparent) !important;
-  color:      var(--accent) !important;
+  background: var(--accent-soft) !important;
+  color: var(--accent-text) !important;
 }
+
+/* --- task run buttons --- */
+[style*="background: rgb(0, 255, 136)"],
+[style*="background: rgb(255, 170, 0)"],
 [style*="background: rgb(129, 140, 248)"] {
-  background:   var(--accent) !important;
+  background: var(--accent) !important;
   border-color: var(--accent) !important;
-  color:        var(--accent-contrast) !important;
+  color: var(--accent-contrast) !important;
+  box-shadow: none !important;
 }
 
-/* --- active nav pill  rgb(111,117,229)  ->  accent --- */
+/* --- active nav pill --- */
 [style*="rgb(111, 117, 229)"] {
-  background:   color-mix(in srgb, var(--accent) 16%, transparent) !important;
-  border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
-  color:        var(--accent) !important;
+  background: var(--accent-soft) !important;
+  border-color: transparent !important;
+  color: var(--text-bright) !important;
 }
 
-/* --- rotating logo cube  #00F2FE / rgb(0,242,254)  ->  lime --- */
-[style*="#00F2FE"] {
-  background:   color-mix(in srgb, var(--accent-hot) 10%, var(--bg-card)) !important;
-  border-color: color-mix(in srgb, var(--accent-hot) 40%, transparent) !important;
-}
-[style*="rgb(0, 242, 254) 45%"] {
-  background: radial-gradient(
-    color-mix(in srgb, var(--accent-hot) 45%, transparent),
-    transparent 70%
-  ) !important;
-}
-[style*="background: rgb(0, 242, 254)"] {
-  background: var(--accent-hot) !important;
-}
-
-/* --- nav micro-badges: one hue, calmer --- */
+/* --- nav micro-badges -> soft chip --- */
 [style*="rgb(0, 212, 255)"],
 [style*="rgb(59, 130, 246)"],
 [style*="rgb(167, 139, 250)"],
-[style*="rgb(245, 158, 11)"] {
-  background: var(--accent-muted) !important;
-  color:      var(--accent) !important;
-}
+[style*="rgb(245, 158, 11)"],
 [style*="rgb(0, 212, 170)"] {
-  background: var(--accent-hot-soft) !important;
-  color:      var(--accent-hot-text) !important;
+  background: var(--accent-soft) !important;
+  color: var(--accent-text) !important;
 }
 
-/* --- 2048 card + target icon --- */
+/* --- rotating cube: cyan -> lime --- */
+[style*="#00F2FE"] {
+  background: var(--accent-soft) !important;
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent) !important;
+}
+[style*="background: rgb(0, 242, 254)"] {
+  background: var(--accent) !important;
+}
+
+/* --- 2048 card + misc literals --- */
 [style*="#4F46E5"] {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--accent) 8%, var(--bg-card)) 0%,
-    color-mix(in srgb, var(--accent) 6%, var(--bg-subtle)) 100%
-  ) !important;
+  background: var(--bg-card) !important;
 }
 [style*="rgb(79, 70, 229)"] {
-  background: radial-gradient(circle at left bottom, var(--accent), transparent 60%) !important;
+  background: radial-gradient(circle at left bottom, var(--accent-soft), transparent 65%) !important;
 }
 [style*="rgb(139, 92, 246)"] {
-  color: var(--accent) !important;
+  color: var(--accent-text) !important;
 }
 
 
 /* ==========================================================================
-   5 · COSMIC LAYER  —  bring the space treatment back into light mode
-   ========================================================================== */
-:root[data-theme="web3-light"] .space-bg-canvas { display: block; opacity: .45; }
-:root[data-theme="web3-light"] .cosmic-vignette { display: block; opacity: .40; }
-:root[data-theme="web3-light"] .cosmic-grain   { display: block; opacity: .50; }
-
-
-/* ==========================================================================
-   6 · ACCESSIBILITY + POLISH  —  free wins, pure CSS
+   7 · ACCESSIBILITY + POLISH
    ========================================================================== */
 :where(a, button, [tabindex]):focus-visible {
   outline: 2px solid var(--border-focus);
@@ -1263,13 +1306,13 @@
   border-radius: var(--r-sm);
 }
 ::selection {
-  background: var(--accent-hot-soft);
-  color: var(--text-bright);
+  background: var(--accent);
+  color: var(--accent-contrast);
 }
 html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 @media (prefers-reduced-motion: reduce) {
-  .dg-cube-spin, .dg-cube-float, .progress-fill { animation: none !important; }
+  .dg-cube-spin, .dg-cube-float { animation: none !important; }
 }
