@@ -968,9 +968,9 @@
   }
 }
 /* ==========================================================================
-   DGDreams — Ritual Theme  ·  PHASE A
+   DGDreams — Ritual Theme  ·  PHASE A + B
    Paste at the very END of app/globals.css
-   Light-first. One accent. No glows. No gradients.
+   Light-first. One accent. No glows. No gradients. Restructured page flow.
    ========================================================================== */
 
 
@@ -981,7 +981,6 @@
 :root[data-theme="web3-light"] {
   color-scheme: light;
 
-  /* surfaces */
   --bg-base:         #f7f5f2;
   --bg-subtle:       #f1eee9;
   --bg-elevated:     #ffffff;
@@ -989,13 +988,11 @@
   --bg-strong:       #ede9e3;
   --bg-strong-hover: #e4dfd7;
 
-  /* hairlines */
   --border-default: #e5e0d9;
   --border-strong:  #d6d0c6;
   --border-hover:   #c6c0b4;
   --border-focus:   #12100e;
 
-  /* text ramp — every tier clears 4.5:1 on --bg-base */
   --text-bright:     #0a0908;
   --text-primary:    #12100e;
   --text-secondary:  #46413a;
@@ -1003,56 +1000,51 @@
   --text-faint:      #6f6960;
   --text-quaternary: var(--text-tertiary);
 
-  /* THE accent — lime, fills and highlights only */
   --accent:          #c6f24e;
   --accent-hover:    #d3f76f;
   --accent-soft:     #e8f5be;
-  --accent-text:     #5a6b14;   /* when lime must be text */
-  --accent-contrast: #12100e;   /* text sitting ON lime */
+  --accent-text:     #5a6b14;
+  --accent-contrast: #12100e;
   --accent-muted:    var(--accent-soft);
 
-  /* status */
   --success: #1f7a4d;
   --warning: #8a6a12;
   --danger:  #b4443a;
 
-  /* gradients are gone — the token now holds a flat colour */
   --theme-gradient: #c6f24e;
   --ambient-1: #c6f24e1f;
   --ambient-2: #12100e08;
 
-  /* radii */
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 18px;
   --r-xl: 24px;
 
-  /* elevation — barely there */
   --shadow-sm: 0 1px 2px #12100e0a;
   --shadow-md: 0 2px 6px -2px #12100e12, 0 14px 34px -14px #12100e1c;
   --shadow-lg: 0 4px 12px -4px #12100e14, 0 28px 60px -24px #12100e24;
   --shadow-inset: inset 0 1px 0 #ffffffcc;
 
-  /* motion */
   --ease: cubic-bezier(.4, 0, .2, 1);
   --ease-out: cubic-bezier(.16, 1, .3, 1);
 
-  /* type scale — six steps, nothing under 11px */
-  --fs-micro:   0.75rem;     /* 12px */
-  --fs-label:   0.875rem;    /* 14px */
-  --fs-body:    1rem;        /* 16px */
-  --fs-title:   1.25rem;     /* 20px */
-  --fs-h2:      2rem;        /* 32px */
-  --fs-display: 4.5rem;      /* 72px */
+  /* FONT FIX: real system mono instead of Space Mono */
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono",
+               "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+
+  --fs-micro:   0.75rem;
+  --fs-label:   0.875rem;
+  --fs-body:    1rem;
+  --fs-title:   1.25rem;
+  --fs-h2:      2rem;
+  --fs-display: 4.5rem;
   --lh-tight: 1.08;
   --lh-snug:  1.3;
   --lh-body:  1.6;
 
-  /* spacing rhythm */
   --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
   --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px;
 
-  /* legacy aliases */
   --bg: var(--bg-base);
   --bg2: var(--bg-elevated);
   --bg3: var(--bg-strong);
@@ -1063,7 +1055,7 @@
 
 
 /* ==========================================================================
-   2 · DARK  —  warm near-black, same single accent
+   2 · DARK
    ========================================================================== */
 :root[data-theme="web3"] {
   color-scheme: dark;
@@ -1110,18 +1102,42 @@
 
 
 /* ==========================================================================
-   3 · TYPE SCALE  —  raise the illegible floor
+   3 · TYPOGRAPHY + FONT RENDERING FIX
    ========================================================================== */
+
+/* on a light background, subpixel rendering is what makes text look crisp */
+html {
+  -webkit-font-smoothing: auto !important;
+  -moz-osx-font-smoothing: auto !important;
+  text-rendering: auto !important;
+}
+/* on dark, grayscale AA avoids colour fringing */
+html[data-theme="web3"] {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* mono is now a clean system mono, aligned on a tabular grid */
+[class~="font-mono"],
+.kicker,
+.badge-cyan,
+.stat-label {
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: 0 !important;
+}
+
+/* nothing renders below 11px */
 [class~="text-[8px]"],
 [class~="text-[9px]"] {
-  font-size: var(--fs-micro);
+  font-size: 0.6875rem;
   line-height: 1.35;
 }
-[class~="text-[10px]"] {
+[class~="text-[10px]"],
+[class~="text-[11px]"] {
   font-size: 0.75rem;
-  line-height: 1.35;
+  line-height: 1.4;
 }
-[class~="text-[11px]"],
 [class~="text-xs"] {
   font-size: 0.8125rem;
   line-height: 1.4;
@@ -1131,9 +1147,14 @@
   line-height: 1.5;
 }
 
+/* tighten display type */
+h1, h2, h3 {
+  letter-spacing: -0.025em !important;
+}
+
 
 /* ==========================================================================
-   4 · KILL THE COSMIC LAYER  —  no canvas, no grain, no vignette
+   4 · KILL THE COSMIC LAYER
    ========================================================================== */
 .space-bg-canvas,
 .cosmic-vignette,
@@ -1141,12 +1162,13 @@
   display: none !important;
 }
 
+/* the spinning cube is dated and eats vertical space */
+.glass-panel .py-2 { display: none !important; }
+
 
 /* ==========================================================================
-   5 · FLATTEN THE LEGACY COMPONENT CLASSES
+   5 · FLATTEN LEGACY COMPONENT CLASSES
    ========================================================================== */
-
-/* glass -> plain card */
 .glass-panel,
 .glass-card {
   background: var(--bg-card) !important;
@@ -1155,7 +1177,6 @@
   backdrop-filter: none !important;
 }
 
-/* primary button -> lime fill, ink text, no glow, pill */
 .btn-primary {
   background: var(--accent) !important;
   color: var(--accent-contrast) !important;
@@ -1168,24 +1189,23 @@
 }
 .btn-primary:hover { background: var(--accent-hover) !important; }
 
-/* kicker -> quiet mono, not lime */
 .kicker {
   color: var(--text-tertiary) !important;
-  font-size: 0.75rem !important;
-  letter-spacing: .1em !important;
+  font-size: 0.6875rem !important;
+  letter-spacing: .08em !important;
   font-weight: 500 !important;
+  text-transform: uppercase !important;
 }
 
-/* badges -> soft lime chip, no border */
 .badge-cyan {
   background: var(--accent-soft) !important;
   border: 1px solid transparent !important;
   color: var(--accent-text) !important;
   border-radius: 999px !important;
-  font-size: 0.75rem !important;
+  font-size: 0.6875rem !important;
+  letter-spacing: 0 !important;
 }
 
-/* progress -> flat lime */
 .progress-bar {
   background: var(--bg-strong) !important;
   border-radius: 999px !important;
@@ -1197,7 +1217,6 @@
   animation: none !important;
 }
 
-/* stat cards -> clean white cards, hover glow off */
 .stat-card {
   background: var(--bg-card) !important;
   border: 1px solid var(--border-default) !important;
@@ -1205,51 +1224,52 @@
 }
 .stat-card::before,
 .stat-card::after { opacity: 0 !important; }
-.stat-value { letter-spacing: -0.04em !important; }
-.stat-label { color: var(--text-tertiary) !important; font-size: 0.75rem !important; }
+.stat-value {
+  letter-spacing: -0.04em !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.stat-label {
+  color: var(--text-tertiary) !important;
+  font-size: 0.6875rem !important;
+}
 
-/* gradient text -> plain ink */
 .text-gradient {
   background: none !important;
   -webkit-text-fill-color: currentColor !important;
   color: var(--text-bright) !important;
 }
-
-/* animated gradient border -> hairline */
 .gradient-border {
   border: 1px solid var(--border-default) !important;
   animation: none !important;
+}
+
+/* the nav mask was fading out the last items */
+[style*="mask-image"] {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
 }
 
 
 /* ==========================================================================
    6 · HARDCODED COLOUR REMAP  —  everything collapses onto one accent
    ========================================================================== */
-
-/* --- task card borders -> hairline --- */
 [style*="rgb(0, 255, 136) 25%"],
 [style*="rgb(255, 170, 0) 25%"],
 [style*="rgb(129, 140, 248) 25%"] {
   border-color: var(--border-default) !important;
 }
-
-/* --- task icon tiles -> soft lime --- */
 [style*="rgb(0, 255, 136) 12%"],
 [style*="rgb(255, 170, 0) 12%"],
 [style*="rgb(129, 140, 248) 12%"] {
   background: var(--accent-soft) !important;
   border-color: color-mix(in srgb, var(--accent) 45%, transparent) !important;
 }
-
-/* --- task meta chips --- */
 [style*="rgb(0, 255, 136) 10%"],
 [style*="rgb(255, 170, 0) 10%"],
 [style*="rgb(129, 140, 248) 10%"] {
   background: var(--accent-soft) !important;
   color: var(--accent-text) !important;
 }
-
-/* --- task run buttons --- */
 [style*="background: rgb(0, 255, 136)"],
 [style*="background: rgb(255, 170, 0)"],
 [style*="background: rgb(129, 140, 248)"] {
@@ -1258,15 +1278,11 @@
   color: var(--accent-contrast) !important;
   box-shadow: none !important;
 }
-
-/* --- active nav pill --- */
 [style*="rgb(111, 117, 229)"] {
   background: var(--accent-soft) !important;
   border-color: transparent !important;
   color: var(--text-bright) !important;
 }
-
-/* --- nav micro-badges -> soft chip --- */
 [style*="rgb(0, 212, 255)"],
 [style*="rgb(59, 130, 246)"],
 [style*="rgb(167, 139, 250)"],
@@ -1275,8 +1291,6 @@
   background: var(--accent-soft) !important;
   color: var(--accent-text) !important;
 }
-
-/* --- rotating cube: cyan -> lime --- */
 [style*="#00F2FE"] {
   background: var(--accent-soft) !important;
   border-color: color-mix(in srgb, var(--accent) 45%, transparent) !important;
@@ -1284,21 +1298,79 @@
 [style*="background: rgb(0, 242, 254)"] {
   background: var(--accent) !important;
 }
-
-/* --- 2048 card + misc literals --- */
-[style*="#4F46E5"] {
-  background: var(--bg-card) !important;
-}
+[style*="#4F46E5"] { background: var(--bg-card) !important; }
 [style*="rgb(79, 70, 229)"] {
   background: radial-gradient(circle at left bottom, var(--accent-soft), transparent 65%) !important;
 }
-[style*="rgb(139, 92, 246)"] {
-  color: var(--accent-text) !important;
+[style*="rgb(139, 92, 246)"] { color: var(--accent-text) !important; }
+
+
+/* ==========================================================================
+   7 · PAGE RESTRUCTURE  —  the ritual comes first
+   ========================================================================== */
+
+/* the page container becomes an ordered column, and stops being full-bleed */
+.max-w-full.space-y-4 {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 24px !important;
+  max-width: 1240px !important;
+  margin-inline: auto !important;
+}
+.max-w-full.space-y-4 > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* --- new order: header · stats · ritual · networks · (status) --- */
+.max-w-full.space-y-4 > *:nth-child(1) { order: 1; }   /* page header      */
+.max-w-full.space-y-4 > *:nth-child(3) { order: 2; }   /* stats overview   */
+.max-w-full.space-y-4 > *:nth-child(5) { order: 3; }   /* daily ritual     */
+.max-w-full.space-y-4 > *:nth-child(4) { order: 4; }   /* networks         */
+.max-w-full.space-y-4 > *:nth-child(2) { order: 5; }   /* system online    */
+.max-w-full.space-y-4 > *:nth-child(6) { order: 6; }   /* status bar       */
+
+/* the mid-page "SYSTEM ONLINE" card and the bottom status bar are duplicates */
+.max-w-full.space-y-4 > *:nth-child(2),
+.max-w-full.space-y-4 > *:nth-child(6) { display: none !important; }
+
+/* the ritual gets the full width, the 2048 tile sits beside it */
+.max-w-full.space-y-4 > *:nth-child(5) { grid-template-columns: 1fr !important; }
+@media (min-width: 1024px) {
+  .max-w-full.space-y-4 > *:nth-child(5) {
+    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) !important;
+  }
+}
+
+/* the three ritual steps become one row instead of a stack */
+@media (min-width: 768px) {
+  .glass-panel .space-y-3 {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px !important;
+  }
+  .glass-panel .space-y-3 > * + * { margin-top: 0 !important; }
+}
+
+/* networks become a dense strip instead of 14 big cards */
+.max-w-full.space-y-4 > *:nth-child(4) .grid {
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)) !important;
+  gap: 8px !important;
+}
+
+/* more room to breathe */
+.flex-1.p-4.lg\:p-6 { padding: 28px 32px 64px !important; }
+
+/* bigger page title */
+.max-w-full.space-y-4 > *:nth-child(1) h1 {
+  font-size: clamp(1.75rem, 3.2vw, 2.5rem) !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.035em !important;
 }
 
 
 /* ==========================================================================
-   7 · ACCESSIBILITY + POLISH
+   8 · ACCESSIBILITY
    ========================================================================== */
 :where(a, button, [tabindex]):focus-visible {
   outline: 2px solid var(--border-focus);
@@ -1308,10 +1380,6 @@
 ::selection {
   background: var(--accent);
   color: var(--accent-contrast);
-}
-html {
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 @media (prefers-reduced-motion: reduce) {
   .dg-cube-spin, .dg-cube-float { animation: none !important; }
