@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      data-theme="web3-light"
+      data-theme="web3"
       className={`${spaceGrotesk.variable} ${spaceMono.variable} ${syne.variable}`}
     >
       <body className="bg-[var(--bg-base)] text-[var(--text-primary)] antialiased">
