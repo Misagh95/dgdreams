@@ -26,7 +26,7 @@ export default function RootError({
           System Anomaly Detected
         </h2>
         
-        <p className="text-sm font-mono text-[var(--text-secondary)] mb-6 leading-relaxed">
+        <p className="text-sm text-[var(--text-secondary)] mb-6 leading-relaxed">
           {error?.message || "An unexpected error occurred while interacting with the network."}
         </p>
 
@@ -41,7 +41,7 @@ export default function RootError({
           <Link href="/dashboard" className="w-full sm:w-auto">
             <button className="btn-ghost w-full px-5 py-2.5 text-xs font-semibold flex items-center justify-center gap-2">
               <Home className="w-3.5 h-3.5" />
-              Return to Mission Control
+              Return to Today
             </button>
           </Link>
         </div>

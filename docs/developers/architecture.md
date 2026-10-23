@@ -17,6 +17,7 @@ src/
 ├── components/
 │   ├── DailyTaskPanel   # Task execution modal (wagmi + genlayer-js)
 │   ├── FiveInOne        # 6-in-1 runner (missions + three deploys)
+│   ├── CounterSolo      # Standalone incrementCounter() transaction
 │   ├── DailyMissionDeck # Mission cards with UTC-day state
 │   ├── Sidebar          # Navigation sidebar
 │   ├── DashboardLayout  # Shared layout wrapper

@@ -19,8 +19,16 @@ const FALLBACK_CHAIN_ID = 8453; // Base
 interface ActiveNetworkValue {
   /** The chain the user picked in the rail (may differ from the wallet chain). */
   activeChainId: number;
-  /** Pick a network: updates the rail and asks the wallet to switch. */
-  selectNetwork: (chainId: number) => void;
+  /**
+   * Pick a network: updates the rail and asks the wallet to follow.
+   *
+   * `promptConnect` decides what happens when no wallet is attached yet. A
+   * deliberate choice (picking from the network sheet) can open the connect
+   * sheet, because being told "you need a wallet for that" is the point. A
+   * casual tap on a chip in a list is not — it should just record the pick,
+   * so browsing the chains never throws a modal in the user's face.
+   */
+  selectNetwork: (chainId: number, options?: { promptConnect?: boolean }) => void;
   /** True while the wallet is being asked to switch. */
   switching: boolean;
 }
@@ -63,14 +71,15 @@ export function ActiveNetworkProvider({ children }: { children: ReactNode }) {
   }, [activeChainId, ready]);
 
   const selectNetwork = useCallback(
-    (next: number) => {
+    (next: number, options?: { promptConnect?: boolean }) => {
       setActiveChainId(next);
       if (typeof window === "undefined") return;
       if (!getNetworkConfig(next)) return;
       if (next === walletChainId) return;
-      // No wallet yet: still record the pick, and offer the connect sheet.
+      // No wallet yet: the pick is still recorded and persisted. Only offer
+      // the connect sheet when the caller says the intent is deliberate.
       if (walletChainId === undefined) {
-        openConnectModal?.();
+        if (options?.promptConnect !== false) openConnectModal?.();
         return;
       }
       void switchChainAsync({ chainId: next }).catch(() => {

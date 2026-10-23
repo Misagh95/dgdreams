@@ -351,7 +351,8 @@ export interface NetworkConfig {
    * explicit legacy `gasPrice`, and they also reject it when the wallet's
    * local nonce drifts from the sequencer's expected message index. When set,
    * the mission sender injects `legacyGasPrice` and refreshes the nonce from
-   * the RPC before sending. See sendTx() in DailyTaskPanel.
+   * the RPC before sending. See `broadcastCall()` in lib/missionSender and the
+   * equivalent block in CounterSolo.
    */
   requiresLegacyGas?: boolean;
   /** Hex gas price to use on such chains, e.g. 0x989680 = 0.1 gwei. */
@@ -432,7 +433,7 @@ function makeNetworkConfig(
       default: { name: "Explorer", url: "" },
     },
     logo: "",
-    color: "#627eea",
+    color: "var(--text-tertiary)",
     status: "operational",
     game2048Contract: GAME2048_CONTRACTS[chain.id],
     nikBaseContract: NIKBASE_CONTRACTS[chain.id],
@@ -448,7 +449,7 @@ export const mainnetNetworks: NetworkConfig[] = [
   }),
   makeNetworkConfig(hyperEvmChain, {
     shortName: "HYPE",
-    color: "#FF6B6B",
+    color: "var(--danger)",
     logo: "/logos/hyperliquid.png",
   }),
   makeNetworkConfig(unichainChain, {
@@ -458,7 +459,7 @@ export const mainnetNetworks: NetworkConfig[] = [
   }),
   makeNetworkConfig(tempoChain, {
     shortName: "TMP",
-    color: "#00D4AA",
+    color: "var(--accent-text)",
     logo: "/logos/tempo.png",
   }),
   makeNetworkConfig(robinhoodChain, {
@@ -469,7 +470,7 @@ export const mainnetNetworks: NetworkConfig[] = [
   }),
   makeNetworkConfig(mainnet, {
     shortName: "ETH",
-    color: "#627EEA",
+    color: "var(--text-tertiary)",
     logo: "/logos/ethereum.png",
   }),
   makeNetworkConfig(inkChain, {
@@ -480,7 +481,7 @@ export const mainnetNetworks: NetworkConfig[] = [
   }),
   makeNetworkConfig(arcMainnetChain, {
     shortName: "ARC",
-    color: "#00D4AA",
+    color: "var(--accent-text)",
     logo: "/logos/arc.png",
   }),
   makeNetworkConfig(bnbChain, {
@@ -513,7 +514,7 @@ export const mainnetNetworks: NetworkConfig[] = [
 export const testnetNetworks: NetworkConfig[] = [
   makeNetworkConfig(sepolia, {
     shortName: "SEP",
-    color: "#627EEA",
+    color: "var(--text-tertiary)",
     isTestnet: true,
     logo: "/logos/ethereum.png",
   }),
@@ -525,13 +526,13 @@ export const testnetNetworks: NetworkConfig[] = [
   }),
   makeNetworkConfig(giwaSepoliaChain, {
     shortName: "GIWA",
-    color: "#FF6B6B",
+    color: "var(--danger)",
     isTestnet: true,
     logo: "/logos/giwa.png",
   }),
   makeNetworkConfig(liteforgeChain, {
     shortName: "LIT",
-    color: "#FFD700",
+    color: "var(--accent-text)",
     isTestnet: true,
     logo: "/logos/litvm.png",
     // Arbitrum Orbit sequencer: needs an explicit legacy gasPrice, and a nonce
@@ -541,7 +542,7 @@ export const testnetNetworks: NetworkConfig[] = [
   }),
   makeNetworkConfig(arcTestChain, {
     shortName: "ARC",
-    color: "#00D4AA",
+    color: "var(--accent-text)",
     isTestnet: true,
     logo: "/logos/arc.png",
   }),
@@ -553,7 +554,7 @@ export const testnetNetworks: NetworkConfig[] = [
   }),
   makeNetworkConfig(genlayerBradburyChain, {
     shortName: "GEN",
-    color: "#110FFF",
+    color: "var(--accent-text)",
     isTestnet: true,
     logo: "/logos/genlayer.svg",
     cropInsuranceContract: "0x5af45E1F050ffe09E7dD9adaeac83a3Ab7081E6a" as `0x${string}`,

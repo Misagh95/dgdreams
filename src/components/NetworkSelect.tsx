@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { ChevronDown, Check } from "lucide-react";
 import { getNetworkConfig } from "@/config/chains";
 
@@ -17,7 +17,7 @@ import { getNetworkConfig } from "@/config/chains";
    a network has no logo asset.
    ───────────────────────────────────────────── */
 
-const FALLBACK_COLORS = ["#6F75E5", "#00B17E", "#FF68F0", "#FFB020", "#00D4FF", "#FF6B6B"];
+const FALLBACK_COLORS = ["var(--accent)", "var(--success)", "var(--accent)", "var(--warning)", "var(--accent)", "var(--danger)"];
 
 function LogoFallback({ id, name, color }: { id: number; name: string; color?: string }) {
   const bg = color || FALLBACK_COLORS[id % FALLBACK_COLORS.length];
@@ -75,7 +75,7 @@ export default function NetworkSelect({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-mono outline-none transition-colors"
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs outline-none transition-colors"
         style={{
           minWidth: 150,
           background: "var(--bg-card)",
@@ -117,7 +117,7 @@ export default function NetworkSelect({
       {/* Dropdown panel — logo + name per network */}
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
@@ -144,7 +144,7 @@ export default function NetworkSelect({
                     onChange(n.id);
                     setOpen(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-mono text-left transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left transition-colors"
                   style={{
                     color: active ? "var(--accent)" : "var(--text-secondary)",
                     background: active ? "var(--accent-muted)" : "transparent",
@@ -157,7 +157,7 @@ export default function NetworkSelect({
                         alt=""
                         width={16}
                         height={16}
-                        style={{ objectFit: "contain" }}
+                        style={{ objectFit: "contain", width: "16px", height: "16px" }}
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                       />
                     </span>
@@ -169,7 +169,7 @@ export default function NetworkSelect({
                 </button>
               );
             })}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

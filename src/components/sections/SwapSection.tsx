@@ -147,10 +147,17 @@ export function SwapSection() {
     return () => clearTimeout(timer);
   }, [fromToken, toToken, fromAmountWei, address, netId]);
 
-  /* Allowance check for ERC20 source */
-  const needsApproval = quote && fromToken && !isFromNative && fromAmountWei
-    ? { spender: quote.approvalAddress as Address, token: fromToken.address as Address }
-    : null;
+  /* Allowance check for ERC20 source.
+     useMemo keeps the object identity stable, so callbacks that depend on it
+     (handleApprove) don't get rebuilt — and invalidated looked-up effects
+     don't refire — on every render of unrelated state. */
+  const needsApproval = useMemo(
+    () =>
+      quote && fromToken && !isFromNative && fromAmountWei
+        ? { spender: quote.approvalAddress as Address, token: fromToken.address as Address }
+        : null,
+    [quote, fromToken, isFromNative, fromAmountWei]
+  );
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: needsApproval?.token,
     abi: ERC20_ABI,
@@ -264,7 +271,7 @@ export function SwapSection() {
             <span className="font-semibold text-sm" style={{ color: "var(--text-bright)" }}>Swap</span>
           </div>
           <span
-            className="text-[10px] font-mono px-2.5 py-1.5 rounded-lg"
+            className="text-[12px] px-2.5 py-1.5 rounded-lg"
             style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
           >
             {getNetworkConfig(netId)?.name ?? "Network"}
@@ -272,8 +279,8 @@ export function SwapSection() {
         </div>
         {!supportedHere && (
           <p
-            className="text-[11px] font-mono px-3 py-2 rounded-xl"
-            style={{ background: "rgba(255,170,0,.1)", border: "1px solid rgba(255,170,0,.28)", color: "#FFC24B" }}
+            className="text-[12px] px-3 py-2 rounded-xl"
+            style={{ background: "rgba(255,170,0,.1)", border: "1px solid rgba(255,170,0,.28)", color: "var(--warning)" }}
           >
             {activeNet?.name ?? `Chain #${activeChainId}`} has no swap route — pick a
             highlighted network in the left rail.
@@ -282,11 +289,11 @@ export function SwapSection() {
         {/* From */}
         <div className="p-4 rounded-2xl" style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>From</span>
+            <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>From</span>
             {balance && (
               <button
                 onClick={() => setAmount(formatUnits(balance.value, balance.decimals))}
-                className="text-[10px] font-mono hover:opacity-80"
+                className="text-[12px] hover:opacity-80"
                 style={{ color: "var(--accent)" }}
               >
                 Balance: {Number(formatUnits(balance.value, balance.decimals)).toFixed(5)} {balance.symbol} · MAX
@@ -307,7 +314,7 @@ export function SwapSection() {
             <TokenSelect tokens={tokens} value={fromToken} onChange={(t) => { setFromToken(t); setQuote(null); }} label="From token" />
           </div>
           {notEnoughBalance && (
-            <p className="text-[11px] mt-1.5" style={{ color: "var(--danger)" }}>Insufficient balance</p>
+            <p className="text-[12px] mt-1.5" style={{ color: "var(--danger)" }}>Insufficient balance</p>
           )}
         </div>
 
@@ -326,7 +333,7 @@ export function SwapSection() {
         {/* To */}
         <div className="p-4 rounded-2xl" style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>To (estimated)</span>
+            <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>To (estimated)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="flex-1 text-2xl font-semibold min-w-0 truncate" style={{ color: phase === "quoting" ? "var(--text-tertiary)" : "var(--text-bright)" }}>
@@ -340,15 +347,15 @@ export function SwapSection() {
           <div className="p-3 rounded-xl text-xs space-y-1.5" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-default)" }}>
             <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
               <span>Route</span>
-              <span className="font-mono" style={{ color: "var(--accent)" }}>{quote.tool} · via {quote.source === "lifi" ? "LI.FI" : "Relay"}</span>
+              <span className="" style={{ color: "var(--accent)" }}>{quote.tool} · via {quote.source === "lifi" ? "LI.FI" : "Relay"}</span>
             </div>
             <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
               <span>Min. received</span>
-              <span className="font-mono" style={{ color: "var(--text-bright)" }}>{estOutMin ? Number(estOutMin).toPrecision(6) : "-"} {toToken?.symbol}</span>
+              <span className="" style={{ color: "var(--text-bright)" }}>{estOutMin ? Number(estOutMin).toPrecision(6) : "-"} {toToken?.symbol}</span>
             </div>
             <div className="flex justify-between" style={{ color: "var(--text-tertiary)" }}>
               <span>Slippage</span>
-              <span className="font-mono" style={{ color: "var(--text-bright)" }}>0.5%</span>
+              <span className="" style={{ color: "var(--text-bright)" }}>0.5%</span>
             </div>
           </div>
         )}
@@ -356,7 +363,7 @@ export function SwapSection() {
         {/* Source comparison */}
         {quotes.length > 1 && (
           <div className="p-3 rounded-xl space-y-1.5" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-default)" }}>
-            <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>Compare sources</span>
+            <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>Compare sources</span>
             {quotes.map((q) => {
               const bestTo = quotes.reduce((m, x) => (BigInt(x.toAmount) > BigInt(m.toAmount) ? x : m)).toAmount;
               const out = toToken ? Number(formatUnits(BigInt(q.toAmount), toToken.decimals)) : 0;
@@ -376,10 +383,10 @@ export function SwapSection() {
                   <span className="font-semibold" style={{ color: active ? "var(--accent)" : "var(--text-primary)" }}>
                     {q.source === "lifi" ? "LI.FI" : "Relay"}
                     {best && (
-                      <span className="ml-2 text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ background: "color-mix(in srgb, var(--success) 12%, transparent)", color: "var(--success)" }}>BEST</span>
+                      <span className="ml-2 text-[12px] px-1.5 py-0.5 rounded" style={{ background: "color-mix(in srgb, var(--success) 12%, transparent)", color: "var(--success)" }}>BEST</span>
                     )}
                   </span>
-                  <span className="font-mono" style={{ color: "var(--text-bright)" }}>{out.toPrecision(6)} {toToken?.symbol}</span>
+                  <span className="" style={{ color: "var(--text-bright)" }}>{out.toPrecision(6)} {toToken?.symbol}</span>
                 </button>
               );
             })}
@@ -387,7 +394,7 @@ export function SwapSection() {
         )}
 
         {quoteError && (
-          <p className="text-xs px-3 py-2 rounded-xl" style={{ background: "rgba(255,170,0,.1)", border: "1px solid rgba(255,170,0,.28)", color: "#FFC24B" }}>{quoteError}</p>
+          <p className="text-xs px-3 py-2 rounded-xl" style={{ background: "rgba(255,170,0,.1)", border: "1px solid rgba(255,170,0,.28)", color: "var(--warning)" }}>{quoteError}</p>
         )}
         {error && (
           <p className="text-xs px-3 py-2 rounded-xl" style={{ background: "color-mix(in srgb, var(--danger) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--danger) 30%, transparent)", color: "var(--danger)" }}>{error}</p>
@@ -397,7 +404,7 @@ export function SwapSection() {
             href={getExplorerUrl(net, txHash, "tx")}
             target="_blank"
             rel="noopener noreferrer"
-            className="block text-[11px] font-mono hover:underline"
+            className="block text-[12px] hover:underline"
             style={{ color: "var(--text-tertiary)" }}
           >
             {phase === "confirmed" ? "Swap confirmed - " : ""}{shortenHash(txHash)}
@@ -444,7 +451,7 @@ export function SwapSection() {
           </button>
         )}
 
-        <p className="text-center text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+        <p className="text-center text-[12px]" style={{ color: "var(--text-quaternary)" }}>
           Powered by LI.FI - quotes refresh as you type
         </p>
       </div>

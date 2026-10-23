@@ -184,7 +184,7 @@ export default function GenLayerMarketPage() {
     return (
       <DashboardLayout title="Predictions">
         <div className="flex items-center justify-center h-64">
-          <button onClick={openConnectModal} className="px-6 py-3 rounded-xl text-sm font-mono transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>Connect Wallet</button>
+          <button onClick={openConnectModal} className="px-6 py-3 rounded-xl text-sm transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>Connect Wallet</button>
         </div>
       </DashboardLayout>
     );
@@ -195,13 +195,13 @@ export default function GenLayerMarketPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" style={{ color: "#F59E0B" }} />
-            <h1 className="text-lg font-mono font-semibold" style={{ color: "var(--text-primary)" }}>Predictions</h1>
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: "color-mix(in srgb, #F59E0B 15%, transparent)", color: "#F59E0B" }}>AI</span>
+            <Sparkles className="w-5 h-5" style={{ color: "var(--warning)" }} />
+            <h1 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>Predictions</h1>
+            <span className="text-[12px] px-1.5 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--warning) 15%, transparent)", color: "var(--warning)" }}>AI</span>
           </div>
           <div className="flex items-center gap-2">
-            {!onGenLayer && <span className="text-[9px] px-2 py-1 rounded-full font-mono" style={{ background: "color-mix(in srgb, #EF4444 15%, transparent)", color: "#EF4444" }}>Switch to GenLayer</span>}
-            <button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 rounded-xl text-xs font-mono transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
+            {!onGenLayer && <span className="text-[12px] px-2 py-1 rounded-full" style={{ background: "color-mix(in srgb, var(--danger) 15%, transparent)", color: "var(--danger)" }}>Switch to GenLayer</span>}
+            <button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 rounded-xl text-xs transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
               {showCreate ? "Cancel" : "+ New"}
             </button>
           </div>
@@ -209,23 +209,23 @@ export default function GenLayerMarketPage() {
 
         {/* Daily Suggestions */}
         {allSuggestions.length > 0 && (
-          <div className="rounded-xl p-5 mb-6 space-y-3" style={{ background: "linear-gradient(135deg, color-mix(in srgb, #10B981 8%, var(--bg-strong)) 0%, color-mix(in srgb, #F59E0B 5%, var(--bg-strong)) 100%)", border: "1px solid color-mix(in srgb, #10B981 20%, transparent)" }}>
+          <div className="rounded-xl p-5 mb-6 space-y-3" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--success) 8%, var(--bg-strong)) 0%, color-mix(in srgb, var(--warning) 5%, var(--bg-strong)) 100%)", border: "1px solid color-mix(in srgb, var(--success) 20%, transparent)" }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" style={{ color: "#10B981" }} />
-                 <span className="text-xs font-mono font-semibold" style={{ color: "var(--text-primary)" }}>Today&apos;s Predictions</span>
-                <span className="text-[8px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: "color-mix(in srgb, #10B981 15%, transparent)", color: "#10B981" }}>CoinGecko</span>
+                <BarChart3 className="w-4 h-4" style={{ color: "var(--success)" }} />
+                 <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>Today&apos;s Predictions</span>
+                <span className="text-[12px] px-1.5 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--success) 15%, transparent)", color: "var(--success)" }}>CoinGecko</span>
               </div>
-              <p className="text-[9px] font-mono" style={{ color: "var(--text-quaternary)" }}>{allSuggestions.length} questions</p>
+              <p className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>{allSuggestions.length} questions</p>
             </div>
             <div className="space-y-2">
               {allSuggestions.slice(0, 6).map((s, i) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
                   <div className="flex-1 min-w-0 mr-3">
-                    <p className="text-[11px] font-mono" style={{ color: "var(--text-primary)" }}>{s.question}</p>
-                    <p className="text-[9px] font-mono mt-0.5" style={{ color: "var(--text-quaternary)" }}>Ends {new Date(s.resolvesAt * 1000).toLocaleString()}</p>
+                    <p className="text-[12px]" style={{ color: "var(--text-primary)" }}>{s.question}</p>
+                    <p className="text-[12px] mt-0.5" style={{ color: "var(--text-quaternary)" }}>Ends {new Date(s.resolvesAt * 1000).toLocaleString()}</p>
                   </div>
-                  <button onClick={() => handleFillSuggestion(s.question, s.resolvesAt)} className="px-3 py-1.5 rounded-lg text-[10px] font-mono whitespace-nowrap" style={{ background: "#F59E0B", color: "#000", border: "none" }}>
+                  <button onClick={() => handleFillSuggestion(s.question, s.resolvesAt)} className="px-3 py-1.5 rounded-lg text-[12px] whitespace-nowrap" style={{ background: "var(--warning)", color: "#000", border: "none" }}>
                     Use
                   </button>
                 </div>
@@ -238,8 +238,8 @@ export default function GenLayerMarketPage() {
         <div className="flex flex-wrap gap-2 mb-6">
           {QUICK_QUESTIONS.map((q) => (
             <button key={q} onClick={() => { setQuestion(q); setShowCreate(true); }}
-              className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80 text-left max-w-[280px]"
-              style={{ background: "color-mix(in srgb, #F59E0B 10%, transparent)", color: "#F59E0B", border: "1px solid color-mix(in srgb, #F59E0B 20%, transparent)" }}>
+              className="px-3 py-1.5 rounded-lg text-[12px] transition-all hover:opacity-80 text-left max-w-[280px]"
+              style={{ background: "color-mix(in srgb, var(--warning) 10%, transparent)", color: "var(--warning)", border: "1px solid color-mix(in srgb, var(--warning) 20%, transparent)" }}>
               {q}
             </button>
           ))}
@@ -249,21 +249,21 @@ export default function GenLayerMarketPage() {
         {showCreate && (
           <div className="rounded-xl p-6 mb-6 space-y-3" style={{ background: "var(--bg-strong)", border: "1px solid var(--border)" }}>
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--text-quaternary)" }}>Question</label>
-              <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={2} placeholder='Will BTC exceed $75,000 by end of week?' className="w-full mt-1 px-3 py-2 rounded-lg text-xs font-mono outline-none resize-none" style={{ background: "var(--bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
+              <label className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>Question</label>
+              <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={2} placeholder='Will BTC exceed $75,000 by end of week?' className="w-full mt-1 px-3 py-2 rounded-lg text-xs outline-none resize-none" style={{ background: "var(--bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
               {question && (() => {
                 const parsed = parseQuestion(question);
                 return parsed ? (
-                  <p className="text-[9px] font-mono mt-1" style={{ color: "#10B981" }}>Detected: {parsed.asset.toUpperCase()} {parsed.condition === "gt" ? ">" : "<"} ${parseInt(parsed.targetValue).toLocaleString()}</p>
+                  <p className="text-[12px] mt-1" style={{ color: "var(--success)" }}>Detected: {parsed.asset.toUpperCase()} {parsed.condition === "gt" ? ">" : "<"} ${parseInt(parsed.targetValue).toLocaleString()}</p>
                 ) : (
-                  <p className="text-[9px] font-mono mt-1" style={{ color: "#EF4444" }}>Add BTC/ETH/SOL/ADA/AVAX/LINK and a price target</p>
+                  <p className="text-[12px] mt-1" style={{ color: "var(--danger)" }}>Add BTC/ETH/SOL/ADA/AVAX/LINK and a price target</p>
                 );
               })()}
             </div>
             <div className="flex items-center gap-3">
               <div className="flex-1">
-                <label className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--text-quaternary)" }}>Resolves In</label>
-                <select value={resolvesIn} onChange={(e) => setResolvesIn(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-lg text-xs font-mono outline-none" style={{ background: "var(--bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
+                <label className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>Resolves In</label>
+                <select value={resolvesIn} onChange={(e) => setResolvesIn(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-lg text-xs outline-none" style={{ background: "var(--bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
                   <option value="1">1 hour</option>
                   <option value="4">4 hours</option>
                   <option value="24">24 hours</option>
@@ -272,7 +272,7 @@ export default function GenLayerMarketPage() {
                   <option value="168">7 days</option>
                 </select>
               </div>
-              <button onClick={handleCreate} disabled={!question.trim()} className="mt-5 px-6 py-2.5 rounded-xl text-xs font-mono transition-all hover:opacity-80 disabled:opacity-40" style={{ background: "#F59E0B", color: "#000", border: "none" }}>
+              <button onClick={handleCreate} disabled={!question.trim()} className="mt-5 px-6 py-2.5 rounded-xl text-xs transition-all hover:opacity-80 disabled:opacity-40" style={{ background: "var(--warning)", color: "#000", border: "none" }}>
                 Create Market
               </button>
             </div>
@@ -281,9 +281,9 @@ export default function GenLayerMarketPage() {
 
         {/* Markets */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-8"><GenLayerSpinner size={28} /><p className="text-xs font-mono" style={{ color: "var(--text-quaternary)" }}>Loading markets...</p></div>
+          <div className="flex flex-col items-center justify-center gap-3 py-8"><GenLayerSpinner size={28} /><p className="text-xs" style={{ color: "var(--text-quaternary)" }}>Loading markets...</p></div>
         ) : markets.length === 0 ? (
-          <p className="text-xs font-mono py-8 text-center" style={{ color: "var(--text-quaternary)" }}>No markets yet — create one!</p>
+          <p className="text-xs py-8 text-center" style={{ color: "var(--text-quaternary)" }}>No markets yet — create one!</p>
         ) : (
           <div className="space-y-3">
             {markets.map((m) => {
@@ -292,36 +292,36 @@ export default function GenLayerMarketPage() {
               return (
                 <div key={m.id} className="rounded-xl p-4 space-y-3" style={{ background: "var(--bg-strong)", border: "1px solid var(--border)" }}>
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-mono font-semibold leading-snug" style={{ color: "var(--text-primary)" }}>{m.question}</p>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-mono shrink-0" style={{
-                      background: m.resolved ? "color-mix(in srgb, #8B5CF6 15%, transparent)" : isExpired ? "color-mix(in srgb, #EF4444 15%, transparent)" : "color-mix(in srgb, #10B981 15%, transparent)",
-                      color: m.resolved ? "#8B5CF6" : isExpired ? "#EF4444" : "#10B981",
+                    <p className="text-sm font-semibold leading-snug" style={{ color: "var(--text-primary)" }}>{m.question}</p>
+                    <span className="text-[12px] px-2 py-0.5 rounded-full shrink-0" style={{
+                      background: m.resolved ? "color-mix(in srgb, var(--accent) 15%, transparent)" : isExpired ? "color-mix(in srgb, var(--danger) 15%, transparent)" : "color-mix(in srgb, var(--success) 15%, transparent)",
+                      color: m.resolved ? "var(--accent)" : isExpired ? "var(--danger)" : "var(--success)",
                     }}>
                       {m.resolved ? `Resolved: ${m.outcome}` : isExpired ? "Expired" : "Open"}
                     </span>
                   </div>
-                  <div className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+                  <div className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>
                     {m.condition} {m.target_value} · Source: {m.source_url?.includes("BTC") ? "BTC" : m.source_url?.includes("ETH") ? "ETH" : m.source_url?.includes("SOL") ? "SOL" : "Custom"}
                   </div>
                   {poolTotal > 0 && (
                     <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--bg)" }}>
-                      <div className="h-full rounded-full transition-all" style={{ width: `${((m.yes_pool || 0) / poolTotal) * 100}%`, background: "linear-gradient(90deg, #10B981, #F59E0B)" }} />
+                      <div className="h-full rounded-full transition-all" style={{ width: `${((m.yes_pool || 0) / poolTotal) * 100}%`, background: "linear-gradient(90deg, var(--success), var(--warning))" }} />
                     </div>
                   )}
                   <div className="flex gap-2">
                     {!m.resolved && (
                       isExpired ? (
                         <div className="flex gap-2 w-full">
-                          <button onClick={() => handleResolve(m.id)} className="flex-1 py-2 rounded-lg text-xs font-mono font-semibold transition-all hover:opacity-80" style={{ background: "#8B5CF6", color: "#fff", border: "none" }}>
+                          <button onClick={() => handleResolve(m.id)} className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80" style={{ background: "var(--accent)", color: "#fff", border: "none" }}>
                             Resolve (AI Verdict)
                           </button>
                         </div>
                       ) : (
                         <>
-                          <button onClick={() => handlePredict(m.id, 1)} disabled={predicting === m.id} className="flex-1 py-2 rounded-lg text-xs font-mono font-semibold transition-all hover:opacity-80 disabled:opacity-40 flex items-center justify-center gap-1.5" style={{ background: "color-mix(in srgb, #10B981 15%, transparent)", color: "#10B981", border: "1px solid color-mix(in srgb, #10B981 30%, transparent)" }}>
+                          <button onClick={() => handlePredict(m.id, 1)} disabled={predicting === m.id} className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80 disabled:opacity-40 flex items-center justify-center gap-1.5" style={{ background: "color-mix(in srgb, var(--success) 15%, transparent)", color: "var(--success)", border: "1px solid color-mix(in srgb, var(--success) 30%, transparent)" }}>
                             <TrendingUp className="w-3.5 h-3.5" /> YES · {m.yes_pool}
                           </button>
-                          <button onClick={() => handlePredict(m.id, 0)} disabled={predicting === m.id} className="flex-1 py-2 rounded-lg text-xs font-mono font-semibold transition-all hover:opacity-80 disabled:opacity-40 flex items-center justify-center gap-1.5" style={{ background: "color-mix(in srgb, #EF4444 15%, transparent)", color: "#EF4444", border: "1px solid color-mix(in srgb, #EF4444 30%, transparent)" }}>
+                          <button onClick={() => handlePredict(m.id, 0)} disabled={predicting === m.id} className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80 disabled:opacity-40 flex items-center justify-center gap-1.5" style={{ background: "color-mix(in srgb, var(--danger) 15%, transparent)", color: "var(--danger)", border: "1px solid color-mix(in srgb, var(--danger) 30%, transparent)" }}>
                             <TrendingDown className="w-3.5 h-3.5" /> NO · {m.no_pool}
                           </button>
                         </>
@@ -334,14 +334,14 @@ export default function GenLayerMarketPage() {
           </div>
         )}
 
-        {actionMsg && <p className="text-[11px] font-mono mt-3" style={{ color: "var(--text-secondary)" }}>{actionMsg}</p>}
+        {actionMsg && <p className="text-[12px] mt-3" style={{ color: "var(--text-secondary)" }}>{actionMsg}</p>}
 
         {log.length > 0 && (
           <div className="mt-8">
-            <p className="text-[9px] font-mono uppercase mb-2" style={{ color: "var(--text-quaternary)" }}>Log</p>
+            <p className="text-[12px] mb-2" style={{ color: "var(--text-quaternary)" }}>Log</p>
             <div className="rounded-xl p-3 max-h-32 overflow-y-auto" style={{ background: "var(--bg-strong)", border: "1px solid var(--border)" }}>
               {log.map((msg, i) => (
-                <p key={i} className="text-[9px] font-mono leading-relaxed" style={{ color: "var(--text-quaternary)" }}>{msg}</p>
+                <p key={i} className="text-[12px] leading-relaxed" style={{ color: "var(--text-quaternary)" }}>{msg}</p>
               ))}
             </div>
           </div>

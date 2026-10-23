@@ -19,13 +19,18 @@ import {
  */
 export function useUtcDay(onNewDay?: (newDay: number) => void) {
   const [day, setDay] = useState(() => utcDayNumber());
-  const [countdown, setCountdown] = useState(() => formatCountdown(msUntilNextUtcMidnight()));
+  const [countdown, setCountdown] = useState("0m 0s");
   // kept in a ref so the timer never needs to be rebuilt when a callback changes
   const cb = useRef(onNewDay);
   cb.current = onNewDay;
 
   useEffect(() => {
     let alive = true;
+
+    // Initialize countdown after mount to avoid hydration mismatch
+    const initCountdown = () => {
+      setCountdown(formatCountdown(msUntilNextUtcMidnight()));
+    };
 
     const tick = () => {
       if (!alive) return;
@@ -53,6 +58,8 @@ export function useUtcDay(onNewDay?: (newDay: number) => void) {
       }, msUntilNextUtcMidnight() + 250);
     };
 
+    // Initialize after first render to avoid hydration mismatch
+    initCountdown();
     tick();
     schedule();
     interval = setInterval(tick, 1000);

@@ -17,7 +17,7 @@ export function useIsLightTheme(): boolean {
   useEffect(() => {
     const read = () =>
       setIsLight(
-        document.documentElement.getAttribute("data-theme") === "web3-light"
+        document.documentElement.getAttribute("data-theme") !== "dark"
       );
 
     // The html tag ships with data-theme already set, so read before observing.

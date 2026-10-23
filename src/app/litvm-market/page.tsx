@@ -103,7 +103,7 @@ export default function LitVMMarketPage() {
     return (
       <DashboardLayout title="Predictions">
         <div className="flex items-center justify-center h-64">
-          <button onClick={openConnectModal} className="px-6 py-3 rounded-xl text-sm font-mono transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>Connect Wallet</button>
+          <button onClick={openConnectModal} className="px-6 py-3 rounded-xl text-sm transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>Connect Wallet</button>
         </div>
       </DashboardLayout>
     );
@@ -114,12 +114,12 @@ export default function LitVMMarketPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" style={{ color: "#8B5CF6" }} />
-            <h1 className="text-lg font-mono font-semibold" style={{ color: "var(--text-primary)" }}>Predictions</h1>
+            <Sparkles className="w-5 h-5" style={{ color: "var(--accent-text)" }} />
+            <h1 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>Predictions</h1>
           </div>
           <div className="flex items-center gap-2">
-            {!onLiteVM && <span className="text-[9px] px-2 py-1 rounded-full font-mono" style={{ background: "color-mix(in srgb, #EF4444 15%, transparent)", color: "#EF4444" }}>Switch to LITVM</span>}
-            <button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 rounded-xl text-xs font-mono transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
+            {!onLiteVM && <span className="text-[12px] px-2 py-1 rounded-full" style={{ background: "color-mix(in srgb, var(--danger) 15%, transparent)", color: "var(--danger)" }}>Switch to LITVM</span>}
+            <button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 rounded-xl text-xs transition-all hover:opacity-80" style={{ background: "var(--bg-strong)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
               {showCreate ? "Cancel" : "+ New"}
             </button>
           </div>
@@ -129,8 +129,8 @@ export default function LitVMMarketPage() {
         <div className="flex flex-wrap gap-2 mb-6">
           {QUICK_QUESTIONS.map((q) => (
             <button key={q} onClick={() => { setCreateQuestion(q); setShowCreate(true); }}
-              className="px-3 py-1.5 rounded-lg text-[10px] font-mono transition-all hover:opacity-80 text-left max-w-[280px]"
-              style={{ background: "color-mix(in srgb, #8B5CF6 10%, transparent)", color: "#8B5CF6", border: "1px solid color-mix(in srgb, #8B5CF6 20%, transparent)" }}>
+              className="px-3 py-1.5 rounded-lg text-[12px] transition-all hover:opacity-80 text-left max-w-[280px]"
+              style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent-text)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
               {q}
             </button>
           ))}
@@ -140,13 +140,13 @@ export default function LitVMMarketPage() {
         {showCreate && (
           <div className="rounded-xl p-6 mb-6 space-y-3" style={{ background: "var(--bg-strong)", border: "1px solid var(--border)" }}>
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--text-quaternary)" }}>Question</label>
-              <textarea value={createQuestion} onChange={(e) => setCreateQuestion(e.target.value)} rows={2} placeholder='Will BTC exceed $75,000 by end of week?' className="w-full mt-1 px-3 py-2 rounded-lg text-xs font-mono outline-none resize-none" style={{ background: "var(--bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
+              <label className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>Question</label>
+              <textarea value={createQuestion} onChange={(e) => setCreateQuestion(e.target.value)} rows={2} placeholder='Will BTC exceed $75,000 by end of week?' className="w-full mt-1 px-3 py-2 rounded-lg text-xs outline-none resize-none" style={{ background: "var(--bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
             </div>
             <div className="flex items-center gap-3">
               <div className="flex-1">
-                <label className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--text-quaternary)" }}>Resolves In</label>
-                <select value={createHours} onChange={(e) => setCreateHours(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-lg text-xs font-mono outline-none" style={{ background: "var(--bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
+                <label className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>Resolves In</label>
+                <select value={createHours} onChange={(e) => setCreateHours(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-lg text-xs outline-none" style={{ background: "var(--bg)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
                   <option value="1">1 hour</option>
                   <option value="4">4 hours</option>
                   <option value="24">24 hours</option>
@@ -156,7 +156,7 @@ export default function LitVMMarketPage() {
                   <option value="720">30 days</option>
                 </select>
               </div>
-              <button onClick={() => handleCreate(createQuestion, createHours)} disabled={!createQuestion.trim()} className="mt-5 px-6 py-2.5 rounded-xl text-xs font-mono transition-all hover:opacity-80 disabled:opacity-40" style={{ background: "#8B5CF6", color: "#fff", border: "none" }}>
+              <button onClick={() => handleCreate(createQuestion, createHours)} disabled={!createQuestion.trim()} className="mt-5 px-6 py-2.5 rounded-xl text-xs transition-all hover:opacity-80 disabled:opacity-40" style={{ background: "var(--accent)", color: "#fff", border: "none" }}>
                 Create Market
               </button>
             </div>
@@ -164,23 +164,23 @@ export default function LitVMMarketPage() {
         )}
 
         {/* Daily Suggestions */}{suggestions.length > 0 && (
-          <div className="rounded-xl p-5 mb-6 space-y-3" style={{ background: "linear-gradient(135deg, color-mix(in srgb, #10B981 8%, var(--bg-strong)) 0%, color-mix(in srgb, #8B5CF6 5%, var(--bg-strong)) 100%)", border: "1px solid color-mix(in srgb, #10B981 20%, transparent)" }}>
+          <div className="rounded-xl p-5 mb-6 space-y-3" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--success) 8%, var(--bg-strong)) 0%, color-mix(in srgb, var(--accent) 5%, var(--bg-strong)) 100%)", border: "1px solid color-mix(in srgb, var(--success) 20%, transparent)" }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" style={{ color: "#10B981" }} />
-                 <span className="text-xs font-mono font-semibold" style={{ color: "var(--text-primary)" }}>Today&apos;s Predictions</span>
-                <span className="text-[8px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: "color-mix(in srgb, #10B981 15%, transparent)", color: "#10B981" }}>CoinGecko</span>
+                <BarChart3 className="w-4 h-4" style={{ color: "var(--success)" }} />
+                 <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>Today&apos;s Predictions</span>
+                <span className="text-[12px] px-1.5 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--success) 15%, transparent)", color: "var(--success)" }}>CoinGecko</span>
               </div>
-              <p className="text-[9px] font-mono" style={{ color: "var(--text-quaternary)" }}>{suggestions.length} questions</p>
+              <p className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>{suggestions.length} questions</p>
             </div>
             <div className="space-y-2">
               {suggestions.slice(0, 6).map((s, i) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
                   <div className="flex-1 min-w-0 mr-3">
-                    <p className="text-[11px] font-mono" style={{ color: "var(--text-primary)" }}>{s.question}</p>
-                    <p className="text-[9px] font-mono mt-0.5" style={{ color: "var(--text-quaternary)" }}>Ends {new Date(s.resolvesAt * 1000).toLocaleString()}</p>
+                    <p className="text-[12px]" style={{ color: "var(--text-primary)" }}>{s.question}</p>
+                    <p className="text-[12px] mt-0.5" style={{ color: "var(--text-quaternary)" }}>Ends {new Date(s.resolvesAt * 1000).toLocaleString()}</p>
                   </div>
-                  <button onClick={() => handleCreate(s.question, String(Math.max(1, Math.round((s.resolvesAt - Date.now() / 1000) / 3600))))} className="px-3 py-1.5 rounded-lg text-[10px] font-mono whitespace-nowrap" style={{ background: "#10B981", color: "#000", border: "none" }}>
+                  <button onClick={() => handleCreate(s.question, String(Math.max(1, Math.round((s.resolvesAt - Date.now() / 1000) / 3600))))} className="px-3 py-1.5 rounded-lg text-[12px] whitespace-nowrap" style={{ background: "var(--success)", color: "#000", border: "none" }}>
                     Create
                   </button>
                 </div>
@@ -191,9 +191,9 @@ export default function LitVMMarketPage() {
 
         {/* Active markets */}
         <div>
-          <p className="text-[10px] font-mono uppercase tracking-wider mb-3" style={{ color: "var(--text-quaternary)" }}>Active Markets</p>
+          <p className="text-[12px] mb-3" style={{ color: "var(--text-quaternary)" }}>Active Markets</p>
           {!activeMarkets || (activeMarkets as any[])?.length === 0 ? (
-            <p className="text-xs font-mono py-8 text-center" style={{ color: "var(--text-quaternary)" }}>No active markets — create one!</p>
+            <p className="text-xs py-8 text-center" style={{ color: "var(--text-quaternary)" }}>No active markets — create one!</p>
           ) : (
             <div className="space-y-3">
               {(activeMarkets as any[])?.map((m: any) => {
@@ -203,35 +203,35 @@ export default function LitVMMarketPage() {
                 return (
                   <div key={String(m.id)} className="rounded-xl p-4 space-y-3" style={{ background: "var(--bg-strong)", border: "1px solid var(--border)" }}>
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-mono font-semibold leading-snug" style={{ color: "var(--text-primary)" }}>{m.question}</p>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-mono shrink-0" style={{
-                        background: m.resolved ? "color-mix(in srgb, #8B5CF6 15%, transparent)" : isExpired ? "color-mix(in srgb, #EF4444 15%, transparent)" : "color-mix(in srgb, #10B981 15%, transparent)",
-                        color: m.resolved ? "#8B5CF6" : isExpired ? "#EF4444" : "#10B981",
+                      <p className="text-sm font-semibold leading-snug" style={{ color: "var(--text-primary)" }}>{m.question}</p>
+                      <span className="text-[12px] px-2 py-0.5 rounded-full shrink-0" style={{
+                        background: m.resolved ? "color-mix(in srgb, var(--accent) 15%, transparent)" : isExpired ? "color-mix(in srgb, var(--danger) 15%, transparent)" : "color-mix(in srgb, var(--success) 15%, transparent)",
+                        color: m.resolved ? "var(--accent)" : isExpired ? "var(--danger)" : "var(--success)",
                       }}>
                         {m.resolved ? m.outcome ? "YES ✓" : "NO ✗" : isExpired ? "Expired" : "Open"}
                       </span>
                     </div>
                     {poolTotal > 0 && (
                       <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--bg)" }}>
-                        <div className="h-full rounded-full transition-all" style={{ width: `${yesPct}%`, background: "linear-gradient(90deg, #10B981, #EF4444)" }} />
+                        <div className="h-full rounded-full transition-all" style={{ width: `${yesPct}%`, background: "linear-gradient(90deg, var(--success), var(--danger))" }} />
                       </div>
                     )}
-                    <div className="flex items-center justify-between text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+                    <div className="flex items-center justify-between text-[12px]" style={{ color: "var(--text-quaternary)" }}>
                       <span>Ends {new Date(Number(m.resolvesAt) * 1000).toLocaleString()}</span>
                       <span>Pool: {poolTotal} zkLTC</span>
                     </div>
                     <div className="flex gap-2">
                       {!m.resolved && (
                         isExpired ? (
-                          <button onClick={() => handleResolve(m.id, true, m.question)} className="flex-1 py-2 rounded-lg text-xs font-mono font-semibold transition-all hover:opacity-80" style={{ background: "#8B5CF6", color: "#fff", border: "none" }}>
+                          <button onClick={() => handleResolve(m.id, true, m.question)} className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80" style={{ background: "var(--accent)", color: "#fff", border: "none" }}>
                             Resolve YES
                           </button>
                         ) : (
                           <>
-                            <button onClick={() => handlePredict(m.id, true, m.question)} className="flex-1 py-2 rounded-lg text-xs font-mono font-semibold transition-all hover:opacity-80 flex items-center justify-center gap-1.5" style={{ background: "color-mix(in srgb, #10B981 15%, transparent)", color: "#10B981", border: "1px solid color-mix(in srgb, #10B981 30%, transparent)" }}>
+                            <button onClick={() => handlePredict(m.id, true, m.question)} className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80 flex items-center justify-center gap-1.5" style={{ background: "color-mix(in srgb, var(--success) 15%, transparent)", color: "var(--success)", border: "1px solid color-mix(in srgb, var(--success) 30%, transparent)" }}>
                               <TrendingUp className="w-3.5 h-3.5" /> YES · {Number(m.yesPool)}
                             </button>
-                            <button onClick={() => handlePredict(m.id, false, m.question)} className="flex-1 py-2 rounded-lg text-xs font-mono font-semibold transition-all hover:opacity-80 flex items-center justify-center gap-1.5" style={{ background: "color-mix(in srgb, #EF4444 15%, transparent)", color: "#EF4444", border: "1px solid color-mix(in srgb, #EF4444 30%, transparent)" }}>
+                            <button onClick={() => handlePredict(m.id, false, m.question)} className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80 flex items-center justify-center gap-1.5" style={{ background: "color-mix(in srgb, var(--danger) 15%, transparent)", color: "var(--danger)", border: "1px solid color-mix(in srgb, var(--danger) 30%, transparent)" }}>
                               <TrendingDown className="w-3.5 h-3.5" /> NO · {Number(m.noPool)}
                             </button>
                           </>
@@ -245,14 +245,14 @@ export default function LitVMMarketPage() {
           )}
         </div>
 
-        {actionMsg && <p className="text-[11px] font-mono mt-3" style={{ color: "var(--text-secondary)" }}>{actionMsg}</p>}
+        {actionMsg && <p className="text-[12px] mt-3" style={{ color: "var(--text-secondary)" }}>{actionMsg}</p>}
 
         {log.length > 0 && (
           <div className="mt-8">
-            <p className="text-[9px] font-mono uppercase mb-2" style={{ color: "var(--text-quaternary)" }}>Log</p>
+            <p className="text-[12px] mb-2" style={{ color: "var(--text-quaternary)" }}>Log</p>
             <div className="rounded-xl p-3 max-h-32 overflow-y-auto" style={{ background: "var(--bg-strong)", border: "1px solid var(--border)" }}>
               {log.map((msg, i) => (
-                <p key={i} className="text-[9px] font-mono leading-relaxed" style={{ color: "var(--text-quaternary)" }}>{msg}</p>
+                <p key={i} className="text-[12px] leading-relaxed" style={{ color: "var(--text-quaternary)" }}>{msg}</p>
               ))}
             </div>
           </div>

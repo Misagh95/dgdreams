@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -25,25 +25,25 @@ const TIER_STYLE: Record<
 > = {
   low: {
     label: "Low risk",
-    color: "#00B17E",
+    color: "var(--success)",
     Icon: ShieldCheck,
     blurb: "Nothing unusual found. Your activity looks like a normal wallet.",
   },
   watch: {
     label: "Worth a look",
-    color: "#FFB020",
+    color: "var(--warning)",
     Icon: ShieldAlert,
     blurb: "One or two patterns stood out. Not enough on their own to mean anything.",
   },
   elevated: {
     label: "Elevated risk",
-    color: "#FF8A4C",
+    color: "var(--warning)",
     Icon: ShieldAlert,
     blurb: "Several independent signals agree. Worth reviewing if this is not you.",
   },
   severe: {
     label: "Severe risk",
-    color: "#FF6B6B",
+    color: "var(--danger)",
     Icon: ShieldAlert,
     blurb: "Many independent signals agree that this wallet behaves like a farm.",
   },
@@ -80,13 +80,13 @@ export default function SybilRiskPage() {
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "#00d4ff18", border: "1px solid #00d4ff33" }}
+              style={{ background: "var(--accent)18", border: "1px solid var(--accent)33" }}
             >
-              <ShieldCheck className="w-5 h-5" style={{ color: "#00d4ff" }} />
+              <ShieldCheck className="w-5 h-5" style={{ color: "var(--accent-text)" }} />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-base font-semibold text-[#e2e8f0]">Sybil Risk Score</h1>
-              <p className="text-[11px] font-mono text-[#64748b]">
+              <h1 className="text-base font-semibold text-[var(--text-bright)]">Sybil Risk Score</h1>
+              <p className="text-[12px] text-[var(--text-tertiary)]">
                 {"// one person, many wallets, farming the same rewards"}
               </p>
             </div>
@@ -94,8 +94,8 @@ export default function SybilRiskPage() {
               <button
                 onClick={() => void load()}
                 disabled={loading}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-opacity hover:opacity-80 disabled:opacity-40"
-                style={{ background: "rgba(0,212,255,0.1)", border: "1px solid rgba(0,212,255,0.25)", color: "#00d4ff" }}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-opacity hover:opacity-80 disabled:opacity-40"
+                style={{ background: "rgba(0,212,255,0.1)", border: "1px solid rgba(0,212,255,0.25)", color: "var(--accent-text)" }}
               >
                 <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
                 Refresh
@@ -128,7 +128,7 @@ export default function SybilRiskPage() {
  */
 function NoDataNote({ report, address }: { report: SybilReport; address?: string }) {
   return (
-    <motion.section
+    <m.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
@@ -138,26 +138,26 @@ function NoDataNote({ report, address }: { report: SybilReport; address?: string
         <div className="relative w-24 h-24 shrink-0">
           <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
             <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="8" />
-            <circle cx="50" cy="50" r="42" fill="none" stroke="#334155" strokeWidth="8" strokeLinecap="round" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="var(--text-faint)" strokeWidth="8" strokeLinecap="round" />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-mono font-bold text-[#334155]">0</span>
-            <span className="text-[9px] font-mono text-[#475569]">/100</span>
+            <span className="text-2xl font-bold text-[var(--text-faint)]">0</span>
+            <span className="text-[12px] text-[var(--text-tertiary)]">/100</span>
           </div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Info className="w-4 h-4" style={{ color: "#FFB020" }} />
-            <span className="text-sm font-semibold" style={{ color: "#FFB020" }}>
+            <Info className="w-4 h-4" style={{ color: "var(--warning)" }} />
+            <span className="text-sm font-semibold" style={{ color: "var(--warning)" }}>
               No activity on record
             </span>
           </div>
-          <p className="text-xs text-[#94a3b8] mt-1 leading-relaxed">
-            This score is <strong className="text-[#e2e8f0]">not a clean bill of health</strong> —
+          <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
+            This score is <strong className="text-[var(--text-bright)]">not a clean bill of health</strong> —
             it is an absence of evidence. Nothing was measured, so nothing was found.
           </p>
           {address && (
-            <p className="text-[10px] font-mono text-[#475569] mt-2">
+            <p className="text-[12px] text-[var(--text-tertiary)] mt-2">
               {shortenAddress(address)} · {report.networks} network
               {report.networks === 1 ? "" : "s"} · {report.signals.length} signal
               {report.signals.length === 1 ? "" : "s"}
@@ -170,23 +170,23 @@ function NoDataNote({ report, address }: { report: SybilReport; address?: string
         className="rounded-lg p-3 mt-4"
         style={{ background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.2)" }}
       >
-        <p className="text-[11px] text-[#00d4ff] font-medium mb-1">To get a real score</p>
-        <ul className="text-[11px] text-[#64748b] space-y-1 leading-relaxed">
+        <p className="text-[12px] text-[var(--accent-text)] font-medium mb-1">To get a real score</p>
+        <ul className="text-[12px] text-[var(--text-tertiary)] space-y-1 leading-relaxed">
           <li>· Complete your daily tasks so a streak is recorded on-chain.</li>
           <li>· Play 2048 or join a tournament, so activity is on record.</li>
           <li>· Link a social handle in your profile.</li>
         </ul>
       </div>
-    </motion.section>
+    </m.section>
   );
 }
 
 function NotConnected() {
   return (
     <div className="glass-panel rounded-xl p-8 text-center">
-      <Wallet className="w-7 h-7 mx-auto mb-3 text-[#475569]" />
-      <p className="text-sm text-[#94a3b8] font-medium">Connect your wallet</p>
-      <p className="text-xs text-[#64748b] mt-1 font-mono">
+      <Wallet className="w-7 h-7 mx-auto mb-3 text-[var(--text-tertiary)]" />
+      <p className="text-sm text-[var(--text-secondary)] font-medium">Connect your wallet</p>
+      <p className="text-xs text-[var(--text-tertiary)] mt-1">
         The score is computed for your own address only.
       </p>
     </div>
@@ -199,8 +199,8 @@ function ErrorNote({ message }: { message: string }) {
       className="rounded-xl p-4 flex items-start gap-3"
       style={{ background: "rgba(255,176,32,0.08)", border: "1px solid rgba(255,176,32,0.3)" }}
     >
-      <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#FFB020" }} />
-      <p className="text-xs font-mono" style={{ color: "#FFB020" }}>
+      <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--warning)" }} />
+      <p className="text-xs" style={{ color: "var(--warning)" }}>
         {message}
       </p>
     </div>
@@ -211,9 +211,9 @@ function Skeleton({ loading }: { loading: boolean }) {
   return (
     <div className="glass-panel rounded-xl p-8 text-center">
       <RefreshCw
-        className={`w-5 h-5 mx-auto mb-3 text-[#00d4ff] ${loading ? "animate-spin" : ""}`}
+        className={`w-5 h-5 mx-auto mb-3 text-[var(--accent-text)] ${loading ? "animate-spin" : ""}`}
       />
-      <p className="text-xs text-[#64748b] font-mono">
+      <p className="text-xs text-[var(--text-tertiary)]">
         {loading ? "reading on-chain activity…" : "no score loaded yet"}
       </p>
     </div>
@@ -229,7 +229,7 @@ function ScoreCard({ report, address }: { report: SybilReport; address?: string 
   return (
     <>
       {/* ── headline score ── */}
-      <motion.section
+      <m.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
@@ -244,7 +244,7 @@ function ScoreCard({ report, address }: { report: SybilReport; address?: string 
                 cx="50" cy="50" r="42"
                 fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="8"
               />
-              <motion.circle
+              <m.circle
                 cx="50" cy="50" r="42"
                 fill="none" stroke={tier.color} strokeWidth="8"
                 strokeLinecap="round"
@@ -255,10 +255,10 @@ function ScoreCard({ report, address }: { report: SybilReport; address?: string 
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-mono font-bold" style={{ color: tier.color }}>
+              <span className="text-2xl font-bold" style={{ color: tier.color }}>
                 {report.score}
               </span>
-              <span className="text-[9px] font-mono text-[#475569]">/100</span>
+              <span className="text-[12px] text-[var(--text-tertiary)]">/100</span>
             </div>
           </div>
 
@@ -269,9 +269,9 @@ function ScoreCard({ report, address }: { report: SybilReport; address?: string 
                 {tier.label}
               </span>
             </div>
-            <p className="text-xs text-[#94a3b8] mt-1 leading-relaxed">{tier.blurb}</p>
+            <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{tier.blurb}</p>
             {address && (
-              <p className="text-[10px] font-mono text-[#475569] mt-2">
+              <p className="text-[12px] text-[var(--text-tertiary)] mt-2">
                 {shortenAddress(address)}
               </p>
             )}
@@ -287,50 +287,50 @@ function ScoreCard({ report, address }: { report: SybilReport; address?: string 
             label="Confidence"
             value={report.confidence}
             hint="how much data backed this score"
-            color={report.confidence >= 60 ? "#00B17E" : "#FFB020"}
+            color={report.confidence >= 60 ? "var(--success)" : "var(--warning)"}
           />
           <Meter
             label="Data coverage"
             value={report.coverage}
             hint="how much we could measure at all"
-            color={report.coverage >= 60 ? "#00B17E" : "#FFB020"}
+            color={report.coverage >= 60 ? "var(--success)" : "var(--warning)"}
           />
         </div>
-      </motion.section>
+      </m.section>
 
       {/* ── family breakdown ── */}
       <section className="glass-panel rounded-xl p-5">
-        <h2 className="text-xs font-semibold text-[#e2e8f0] mb-1">What each family saw</h2>
-        <p className="text-[10px] font-mono text-[#475569] mb-4">
+        <h2 className="text-xs font-semibold text-[var(--text-bright)] mb-1">What each family saw</h2>
+        <p className="text-[12px] text-[var(--text-tertiary)] mb-4">
           {"// risk only escalates when independent families agree"}
         </p>
         <div className="space-y-3">
           {FAMILY_META.map((f) => {
             const risk = report.families[f.key] ?? 0;
             const fired = report.triggeredFamilies.includes(f.key);
-            const color = risk >= 0.6 ? "#FF6B6B" : risk >= 0.3 ? "#FFB020" : risk > 0 ? "#00d4ff" : "#334155";
+            const color = risk >= 0.6 ? "var(--danger)" : risk >= 0.3 ? "var(--warning)" : risk > 0 ? "var(--accent)" : "var(--text-faint)";
             return (
               <div key={f.key} className="flex items-center gap-3">
-                <f.Icon className="w-3.5 h-3.5 shrink-0" style={{ color: fired ? color : "#475569" }} />
+                <f.Icon className="w-3.5 h-3.5 shrink-0" style={{ color: fired ? color : "var(--text-tertiary)" }} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-[#94a3b8] flex items-center gap-1.5">
+                    <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
                       {f.label}
                       {fired && (
                         <span
-                          className="text-[9px] font-mono px-1.5 py-0.5 rounded"
+                          className="text-[12px] px-1.5 py-0.5 rounded"
                           style={{ background: `${color}1f`, color }}
                         >
                           fired
                         </span>
                       )}
                     </span>
-                    <span className="text-[10px] font-mono" style={{ color }}>
+                    <span className="text-[12px]" style={{ color }}>
                       {Math.round(risk * 100)}%
                     </span>
                   </div>
                   <div className="h-1 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                    <motion.div
+                    <m.div
                       className="h-full rounded-full"
                       style={{ background: color }}
                       initial={{ width: 0 }}
@@ -338,7 +338,7 @@ function ScoreCard({ report, address }: { report: SybilReport; address?: string 
                       transition={{ duration: 0.6, ease: "easeOut" }}
                     />
                   </div>
-                  <p className="text-[10px] text-[#475569] mt-1">{f.hint}</p>
+                  <p className="text-[12px] text-[var(--text-tertiary)] mt-1">{f.hint}</p>
                 </div>
               </div>
             );
@@ -348,18 +348,18 @@ function ScoreCard({ report, address }: { report: SybilReport; address?: string 
 
       {/* ── individual signals ── */}
       <section className="glass-panel rounded-xl p-5">
-        <h2 className="text-xs font-semibold text-[#e2e8f0] mb-1">Signals measured</h2>
-        <p className="text-[10px] font-mono text-[#475569] mb-4">
+        <h2 className="text-xs font-semibold text-[var(--text-bright)] mb-1">Signals measured</h2>
+        <p className="text-[12px] text-[var(--text-tertiary)] mb-4">
           {`// ${report.signals.length} indicator${report.signals.length === 1 ? "" : "s"} from ${report.networks} network${report.networks === 1 ? "" : "s"}`}
         </p>
         {report.signals.length === 0 ? (
-          <p className="text-xs text-[#64748b] font-mono">
+          <p className="text-xs text-[var(--text-tertiary)]">
             Not enough activity recorded yet to measure anything.
           </p>
         ) : (
           <div className="space-y-2">
             {report.signals.map((s, i) => (
-              <motion.div
+              <m.div
                 key={`${s.id}-${i}`}
                 initial={{ opacity: 0, x: -6 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -368,24 +368,24 @@ function ScoreCard({ report, address }: { report: SybilReport; address?: string 
                 style={{ background: "rgba(6,13,26,0.6)", border: "1px solid rgba(26,58,92,0.3)" }}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-[#94a3b8] font-mono">{s.id}</span>
+                  <span className="text-xs font-medium text-[var(--text-secondary)]">{s.id}</span>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[9px] font-mono text-[#475569]">
+                    <span className="text-[12px] text-[var(--text-tertiary)]">
                       conf {Math.round(s.confidence * 100)}%
                     </span>
                     <span
-                      className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                      className="text-[12px] px-1.5 py-0.5 rounded"
                       style={{
-                        background: s.risk >= 0.6 ? "#FF6B6B1f" : s.risk >= 0.3 ? "#FFB0201f" : "#00d4ff1f",
-                        color: s.risk >= 0.6 ? "#FF6B6B" : s.risk >= 0.3 ? "#FFB020" : "#00d4ff",
+                        background: s.risk >= 0.6 ? "var(--danger)1f" : s.risk >= 0.3 ? "var(--warning)1f" : "var(--accent)1f",
+                        color: s.risk >= 0.6 ? "var(--danger)" : s.risk >= 0.3 ? "var(--warning)" : "var(--accent)",
                       }}
                     >
                       risk {Math.round(s.risk * 100)}%
                     </span>
                   </div>
                 </div>
-                <p className="text-[11px] text-[#64748b] mt-1.5 leading-relaxed">{s.evidence}</p>
-              </motion.div>
+                <p className="text-[12px] text-[var(--text-tertiary)] mt-1.5 leading-relaxed">{s.evidence}</p>
+              </m.div>
             ))}
           </div>
         )}
@@ -396,19 +396,19 @@ function ScoreCard({ report, address }: { report: SybilReport; address?: string 
         className="rounded-xl p-4 flex items-start gap-3"
         style={{ background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.2)" }}
       >
-        <Info className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#00d4ff" }} />
+        <Info className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--accent-text)" }} />
         <div>
-          <p className="text-xs font-semibold text-[#00d4ff] mb-1.5">
+          <p className="text-xs font-semibold text-[var(--accent-text)] mb-1.5">
             Read this before acting on the number
           </p>
           <ul className="space-y-1">
             {report.disclaimers.map((d) => (
-              <li key={d} className="text-[11px] text-[#64748b] leading-relaxed">
+              <li key={d} className="text-[12px] text-[var(--text-tertiary)] leading-relaxed">
                 · {d}
               </li>
             ))}
           </ul>
-          <p className="text-[10px] font-mono text-[#475569] mt-2">
+          <p className="text-[12px] text-[var(--text-tertiary)] mt-2">
             computed {new Date(report.computedAt).toLocaleString()}
           </p>
         </div>
@@ -431,11 +431,11 @@ function Meter({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-mono text-[#64748b]">{label}</span>
-        <span className="text-[10px] font-mono" style={{ color }}>{value}%</span>
+        <span className="text-[12px] text-[var(--text-tertiary)]">{label}</span>
+        <span className="text-[12px]" style={{ color }}>{value}%</span>
       </div>
       <div className="h-1 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-        <motion.div
+        <m.div
           className="h-full rounded-full"
           style={{ background: color }}
           initial={{ width: 0 }}
@@ -443,7 +443,7 @@ function Meter({
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
       </div>
-      <p className="text-[9px] text-[#475569] mt-1">{hint}</p>
+      <p className="text-[12px] text-[var(--text-tertiary)] mt-1">{hint}</p>
     </div>
   );
 }

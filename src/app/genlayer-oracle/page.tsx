@@ -95,8 +95,8 @@ export default function GenLayerOraclePage() {
       <div className="space-y-6 max-w-2xl">
         <div className="p-5 rounded-xl" style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "color-mix(in srgb, #00D4FF 15%, transparent)" }}>
-              <svg className="w-5 h-5" style={{ color: "#00D4FF" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)" }}>
+              <svg className="w-5 h-5" style={{ color: "var(--accent-text)" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
               </svg>
             </div>
@@ -137,20 +137,20 @@ export default function GenLayerOraclePage() {
               </div>
 
               <div className="p-6 rounded-xl text-center mb-4" style={{ background: "var(--bg-subtle)", border: "1px solid var(--border-subtle)" }}>
-                <p className="text-xs font-mono mb-1" style={{ color: "var(--text-quaternary)" }}>
+                <p className="text-xs mb-1" style={{ color: "var(--text-quaternary)" }}>
                   {symbol}/USDT · {priceStatus === "verified" ? "On-Chain" : priceStatus === "pending" ? "Awaiting Consensus" : priceStatus === "failed" ? "Failed" : "No Data"}
                 </p>
-                <p className="text-4xl font-bold font-mono" style={{ color: price ? "var(--text-bright)" : "var(--text-quaternary)" }}>
+                <p className="text-4xl font-bold" style={{ color: price ? "var(--text-bright)" : "var(--text-quaternary)" }}>
                   {price ? `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "---"}
                 </p>
                 {priceStatus === "pending" && (
-                  <p className="text-[10px] font-mono mt-2" style={{ color: "var(--text-tertiary)" }}>
+                  <p className="text-[12px] mt-2" style={{ color: "var(--text-tertiary)" }}>
                     <GenLayerSpinner size={12} className="mr-1 align-middle" />
                     Waiting for {txHash ? "AI consensus" : "transaction..."}
                   </p>
                 )}
                 {priceStatus === "verified" && (
-                  <p className="text-[10px] font-mono mt-2" style={{ color: "var(--success)" }}>
+                  <p className="text-[12px] mt-2" style={{ color: "var(--success)" }}>
                     ✓ Verified by GenLayer validators
                   </p>
                 )}
@@ -167,7 +167,7 @@ export default function GenLayerOraclePage() {
 
               {txHash && priceStatus !== "pending" && priceStatus !== "verified" && (
                 <div className="mt-3 text-center">
-                  <p className="text-xs font-mono" style={{ color: "var(--text-quaternary)" }}>
+                  <p className="text-xs" style={{ color: "var(--text-quaternary)" }}>
                     Tx: {txHash.slice(0, 14)}...{txHash.slice(-6)}
                   </p>
                 </div>
@@ -186,15 +186,15 @@ export default function GenLayerOraclePage() {
           <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text-bright)" }}>How It Works</h3>
           <div className="space-y-3 text-xs" style={{ color: "var(--text-tertiary)" }}>
             <div className="flex gap-3">
-              <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}>1</span>
+              <span className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0" style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}>1</span>
               <div><strong style={{ color: "var(--text-secondary)" }}>Submit Transaction</strong> — Click &quot;Fetch&quot; to submit a price request to the GenLayer oracle contract. The price is fetched from Binance and shown immediately.</div>
             </div>
             <div className="flex gap-3">
-              <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}>2</span>
-              <div><strong style={{ color: "var(--text-secondary)" }}>AI Consensus</strong> — 5 independent validators each fetch the price. <code className="text-[10px] px-1 py-0.5 rounded" style={{ background: "var(--bg-subtle)" }}>strict_eq</code> ensures they agree before the result is stored on-chain.</div>
+              <span className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0" style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}>2</span>
+              <div><strong style={{ color: "var(--text-secondary)" }}>AI Consensus</strong> — 5 independent validators each fetch the price. <code className="text-[12px] px-1 py-0.5 rounded" style={{ background: "var(--bg-subtle)" }}>strict_eq</code> ensures they agree before the result is stored on-chain.</div>
             </div>
             <div className="flex gap-3">
-              <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}>3</span>
+              <span className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0" style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}>3</span>
               <div><strong style={{ color: "var(--text-secondary)" }}>On-Chain Storage</strong> — After consensus (&lt;30 min), the verified price is stored on GenLayer and becomes available to other smart contracts.</div>
             </div>
           </div>

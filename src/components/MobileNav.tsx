@@ -1,157 +1,144 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  LayoutDashboard,
-  Gamepad2,
-  Menu,
-  X,
-  Zap,
-  Trophy,
-  HelpCircle,
-  BookOpen,
-  Scale,
-  BarChart3,
-  Globe,
-  ArrowDownUp,
-  Rocket,
-  Terminal,
-  ShieldCheck,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useAccount, useDisconnect } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { Wallet } from "lucide-react";
 
-const navItems = [
-  { href: "/app", icon: Terminal, label: "Terminal", color: "#00D4FF" },
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", color: "#6F75E5" },
-  { href: "/tasks", icon: Zap, label: "Daily Tasks", color: "#F59E0B" },
-  { href: "/swap", icon: ArrowDownUp, label: "Swap", color: "#00D4AA" },
-  { href: "/deploy", icon: Rocket, label: "Deploy", color: "#F97316" },
-  { href: "/genlayer", icon: Globe, label: "GenLayer Hub", color: "#3B82F6" },
-  { href: "/truthcourt", icon: Scale, label: "TruthCourt", color: "#A78BFA" },
-  { href: "/leaderboard", icon: Trophy, label: "Leaderboard", color: "#FFB020" },
-  { href: "/2048", icon: Gamepad2, label: "2048 Game", color: "#FF6B6B" },
-  { href: "/sybil", icon: ShieldCheck, label: "Risk Score", color: "#00B17E" },
-];
+import { PRIMARY_NAV } from "@/lib/nav";
+import MoreSheet, { MoreGlyph } from "@/components/shell/MoreSheet";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 
-const bottomLinks = [
-  { href: "/faq", icon: HelpCircle, label: "FAQ" },
-  { href: "/terms", icon: BookOpen, label: "Terms" },
-  { href: "/license", icon: Scale, label: "License" },
-];
+/**
+ * The phone chrome: a slim top bar and a bottom tab bar.
+ *
+ * The old build shipped a full-height drawer with fourteen entries and a
+ * duplicated logo. Five tabs plus "More" is enough, and the wallet button
+ * lives in exactly one place on every screen size.
+ */
+/**
+ * The phone wallet button.
+ *
+ * RainbowKit's default is a ~150px blue pill, which on a 390px screen pushed
+ * the theme control off the bar and read as a third-party advert. One quiet
+ * chip instead: "Connect", or the address once connected.
+ */
+function PhoneWallet() {
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  const { disconnect } = useDisconnect();
+
+  const connected = !!isConnected && !!address;
+
+  return (
+    <button
+      type="button"
+      onClick={() => (connected ? disconnect() : openConnectModal?.())}
+      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-[12px] text-[12px] font-semibold transition-colors"
+      style={{
+        background: isConnected ? "var(--bg-strong)" : "var(--accent)",
+        color: isConnected ? "var(--text-primary)" : "var(--accent-contrast)",
+        border: isConnected ? "1px solid var(--border-default)" : "none",
+      }}
+    >
+      <Wallet className="w-4 h-4" strokeWidth={2} />
+      {isConnected && address
+        ? `${address.slice(0, 6)}…${address.slice(-4)}`
+        : "Connect"}
+    </button>
+  );
+}
 
 export default function MobileNav() {
-  const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <>
-      {/* Mobile Header Bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4"
+      {/* Top bar */}
+      <header
+        className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14"
         style={{
-          background: "color-mix(in srgb, var(--bg-base) 90%, transparent)",
-          backdropFilter: "blur(20px)",
+          background: "color-mix(in srgb, var(--bg-base) 88%, transparent)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
           borderBottom: "1px solid var(--border-default)",
-        }}>
+        }}
+      >
+        <Link href="/" className="flex items-center gap-2">
+          <Image src="/logo.svg" alt="DGDreams" width={24} height={24} />
+          <span
+            className="text-[14px] font-semibold"
+            style={{ color: "var(--text-bright)" }}
+          >
+            DGDreams
+          </span>
+        </Link>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden"
-            style={{ background: "color-mix(in srgb, var(--accent) 20%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
-            <Image src="/logo.svg" alt="DGDreams" width={20} height={20} />
-          </div>
-          <span className="font-bold text-sm" style={{ color: "var(--accent)" }}>DGDreams</span>
+          <ThemeSwitcher />
+          <PhoneWallet />
         </div>
-        <button
-          onClick={() => setOpen(true)}
-          className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ background: "var(--bg-strong)", border: "1px solid var(--border-strong)", color: "var(--text-tertiary)" }}
-        >
-          <Menu className="w-4 h-4" />
-        </button>
-      </div>
+      </header>
 
-      {/* Mobile Drawer */}
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 bg-black/60 z-50"
-              onClick={() => setOpen(false)}
-            />
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="lg:hidden fixed left-0 top-0 h-full w-64 z-50 flex flex-col"
-              style={{
-                background: "color-mix(in srgb, var(--bg-elevated) 98%, transparent)",
-                backdropFilter: "blur(24px)",
-                borderRight: "1px solid var(--border-default)",
-              }}
+      {/* Bottom tabs */}
+      <nav
+        aria-label="Primary"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-stretch justify-around px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2"
+        style={{
+          background: "color-mix(in srgb, var(--bg-base) 92%, transparent)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderTop: "1px solid var(--border-default)",
+        }}
+      >
+        {PRIMARY_NAV.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-label={item.label}
+              aria-current={active ? "page" : undefined}
+              className="flex flex-col items-center gap-1 px-3 py-1 rounded-[12px]"
+              style={{ color: active ? "var(--text-bright)" : "var(--text-faint)" }}
             >
-              <div className="flex items-center justify-between p-4" style={{ borderBottom: "1px solid var(--border-default)" }}>
-                <div className="flex items-center gap-2">
-                  <Image src="/logo.svg" alt="DGDreams" width={22} height={22} />
-                  <span className="font-bold" style={{ color: "var(--accent)" }}>DGDreams</span>
-                </div>
-                <button onClick={() => setOpen(false)} style={{ color: "var(--text-tertiary)" }}>
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <nav className="flex flex-col gap-0.5 p-4 flex-1">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = pathname === item.href;
-                  const isGame = item.href === "/2048";
-                  return (
-                    <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>
-                      <div className={cn("nav-item", isActive && "active", isGame && "mt-2")}
-                        style={isGame ? {
-                          background: "color-mix(in srgb, var(--accent) 8%, transparent)",
-                          border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
-                          color: "var(--accent)",
-                        } : {}}>
-                        <span
-                          className="nav-icon"
-                          style={{
-                            background: `color-mix(in srgb, ${item.color} ${isActive ? "16%" : "10%"}, transparent)`,
-                            border: `1px solid color-mix(in srgb, ${item.color} ${isActive ? "40%" : "22%"}, transparent)`,
-                          }}
-                        >
-                          <Icon className="w-3.5 h-3.5" style={{ color: isActive ? undefined : item.color }} />
-                        </span>
-                        <span>{item.label}</span>
-                        {isGame && <span className="ml-auto badge-cyan text-[9px]">Game</span>}
-                      </div>
-                    </Link>
-                  );
-                })}
-              </nav>
+              <span
+                className="flex items-center justify-center w-8 h-8 rounded-[10px]"
+                style={{
+                  background: active ? "var(--accent-muted)" : "transparent",
+                }}
+              >
+                <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
+              </span>
+              <span className="text-[12px] leading-none font-medium">
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
 
-              {/* Bottom links */}
-              <div className="p-4 border-t" style={{ borderColor: "var(--border-default)" }}>
-                {bottomLinks.map((link) => {
-                  const Icon = link.icon;
-                  return (
-                    <Link key={link.href} href={link.href} onClick={() => setOpen(false)}
-                      className="flex items-center gap-2.5 py-2 px-2 rounded-lg text-xs transition-all"
-                      style={{ color: "var(--text-quaternary)" }}>
-                      <Icon className="w-3.5 h-3.5" />
-                      <span>{link.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+        <MoreSheet
+          trigger={(open) => (
+            <button
+              type="button"
+              onClick={open}
+              aria-label="More"
+              className="flex flex-col items-center gap-1 px-3 py-1 rounded-[12px]"
+              style={{ color: "var(--text-faint)" }}
+            >
+              <span className="flex items-center justify-center w-8 h-8 rounded-[10px]">
+                <MoreGlyph />
+              </span>
+              <span className="text-[12px] leading-none font-medium">More</span>
+            </button>
+          )}
+        />
+      </nav>
     </>
   );
 }

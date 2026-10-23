@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   RotateCcw,
   Trophy,
@@ -241,6 +241,12 @@ export default function Game2048Page() {
   const getSessionToken = useSessionToken();
   const wagmiConfig = useConfig();
 
+  /** latest render values for the post-game submission effect — it intentionally
+      fires once on the gameOver transition, so its args are read via this ref
+      instead of becoming reactive dependencies that would re-send scores. */
+  const submitRef = useRef({ address, score, board, chainId, getSessionToken, tournamentStatus });
+  submitRef.current = { address, score, board, chainId, getSessionToken, tournamentStatus };
+
   useEffect(() => {
     // Seed the starting tiles on the client only, after hydration.
     let b = createEmptyBoard();
@@ -261,7 +267,9 @@ export default function Game2048Page() {
     chainId && GAME2048_CONTRACTS[chainId] ? GAME2048_CONTRACTS[chainId] : null;
 
   useEffect(() => {
-    if (!gameOver || !address || score === 0) return;
+    const s = submitRef.current;
+    if (!gameOver || !s.address || s.score === 0) return;
+    const { address, score, board, chainId, tournamentStatus } = s;
     (async () => {
       try {
         // Save the final score with the current network name so the
@@ -272,7 +280,7 @@ export default function Game2048Page() {
 
         // Authenticate the submission with a session token so scores cannot
         // be forged for other wallets or spammed anonymously.
-        let token = await getSessionToken(address);
+        let token = await s.getSessionToken(address);
         if (token) {
           const submit = (tok: string) =>
             fetch("/api/scores", {
@@ -292,7 +300,7 @@ export default function Game2048Page() {
           if (res.status === 401) {
             // Cached token expired or was minted for another wallet: re-sign.
             clearCachedSessionToken();
-            token = await getSessionToken(address);
+            token = await s.getSessionToken(address);
             if (token) await submit(token);
           }
         }
@@ -470,25 +478,25 @@ export default function Game2048Page() {
             {/* Web3 Status Bar */}
             <div className="glass-panel rounded-xl p-3 mb-4 flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-3">
-                <Wallet className="w-4 h-4 text-[#00d4ff]" />
+                <Wallet className="w-4 h-4 text-[var(--accent-text)]" />
                 {isConnected ? (
                   <>
-                    <span className="text-xs font-mono text-[#64748b]">
+                    <span className="text-xs text-[var(--text-tertiary)]">
                       {address?.slice(0, 6)}...{address?.slice(-4)}
                     </span>
                     {onRightChain && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/20">
+                      <span className="text-[12px] px-2 py-0.5 rounded bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20">
                         {chainNetName || chainId}
                       </span>
                     )}
                     {onWrongChain && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-[#ff4444]/10 text-[#ff4444] border border-[#ff4444]/20">
+                      <span className="text-[12px] px-2 py-0.5 rounded bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20">
                         Wrong net
                       </span>
                     )}
                   </>
                 ) : (
-                  <span className="text-xs text-[#64748b]">Wallet not connected</span>
+                  <span className="text-xs text-[var(--text-tertiary)]">Wallet not connected</span>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -503,8 +511,8 @@ export default function Game2048Page() {
                 />
                 {txCount > 0 && (
                   <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[rgba(0,212,255,0.1)] border border-[rgba(0,212,255,0.2)]">
-                    <Zap className="w-3 h-3 text-[#00d4ff]" />
-                    <span className="text-[10px] font-mono text-[#00d4ff]">
+                    <Zap className="w-3 h-3 text-[var(--accent-text)]" />
+                    <span className="text-[12px] text-[var(--accent-text)]">
                       {txCount} TX
                     </span>
                   </div>
@@ -519,25 +527,25 @@ export default function Game2048Page() {
                   label: "Score",
                   value: score.toLocaleString(),
                   icon: Zap,
-                  color: "#00d4ff",
+                  color: "var(--accent-text)",
                 },
                 {
                   label: "Best",
                   value: bestScore.toLocaleString(),
                   icon: Trophy,
-                  color: "#ffaa00",
+                  color: "var(--warning)",
                 },
                 {
                   label: "Tile",
                   value: bestTile > 0 ? bestTile.toString() : "—",
                   icon: Star,
-                  color: "#8b5cf6",
+                  color: "var(--accent-text)",
                 },
                 {
                   label: "Moves",
                   value: moveCount.toString(),
                   icon: Shield,
-                  color: "#00ff88",
+                  color: "var(--success)",
                 },
               ].map((stat) => {
                 const Icon = stat.icon;
@@ -548,7 +556,7 @@ export default function Game2048Page() {
                   >
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <Icon className="w-3 h-3" style={{ color: stat.color }} />
-                      <span className="text-[9px] font-mono text-[#475569] uppercase tracking-widest">
+                      <span className="text-[12px] text-[var(--text-tertiary)]">
                         {stat.label}
                       </span>
                     </div>
@@ -568,7 +576,6 @@ export default function Game2048Page() {
               className="glass-panel rounded-2xl p-4 relative"
               style={{
                 border: "1px solid rgba(0,212,255,0.15)",
-                boxShadow: "0 0 40px rgba(0,212,255,0.05)",
               }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -580,8 +587,8 @@ export default function Game2048Page() {
                 <div className="flex items-center gap-2">
                   {txPending && (
                     <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[rgba(0,212,255,0.1)] border border-[rgba(0,212,255,0.2)]">
-                      <div className="w-2 h-2 rounded-full bg-[#00d4ff] animate-pulse" />
-                      <span className="text-[9px] font-mono text-[#00d4ff]">
+                      <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
+                      <span className="text-[12px] text-[var(--accent-text)]">
                         TX pending
                       </span>
                     </div>
@@ -611,7 +618,7 @@ export default function Game2048Page() {
                   {board.flat().map((value, idx) => {
                     const tileClass = getTileClass(value);
                     return (
-                      <motion.div
+                      <m.div
                         key={idx}
                         layout
                         initial={value ? { scale: 0.8, opacity: 0 } : false}
@@ -639,14 +646,14 @@ export default function Game2048Page() {
                         }}
                       >
                         {value || ""}
-                      </motion.div>
+                      </m.div>
                     );
                   })}
                 </div>
 
                 <AnimatePresence>
                   {(gameOver || (won && !keepPlaying)) && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
@@ -664,7 +671,7 @@ export default function Game2048Page() {
                           <h3 className="text-2xl font-black gradient-text-cyan">
                             You Reached 2048!
                           </h3>
-                          <p className="text-sm text-[#64748b] font-mono">
+                          <p className="text-sm text-[var(--text-tertiary)]">
                             Score: {score.toLocaleString()}
                           </p>
                           <div className="flex gap-3">
@@ -689,14 +696,14 @@ export default function Game2048Page() {
                       ) : (
                         <>
                           <div className="text-5xl">💀</div>
-                          <h3 className="text-2xl font-black text-[#ff4444]">
+                          <h3 className="text-2xl font-black text-[var(--danger)]">
                             Game Over
                           </h3>
-                          <p className="text-sm text-[#64748b] font-mono">
+                          <p className="text-sm text-[var(--text-tertiary)]">
                             Final Score: {score.toLocaleString()}
                           </p>
                           {tournamentStatus && (
-                            <p className="text-[10px] font-mono" style={{ color: "#F59E0B" }}>
+                            <p className="text-[12px]" style={{ color: "var(--warning)" }}>
                               {tournamentStatus}
                             </p>
                           )}
@@ -708,7 +715,7 @@ export default function Game2048Page() {
                           </button>
                         </>
                       )}
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -744,7 +751,7 @@ export default function Game2048Page() {
               </div>
 
               <div className="mt-3 text-center">
-                <p className="text-[10px] font-mono text-[#1e4d7a]">
+                <p className="text-[12px] text-[var(--text-faint)]">
                   Use arrow keys or WASD to move tiles
                 </p>
               </div>
@@ -756,7 +763,7 @@ export default function Game2048Page() {
             {/* How to Play */}
             <div className="glass-panel rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm font-semibold text-[#e2e8f0]">
+                <span className="text-sm font-semibold text-[var(--text-bright)]">
                   How to Play
                 </span>
               </div>
@@ -770,9 +777,9 @@ export default function Game2048Page() {
                 ].map((tip, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2 text-xs text-[#64748b]"
+                    className="flex items-start gap-2 text-xs text-[var(--text-tertiary)]"
                   >
-                    <span className="text-[#00d4ff] font-mono flex-shrink-0">
+                    <span className="text-[var(--accent-text)] flex-shrink-0">
                       {String(i + 1).padStart(2, "0")}.
                     </span>
                     {tip}
@@ -784,8 +791,8 @@ export default function Game2048Page() {
             {/* Milestones */}
             <div className="glass-panel rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Zap className="w-4 h-4 text-[#00d4ff]" />
-                <span className="text-sm font-semibold text-[#e2e8f0]">
+                <Zap className="w-4 h-4 text-[var(--accent-text)]" />
+                <span className="text-sm font-semibold text-[var(--text-bright)]">
                   Milestones
                 </span>
               </div>
@@ -803,18 +810,18 @@ export default function Game2048Page() {
                       }`,
                     }}
                   >
-                    <span className="text-xs font-mono text-[#64748b]">
+                    <span className="text-xs text-[var(--text-tertiary)]">
                       Score {ms.threshold}
                     </span>
                     <div className="flex items-center gap-1.5">
                       {ms.txSent ? (
-                        <CheckCircle className="w-3.5 h-3.5 text-[#00ff88]" />
+                        <CheckCircle className="w-3.5 h-3.5 text-[var(--success)]" />
                       ) : ms.achieved ? (
-                        <span className="text-[9px] text-[#ffaa00] font-mono">
+                        <span className="text-[12px] text-[var(--warning)]">
                           ready
                         </span>
                       ) : (
-                        <span className="text-[9px] text-[#334155] font-mono">
+                        <span className="text-[12px] text-[var(--text-faint)]">
                           pending
                         </span>
                       )}
@@ -827,15 +834,15 @@ export default function Game2048Page() {
             {/* On-chain Status */}
             <div className="glass-panel rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Shield className="w-4 h-4 text-[#00d4ff]" />
-                <span className="text-sm font-semibold text-[#e2e8f0]">
+                <Shield className="w-4 h-4 text-[var(--accent-text)]" />
+                <span className="text-sm font-semibold text-[var(--text-bright)]">
                   On-Chain Sync
                 </span>
               </div>
-              <div className="flex flex-col gap-2 text-xs font-mono text-[#64748b]">
+              <div className="flex flex-col gap-2 text-xs text-[var(--text-tertiary)]">
                 <div className="flex justify-between">
                   <span>Wallet</span>
-                  <span className={isConnected ? "text-[#00ff88]" : "text-[#ff4444]"}>
+                  <span className={isConnected ? "text-[var(--success)]" : "text-[var(--danger)]"}>
                     {isConnected ? "Connected" : "Disconnected"}
                   </span>
                 </div>
@@ -847,7 +854,7 @@ export default function Game2048Page() {
                 </div>
                 <div className="flex justify-between">
                   <span>Contract</span>
-                  <span className="text-[10px]">
+                  <span className="text-[12px]">
                     {contractAddr
                       ? `${contractAddr.slice(0, 6)}...${contractAddr.slice(-4)}`
                       : "—"}
@@ -855,11 +862,11 @@ export default function Game2048Page() {
                 </div>
                 <div className="flex justify-between">
                   <span>Session TX</span>
-                  <span className="text-[#00d4ff]">{txCount}</span>
+                  <span className="text-[var(--accent-text)]">{txCount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Last Milestone</span>
-                  <span className="text-[#ffaa00]">
+                  <span className="text-[var(--warning)]">
                     {lastMilestone > 0 ? lastMilestone : "—"}
                   </span>
                 </div>
@@ -869,8 +876,8 @@ export default function Game2048Page() {
             {/* Rewards */}
             <div className="glass-panel rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Star className="w-4 h-4 text-[#ffaa00]" />
-                <span className="text-sm font-semibold text-[#e2e8f0]">
+                <Star className="w-4 h-4 text-[var(--warning)]" />
+                <span className="text-sm font-semibold text-[var(--text-bright)]">
                   Score Rewards
                 </span>
               </div>
@@ -909,15 +916,15 @@ export default function Game2048Page() {
                       }`,
                     }}
                   >
-                    <span className="text-xs font-mono text-[#64748b]">
+                    <span className="text-xs text-[var(--text-tertiary)]">
                       Score {tier.threshold}+
                     </span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-[#ffaa00] font-bold">
+                      <span className="text-xs text-[var(--warning)] font-bold">
                         {tier.reward}
                       </span>
                       {tier.achieved && (
-                        <CheckCircle className="w-3.5 h-3.5 text-[#00ff88]" />
+                        <CheckCircle className="w-3.5 h-3.5 text-[var(--success)]" />
                       )}
                     </div>
                   </div>

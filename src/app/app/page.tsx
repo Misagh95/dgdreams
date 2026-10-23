@@ -88,7 +88,7 @@ export default function AppPage() {
             id="swap"
             title="Swap"
             icon={<ArrowDownUp className="w-4 h-4" />}
-            color="#00D4AA"
+            color="var(--accent)"
           >
             <SwapSection />
           </SideSection>

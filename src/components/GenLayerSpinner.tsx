@@ -9,7 +9,7 @@ interface GenLayerSpinnerProps {
   className?: string;
 }
 
-export default function GenLayerSpinner({ size = 32, color = "#110fff", animated = true, label = "Loading", className }: GenLayerSpinnerProps) {
+export default function GenLayerSpinner({ size = 32, color = "var(--accent)", animated = true, label = "Loading", className }: GenLayerSpinnerProps) {
   const style = { "--genlayer-spinner-size": `${size}px`, color } as CSSProperties;
 
   return (

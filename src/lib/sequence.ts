@@ -23,12 +23,15 @@ import {
 export type StepStatus = "pending" | "signing" | "done" | "already" | "failed" | "skipped";
 export type StepKind = "mission" | "deploy";
 
+/** The NikBase calls this runner can make on its own. */
+export type NikBaseMethod = "dailyCheckIn" | "gm" | "gn" | "incrementCounter";
+
 export interface SequenceStepDef {
   id: string;
   label: string;
   kind: StepKind;
   /** mission: which NikBase call; deploy: raw creation bytecode */
-  method?: "dailyCheckIn" | "gm" | "gn";
+  method?: NikBaseMethod;
   artifact?: { abi: Abi; bytecode: `0x${string}`; constructorInputs: unknown[] };
   /** set to false when this step cannot run on the selected network */
   available?: boolean;
@@ -73,17 +76,26 @@ export interface RunOptions {
   switchChain?: (chainId: number) => Promise<number | undefined>;
   explorerUrl?: string;
   done?: DoneMarker;
+  /**
+   * Extra fields merged into the `eth_sendTransaction` params. Arbitrum Orbit
+   * style sequencers reject a transaction that carries no explicit legacy
+   * `gasPrice`, and they reject it when the wallet's local nonce has drifted
+   * from the sequencer's expected message index — so the caller passes
+   * `{ gasPrice, nonce }` for those chains.
+   */
+  txExtra?: Record<string, unknown>;
   onUpdate: (results: StepResult[], currentIndex: number | null) => void;
   signal?: { aborted: boolean };
 }
 
 const SCHEDULE = [150, 300, 500, 750, 1000, 1000, 1500, 1500, 2000];
 
-/** Minimal ABI: the three NikBase calls. */
+/** Minimal ABI: the NikBase calls. */
 const MISSION_ABI = [
   { type: "function", name: "dailyCheckIn", stateMutability: "nonpayable", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "gm", stateMutability: "nonpayable", inputs: [], outputs: [] },
   { type: "function", name: "gn", stateMutability: "nonpayable", inputs: [], outputs: [] },
+  { type: "function", name: "incrementCounter", stateMutability: "nonpayable", inputs: [], outputs: [] },
 ] as const satisfies Abi;
 
 type Pub = ReturnType<typeof createPublicClient>;
@@ -131,7 +143,7 @@ async function waitForReceipt(
 export async function runSequence(opts: RunOptions): Promise<StepResult[]> {
   const {
     steps, account, contractAddress, rpcUrls, getProvider,
-    switchChain, explorerUrl, done, onUpdate, signal,
+    switchChain, explorerUrl, done, txExtra, onUpdate, signal,
   } = opts;
 
   const results: StepResult[] = steps.map((s) => ({
@@ -204,9 +216,15 @@ export async function runSequence(opts: RunOptions): Promise<StepResult[]> {
           functionName: step.method,
           args: [],
         });
+        const txParams: Record<string, unknown> = {
+          from: account,
+          to: contractAddress,
+          data,
+        };
+        if (txExtra) Object.assign(txParams, txExtra);
         hash = (await provider.request({
           method: "eth_sendTransaction",
-          params: [{ from: account, to: contractAddress, data }],
+          params: [txParams],
         })) as `0x${string}`;
       } else {
         const art = step.artifact!;

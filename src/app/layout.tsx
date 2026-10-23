@@ -5,45 +5,72 @@ import "@rainbow-me/rainbowkit/styles.css";
 import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Space_Grotesk, Space_Mono, Syne } from "next/font/google";
+import { Archivo, IBM_Plex_Mono } from "next/font/google";
 
-const spaceGrotesk = Space_Grotesk({
+/**
+ * Two fonts, two jobs.
+ *
+ * Archivo is a variable grotesk with a width axis: the UI runs slightly
+ * condensed and the big numbers run narrower still, so the whole page reads as
+ * one family instead of a headline font fighting a body font.
+ *
+ * IBM Plex Mono is reserved for data — addresses, hashes, counters, timers.
+ * Labels, buttons and captions are set in Archivo.
+ */
+const archivo = Archivo({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-archivo",
   display: "swap",
+  axes: ["wdth"],
 });
 
-const spaceMono = Space_Mono({
-  weight: ["400", "700"],
+const plexMono = IBM_Plex_Mono({
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
-  variable: "--font-mono",
-  display: "swap",
-});
-
-const syne = Syne({
-  subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-plex-mono",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "DGDreams — On-Chain Activity Terminal",
-  description: "Track your daily on-chain streak, interact with multiple blockchain networks, and monitor your Web3 activity.",
+  title: "DGDreams — Daily On-Chain Streak",
+  description:
+    "Track your daily on-chain streak, interact with multiple blockchain networks, and monitor your Web3 activity.",
   icons: { icon: "/logo.svg" },
 };
+
+/**
+ * Applies the saved theme before the first paint.
+ *
+ * Dark is the default — the `data-theme="web3"` default pushed for the ritual
+ * theme — so an unstyled flash is the dark theme and a saved light preference
+ * flips it back. Without this, `/` (which has no theme control of its own)
+ * would ignore the saved preference entirely.
+ */
+const THEME_BOOT = `(function(){try{var s=localStorage.getItem('dgdreams-theme')||localStorage.getItem('voidchain-theme');var dark=!s||s==='dark'||s==='web3'||['cyber','emerald','frost','matrix'].indexOf(s)>-1;document.documentElement.setAttribute('data-theme',dark?'dark':'light');}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      data-theme="web3"
-      className={`${spaceGrotesk.variable} ${spaceMono.variable} ${syne.variable}`}
+      data-theme="dark"
+      suppressHydrationWarning
+      className={`${archivo.variable} ${plexMono.variable}`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body className="bg-[var(--bg-base)] text-[var(--text-primary)] antialiased">
         <Providers>
           {children}
-          <Analytics />
-          <SpeedInsights />
+          {/* Vercel's own script host is unreachable in local dev (the console
+              shows a failed fetch on every page load), so only mount these in
+              production builds where they actually collect data. */}
+          {process.env.NODE_ENV === "production" ? (
+            <>
+              <Analytics />
+              <SpeedInsights />
+            </>
+          ) : null}
         </Providers>
       </body>
     </html>

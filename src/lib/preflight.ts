@@ -14,6 +14,7 @@ export const NIKBASE_TASKS_ABI = [
   { inputs: [], name: "dailyCheckIn", outputs: [{ name: "newStreak", type: "uint256" }], stateMutability: "nonpayable", type: "function" },
   { inputs: [], name: "gm", outputs: [], stateMutability: "nonpayable", type: "function" },
   { inputs: [], name: "gn", outputs: [], stateMutability: "nonpayable", type: "function" },
+  { inputs: [], name: "incrementCounter", outputs: [], stateMutability: "nonpayable", type: "function" },
 ] as const;
 
 const GET_FLAGS_ABI = [
@@ -31,10 +32,15 @@ const GET_FLAGS_ABI = [
   },
 ] as const;
 
-export type TaskMethod = "dailyCheckIn" | "gm" | "gn";
+export type TaskMethod = "dailyCheckIn" | "gm" | "gn" | "incrementCounter";
 
-/** getFlags() index for each mission: (checkedIn, reception, gm, gn). */
-const FLAG_INDEX: Record<TaskMethod, number> = {
+/**
+ * getFlags() index for each mission: (checkedIn, reception, gm, gn).
+ *
+ * `incrementCounter` has no flag: it is limited by a per-day counter (3)
+ * rather than a boolean, so it is decided by simulating the call instead.
+ */
+const FLAG_INDEX: Partial<Record<TaskMethod, number>> = {
   dailyCheckIn: 0,
   gm: 2,
   gn: 3,
@@ -150,6 +156,12 @@ async function checkViaGetFlags(
   pubClient: PreflightClient,
   opts: PreflightOpts
 ): Promise<boolean> {
+  const flagIndex = FLAG_INDEX[opts.method];
+  if (flagIndex === undefined) {
+    // No per-day flag for this action (the counter) — let the caller fall back
+    // to the simulation path, which sees the real LimitReached revert.
+    throw new Error(`no getFlags entry for ${opts.method}`);
+  }
   const data = encodeFunctionData({
     abi: GET_FLAGS_ABI,
     functionName: "getFlags",
@@ -168,7 +180,7 @@ async function checkViaGetFlags(
     functionName: "getFlags",
     data: res.data,
   }) as readonly [boolean, boolean, boolean, boolean];
-  return !flags[FLAG_INDEX[opts.method]];
+  return !flags[flagIndex];
 }
 
 /**

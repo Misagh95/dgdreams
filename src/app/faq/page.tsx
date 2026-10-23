@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
   ChevronUp,
@@ -20,7 +20,7 @@ const faqs = [
   {
     category: "Getting Started",
     icon: Wallet,
-    color: "#00d4ff",
+    color: "var(--accent-text)",
     items: [
       { q: "What is DGDreams?", a: "DGDreams is a cross-chain on-chain operations dashboard that gamifies daily Web3 activity. It tracks your streaks and points across 22 networks (21 EVM chains plus GenLayer) through a unified mission-control interface." },
       { q: "How do I connect my wallet?", a: "Click the 'Connect Wallet' button in the top bar. DGDreams supports any wallet through RainbowKit — MetaMask, WalletConnect, Rainbow, Ledger, and more." },
@@ -30,7 +30,7 @@ const faqs = [
   {
     category: "Points & Streaks",
     icon: Star,
-    color: "#ffaa00",
+    color: "var(--warning)",
     items: [
       { q: "How do I earn points?", a: "Points are earned by completing on-chain actions: daily tasks (+10 pts each), maintaining streaks (+5 pts per day), playing 2048 (+50 pts per game), and high score bonuses." },
       { q: "What is the streak system?", a: "Your streak tracks consecutive days of on-chain activity. A 7-day streak unlocks soulbound NFT minting. Streaks are tracked per wallet on the NikBase contract, and the day rolls over at 00:00 UTC." },
@@ -40,7 +40,7 @@ const faqs = [
   {
     category: "Daily Tasks",
     icon: Zap,
-    color: "#8b5cf6",
+    color: "var(--accent-text)",
     items: [
       { q: "What are daily tasks?", a: "Daily tasks are on-chain actions you perform on supported networks. Each network has 3 tasks per day: Daily Check-In, GM and GN. Complete all 3 to mark the day as done. Tasks are interactions with NikBase contracts." },
       { q: "How do I start a task?", a: "Go to /tasks, select a network, and click 'Start Daily Tasks'. The task panel will guide you through each action. You must be connected to the correct network." },
@@ -50,7 +50,7 @@ const faqs = [
   {
     category: "2048 Game",
     icon: Gamepad2,
-    color: "#a855f7",
+    color: "var(--accent-text)",
     items: [
       { q: "How does on-chain 2048 work?", a: "Every game play records your score to the Game2048 contract. Scores are permanently stored on-chain. Your play count and high score are tracked across all supported networks." },
       { q: "What are the milestones?", a: "Milestones are unlocked at tile values: 16, 32, 64, 128, 256, 512, 1024, and 2048. Each milestone is recorded on-chain as a badge of achievement." },
@@ -60,7 +60,7 @@ const faqs = [
   {
     category: "Security",
     icon: Shield,
-    color: "#00ff88",
+    color: "var(--success)",
     items: [
       { q: "Is my wallet safe?", a: "DGDreams never holds your private keys. All transactions are signed by your wallet. Always verify the network and contract address before signing." },
       { q: "What contracts do you use?", a: "We use NikBase contracts for daily tasks and Game2048 contracts for game scoring. All contracts are open-source and verified on their respective block explorers." },
@@ -70,7 +70,7 @@ const faqs = [
   {
     category: "Networks & Gas",
     icon: Globe,
-    color: "#627eea",
+    color: "var(--text-tertiary)",
     items: [
       { q: "How do I add a custom network?", a: "You can configure custom RPC URLs and chain IDs through your wallet provider. Popular EVM networks are supported out of the box." },
       { q: "Which network has the lowest gas?", a: "Base and most L2s (HyperEVM, Unichain, Tempo) have sub-cent gas fees. Arc mainnet settles gas in USDC, so fees stay dollar-denominated. Ethereum mainnet gas varies based on network congestion." },
@@ -99,23 +99,23 @@ export default function FaqPage() {
                   style={{ background: `${cat.color}18`, border: `1px solid ${cat.color}33` }}>
                   <Icon className="w-4 h-4" style={{ color: cat.color }} />
                 </div>
-                <span className="flex-1 font-semibold text-sm text-[#e2e8f0] text-left">
+                <span className="flex-1 font-semibold text-sm text-[var(--text-bright)] text-left">
                   {cat.category}
                 </span>
-                <span className="text-[10px] font-mono text-[#475569]">{cat.items.length} topics</span>
-                {isOpen ? <ChevronUp className="w-4 h-4 text-[#475569]" /> : <ChevronDown className="w-4 h-4 text-[#475569]" />}
+                <span className="text-[12px] text-[var(--text-tertiary)]">{cat.items.length} topics</span>
+                {isOpen ? <ChevronUp className="w-4 h-4 text-[var(--text-tertiary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--text-tertiary)]" />}
               </button>
 
               <AnimatePresence>
                 {isOpen && (
-                  <motion.div
+                  <m.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-4 pb-4 flex flex-col gap-2 border-t border-[#1a3a5c]/30 pt-3">
+                    <div className="px-4 pb-4 flex flex-col gap-2 border-t border-[var(--border-default)]/30 pt-3">
                       {cat.items.map((item) => {
                         const qOpen = openQuestion === item.q;
                         return (
@@ -125,29 +125,29 @@ export default function FaqPage() {
                               onClick={() => setOpenQuestion(qOpen ? null : item.q)}
                               className="w-full flex items-center justify-between p-3 text-left"
                             >
-                              <span className="text-sm text-[#94a3b8] font-medium">{item.q}</span>
-                              {qOpen ? <ChevronUp className="w-3.5 h-3.5 text-[#475569] shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-[#475569] shrink-0" />}
+                              <span className="text-sm text-[var(--text-secondary)] font-medium">{item.q}</span>
+                              {qOpen ? <ChevronUp className="w-3.5 h-3.5 text-[var(--text-tertiary)] shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-[var(--text-tertiary)] shrink-0" />}
                             </button>
                             <AnimatePresence>
                               {qOpen && (
-                                <motion.div
+                                <m.div
                                   initial={{ height: 0, opacity: 0 }}
                                   animate={{ height: "auto", opacity: 1 }}
                                   exit={{ height: 0, opacity: 0 }}
                                   transition={{ duration: 0.15 }}
                                   className="overflow-hidden"
                                 >
-                                  <p className="px-3 pb-3 text-xs text-[#64748b] leading-relaxed font-mono">
+                                  <p className="px-3 pb-3 text-xs text-[var(--text-tertiary)] leading-relaxed">
                                     {item.a}
                                   </p>
-                                </motion.div>
+                                </m.div>
                               )}
                             </AnimatePresence>
                           </div>
                         );
                       })}
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </div>

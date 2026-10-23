@@ -48,7 +48,7 @@ function Step({ n, title }: { n: string; title: string }) {
   return (
     <div className="flex items-center gap-2.5 pt-1">
       <span
-        className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-mono font-bold flex-shrink-0"
+        className="w-6 h-6 rounded-lg flex items-center justify-center text-[12px] font-bold flex-shrink-0"
         style={{
           background: "color-mix(in srgb, var(--accent) 16%, transparent)",
           border: "1px solid color-mix(in srgb, var(--accent) 34%, transparent)",
@@ -123,7 +123,7 @@ export function DeploySection() {
     setArgs(next);
     setError(null);
     setSent(null);
-  }, [contract, address, targetChain]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [contract, address, targetChain]);
 
   const argsValid = useMemo(() => {
     if (!contract) return false;
@@ -192,7 +192,7 @@ export function DeploySection() {
         </div>
 
         {Object.keys(artifacts).length === 0 && (
-          <p className="text-xs font-mono" style={{ color: "var(--text-quaternary)" }}>
+          <p className="text-xs" style={{ color: "var(--text-quaternary)" }}>
             Loading contracts… if this stays empty run: forge build &amp;&amp; node scripts/export-deployable.mjs
           </p>
         )}
@@ -234,22 +234,22 @@ export function DeploySection() {
                         <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "var(--accent)" }} />
                       )}
                     </div>
-                    <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+                    <span className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>
                       {a.name}
                     </span>
                   </div>
                 </div>
-                <p className="text-[11px] mt-3 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                <p className="text-[12px] mt-3 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
                   {a.blurb}
                 </p>
                 <div className="flex items-center gap-2 mt-3">
                   <span
-                    className="text-[9px] font-mono px-2 py-0.5 rounded-md"
+                    className="text-[12px] px-2 py-0.5 rounded-md"
                     style={{ background: "var(--bg-subtle)", color: "var(--text-quaternary)" }}
                   >
                     {a.tag}
                   </span>
-                  <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+                  <span className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>
                     {faDigits((a.runtimeBytes / 1024).toFixed(1))}KB
                     {a.constructorInputs.length > 0 && ` · ${faDigits(a.constructorInputs.length)} ctor args`}
                   </span>
@@ -265,20 +265,20 @@ export function DeploySection() {
           <div className="flex items-center gap-2.5">
             <span
               className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-              style={{ background: net?.color, boxShadow: `0 0 8px ${net?.color}` }}
+              style={{ background: net?.color }}
             />
             <span className="text-sm font-semibold" style={{ color: "var(--text-bright)" }}>
               {net?.name ?? "Unknown network"}
             </span>
-            <span className="text-[10px] font-mono ml-auto" style={{ color: "var(--text-quaternary)" }}>
+            <span className="text-[12px] ml-auto" style={{ color: "var(--text-quaternary)" }}>
               chain #{targetChain}
             </span>
           </div>
-          <p className="text-[10px] font-mono mt-2" style={{ color: "var(--text-quaternary)" }}>
+          <p className="text-[12px] mt-2" style={{ color: "var(--text-quaternary)" }}>
             Change it from the network rail on the left edge — no extra menu needed.
           </p>
           {net?.isTestnet && (
-            <p className="text-[10px] font-mono mt-2" style={{ color: "#FFC24B" }}>
+            <p className="text-[12px] mt-2" style={{ color: "var(--warning)" }}>
               Testnet — the safe place to try first.
             </p>
           )}
@@ -287,7 +287,7 @@ export function DeploySection() {
           <Step n="3" title="Constructor inputs (if any)" />
         {contract && contract.constructorInputs.length > 0 && (
           <div className="rounded-2xl p-4 space-y-3" style={card}>
-            <label className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--text-quaternary)" }}>
+            <label className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>
               Constructor
             </label>
             {contract.constructorInputs.map((input) => {
@@ -296,7 +296,7 @@ export function DeploySection() {
               const bad = val.trim() !== "" && input.type === "address" && !isAddress(val);
               return (
                 <div key={key}>
-                  <label className="text-[11px] font-mono" style={{ color: "var(--text-tertiary)" }}>
+                  <label className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
                     {key} <span style={{ color: "var(--text-quaternary)" }}>({input.type})</span>
                   </label>
                   <input
@@ -304,14 +304,14 @@ export function DeploySection() {
                     onChange={(e) => setArgs((p) => ({ ...p, [key]: e.target.value }))}
                     placeholder={input.type === "address" ? "0x…" : input.type}
                     spellCheck={false}
-                    className="w-full mt-1 px-3 py-2 rounded-lg text-xs font-mono outline-none"
+                    className="w-full mt-1 px-3 py-2 rounded-lg text-xs outline-none"
                     style={{
                       ...inputStyle,
-                      border: `1px solid ${bad ? "#ff4444" : "var(--border-default)"}`,
+                      border: `1px solid ${bad ? "var(--danger)" : "var(--border-default)"}`,
                     }}
                   />
                   {input.name === "nikBaseAddress" && (
-                    <p className="text-[10px] mt-1" style={{ color: "var(--text-quaternary)" }}>
+                    <p className="text-[12px] mt-1" style={{ color: "var(--text-quaternary)" }}>
                       Prefilled with the NikBase this app uses on {net?.name}. Deploy NikBase first
                       if it is empty.
                     </p>
@@ -333,12 +333,12 @@ export function DeploySection() {
             {busy ? "Deploying…" : `Deploy ${contract?.name ?? ""} to ${net?.name ?? ""}`}
           </button>
           {!isConnected && (
-            <span className="text-[11px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+            <span className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>
               Connect a wallet first
             </span>
           )}
           {isConnected && contract && contract.constructorInputs.length > 0 && !argsValid && (
-            <span className="text-[11px] font-mono" style={{ color: "#FFC24B" }}>
+            <span className="text-[12px]" style={{ color: "var(--warning)" }}>
               Every constructor field needs a valid value
             </span>
           )}
@@ -349,8 +349,8 @@ export function DeploySection() {
             className="flex items-start gap-2 rounded-xl p-3"
             style={{ background: "rgba(255,68,68,0.08)", border: "1px solid rgba(255,68,68,0.25)" }}
           >
-            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#ff6b6b" }} />
-            <span className="text-xs" style={{ color: "#ffb3b3" }}>
+            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--danger)" }} />
+            <span className="text-xs" style={{ color: "var(--danger)" }}>
               {error}
             </span>
           </div>
@@ -367,29 +367,29 @@ export function DeploySection() {
                 Deployment transaction sent
               </span>
             </div>
-            <p className="text-[11px] font-mono break-all" style={{ color: "var(--text-tertiary)" }}>
+            <p className="text-[12px] break-all" style={{ color: "var(--text-tertiary)" }}>
               tx {sent.hash}
             </p>
             <a
               href={`${ALL_NETWORKS.find((n) => n.id === sent.chainId)?.blockExplorers.default.url}/tx/${sent.hash}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-[11px] font-mono"
+              className="inline-flex items-center gap-1.5 text-[12px]"
               style={{ color: "var(--accent)" }}
             >
               View on explorer <ExternalLink className="w-3 h-3" />
             </a>
-            <p className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+            <p className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>
               The contract address appears in the explorer once the tx is mined.
             </p>
           </div>
         )}
 
         <details className="rounded-2xl p-4" style={card}>
-          <summary className="text-[11px] font-mono cursor-pointer" style={{ color: "var(--text-tertiary)" }}>
+          <summary className="text-[12px] cursor-pointer" style={{ color: "var(--text-tertiary)" }}>
             How this works / safety notes
           </summary>
-          <ul className="text-[11px] mt-3 space-y-1.5 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+          <ul className="text-[12px] mt-3 space-y-1.5 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
             <li>• The bytecode here is the compiled output of this repo&apos;s contracts.</li>
             <li>• Deployment is a plain contract-creation transaction sent by your own wallet.</li>
             <li>• Gas is set by the network you pick — check the cost before signing on a mainnet.</li>

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useSpring, useTransform } from "framer-motion";
+import { m, useSpring, useTransform } from "framer-motion";
 import { useEffect } from "react";
 
 /**
@@ -37,11 +37,11 @@ export function AnimatedCounter({
   }, [spring, value]);
 
   return (
-    <motion.span className={className}>
+    <m.span className={className}>
       {prefix}
-      <motion.span>{display}</motion.span>
+      <m.span>{display}</m.span>
       {suffix}
-    </motion.span>
+    </m.span>
   );
 }
 
@@ -60,7 +60,7 @@ export function PulseIndicator({
 
   return (
     <div className="relative flex items-center justify-center">
-      <motion.div
+      <m.div
         className={`${sizes[size]} rounded-full`}
         style={{ background: color }}
         animate={{
@@ -73,7 +73,7 @@ export function PulseIndicator({
           ease: "easeInOut",
         }}
       />
-      <motion.div
+      <m.div
         className={`absolute ${sizes[size]} rounded-full`}
         style={{ 
           background: color,

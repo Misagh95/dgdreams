@@ -1,12 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useConfig, useSwitchChain } from "wagmi";
 import { isAddress } from "viem";
-import { Rocket, CheckCircle2, XCircle, SkipForward, Loader2, ExternalLink, Zap } from "lucide-react";
+import {
+  Rocket,
+  CheckCircle2,
+  XCircle,
+  SkipForward,
+  Loader2,
+  ExternalLink,
+  Zap,
+} from "lucide-react";
 import { runSequence, type SequenceStepDef, type StepResult, type StepStatus } from "@/lib/sequence";
-import NetworkSelect from "@/components/NetworkSelect";
-import { NetworkTile } from "@/components/NetworkTile";
 import { DeployedContractActions } from "@/components/DeployedContractActions";
 import { useUtcDay } from "@/hooks/useUtcDay";
 import {
@@ -15,15 +21,7 @@ import {
   readDeployStore,
   writeDeployStore,
 } from "@/lib/deployStore";
-import {
-  NIKBASE_CONTRACTS,
-  mainnetNetworks,
-  testnetNetworks,
-  type NetworkConfig,
-} from "@/config/chains";
-
-/** every EVM network the 6-in-1 runner may target, for its own picker */
-const ALL_NETWORKS: NetworkConfig[] = [...mainnetNetworks, ...testnetNetworks];
+import { NIKBASE_CONTRACTS, type NetworkConfig } from "@/config/chains";
 
 type DeployArtifact = NonNullable<SequenceStepDef["artifact"]> & {
   /** recorded by the exporter so the UI can price a deployment up front */
@@ -100,23 +98,29 @@ function estimateDeployGas(artifact: DeployArtifact | undefined, ctorArgs: unkno
 }
 
 const STATUS_STYLE: Record<StepStatus, { color: string; icon: typeof CheckCircle2 }> = {
-  pending: { color: "var(--text-quaternary)", icon: SkipForward },
-  signing: { color: "var(--accent)", icon: Loader2 },
+  pending: { color: "var(--text-faint)", icon: SkipForward },
+  signing: { color: "var(--accent-text)", icon: Loader2 },
   done: { color: "var(--success)", icon: CheckCircle2 },
-  already: { color: "var(--accent)", icon: CheckCircle2 },
-  failed: { color: "#ff6b6b", icon: XCircle },
-  skipped: { color: "var(--text-quaternary)", icon: SkipForward },
+  already: { color: "var(--text-tertiary)", icon: CheckCircle2 },
+  failed: { color: "var(--danger)", icon: XCircle },
+  skipped: { color: "var(--text-faint)", icon: SkipForward },
 };
 
 /**
- * Deployed addresses, kept per chain AND per wallet so a second run reuses
+ * The six-in-one run.
+ *
+ * Three missions and three deploys in one press. The card used to own a
+ * twenty-tile network grid and a dropdown on top of it — the same chain list
+ * the page header already showed — so the user had to answer "which network?"
+ * three times. Now the hero owns that answer and this card just runs.
+ *
+ * Deployed addresses are kept per chain AND per wallet so a second run reuses
  * them instead of paying for the same contract again. Shape + access live in
  * `@/lib/deployStore` (v2 keys are `<chainId>:<wallet>:<artifact>` and each
  * entry records its deployer; legacy v1 keys are never read back). The runner
  * re-checks the code on chain before trusting a stored address, so a stale
  * entry can never silently satisfy a step.
  */
-
 export default function FiveInOne(props: FiveInOneProps) {
   const { network, isConnected, account, onConnect, doneTaskIds, onFinished } = props;
   const wagmiConfig = useConfig();
@@ -129,25 +133,23 @@ export default function FiveInOne(props: FiveInOneProps) {
   const [redeploy, setRedeploy] = useState(false);
   /** addresses THIS wallet deployed (per chain), for display + default reuse */
   const [deployed, setDeployed] = useState<Record<string, string>>({});
-  /** network chosen inside this card; null = follow the connected wallet chain */
-  const [pickedNetworkId, setPickedNetworkId] = useState<number | null>(null);
   const abort = useRef({ aborted: false });
   const locallyDone = useRef<Set<string>>(new Set());
 
-  const target: NetworkConfig | undefined = pickedNetworkId
-    ? (ALL_NETWORKS.find((n) => n.id === pickedNetworkId) ?? network)
-    : network;
+  /** The one network, chosen in the hero. This card never picks its own. */
+  const target: NetworkConfig | undefined = network;
 
   // GM/GN/Check-In are once per UTC day, so the "already done" markers we collected in
   // this session stop being true the moment the UTC day rolls over.
-  useUtcDay(useCallback(() => {
-    locallyDone.current = new Set();
-    setResults([]);
-  }, []));
+  useUtcDay(
+    useCallback(() => {
+      locallyDone.current = new Set();
+      setResults([]);
+    }, [])
+  );
 
-  // Session + probe memory is per-network: switching the runner's target
-  // network must not inherit the previous network's "already done" markers.
-  // (Kept after `target` is declared — it is referenced below.)
+  // Session memory is per-network: switching the runner's target network must
+  // not inherit the previous network's "already done" markers.
   const lastTargetId = useRef<number | undefined>(undefined);
   if (lastTargetId.current !== target?.id) {
     lastTargetId.current = target?.id;
@@ -156,24 +158,14 @@ export default function FiveInOne(props: FiveInOneProps) {
   }
 
   /** addresses THIS wallet already deployed on this network, from the local store */
-  const refreshFromStore = useCallback(
-    (chainId: number, wallet?: string) => {
-      if (!wallet) return {};
-      return deployedAddressesFor(
-        chainId,
-        wallet,
-        ARTIFACTS.map((a) => a.key)
-      );
-    },
-    []
-  );
-
-  /** list shown in the card's own picker; always contains the current target */
-  const networkOptions = useMemo(() => {
-    const base = [...mainnetNetworks, ...testnetNetworks];
-    if (target && !base.some((n) => n.id === target.id)) base.push(target);
-    return base;
-  }, [target]);
+  const refreshFromStore = useCallback((chainId: number, wallet?: string) => {
+    if (!wallet) return {};
+    return deployedAddressesFor(
+      chainId,
+      wallet,
+      ARTIFACTS.map((a) => a.key)
+    );
+  }, []);
 
   // show what THIS wallet already deployed whenever the network (or wallet) changes
   useEffect(() => {
@@ -200,10 +192,8 @@ export default function FiveInOne(props: FiveInOneProps) {
   const nikBase = target ? NIKBASE_CONTRACTS[target.id] : undefined;
   /**
    * Per-network mission memory. The page-level probe runs against the
-   * WALLET's chain, while this runner can target a DIFFERENT chain via its
-   * own picker — so the parent hands over chain-qualified ids
-   * ("<chainId>:<taskId>") and a bare id must never match here, or missions
-   * done on one chain would falsely show "already done" everywhere.
+   * active chain, and the parent hands over chain-qualified ids
+   * ("<chainId>:<taskId>") so a bare id can never match here.
    */
   const isDone = useCallback(
     (id: string) =>
@@ -318,140 +308,103 @@ export default function FiveInOne(props: FiveInOneProps) {
 
   return (
     <div
-      className="rounded-2xl p-4 sm:p-5"
+      className="rounded-[20px] p-5 sm:p-6"
       style={{
-        background:
-          "linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--bg-card)) 0%, color-mix(in srgb, #4F46E5 6%, var(--bg-subtle)) 100%)",
-        border: "1px solid color-mix(in srgb, var(--accent) 26%, transparent)",
+        background: "var(--bg-card)",
+        border: "1px solid var(--border-default)",
       }}
     >
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
           <span
-            className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{
-              background: "color-mix(in srgb, var(--accent) 16%, transparent)",
-              border: "1px solid color-mix(in srgb, var(--accent) 34%, transparent)",
-              color: "var(--accent)",
-            }}
+            className="w-9 h-9 rounded-[12px] flex items-center justify-center flex-shrink-0"
+            style={{ background: "var(--bg-subtle)", color: "var(--text-secondary)" }}
           >
-            <Zap className="w-4 h-4" />
+            <Zap className="w-[18px] h-[18px]" strokeWidth={1.75} />
           </span>
           <div>
-            <h3 className="text-sm font-semibold" style={{ color: "var(--text-bright)" }}>
-              6-in-1
+            <h3 className="text-[16px] font-semibold" style={{ color: "var(--text-bright)" }}>
+              Run all six
             </h3>
-            <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>
-              Check-In + GM + GN + Simple + Token + NFT on {target?.name ?? "your network"}, one click
+            <p className="text-[14px] mt-0.5" style={{ color: "var(--text-secondary)" }}>
+              Three missions and three deploys on {target?.name ?? "your network"}.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <NetworkSelect
-            networks={networkOptions}
-            value={target?.id ?? 0}
-            onChange={(id) => setPickedNetworkId(id)}
-            placeholder="Select network"
-            disabled={running}
-          />
-          <button
-            onClick={isConnected ? start : onConnect}
-            disabled={isConnected && (!canRun || running)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-40"
-            style={{ background: "var(--accent)", color: "#000" }}
-          >
-
+        <button
+          onClick={isConnected ? start : onConnect}
+          disabled={isConnected && (!canRun || running)}
+          className="btn-ghost min-w-[152px]"
+        >
           {running ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Rocket className="w-3.5 h-3.5" />
+            <Rocket className="w-4 h-4" />
           )}
           {running
-            ? `Step ${(current ?? 0) + 1}/6...`
+            ? `Step ${(current ?? 0) + 1} of 6`
             : isConnected
-              ? "Run all 6"
+              ? "Run all six"
               : "Connect wallet"}
-          </button>
-        </div>
-      </div>
-
-      {/* Network grid ? this card owns network choice now, so the grid lives here.
-          Selecting a tile sets the chain the runner deploys to and sends Check-In/GM/GN
-          to, replacing the small dropdown above for anything but a quick pick. */}
-      <div className="mt-4">
-        <div className="flex items-center justify-between mb-2.5 px-1">
-          <span
-            className="text-[10px] font-mono uppercase tracking-[0.2em]"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            Pick a network
-          </span>
-          <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
-            {networkOptions.length} networks
-          </span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
-          {networkOptions.map((n) => (
-            <NetworkTile
-              key={n.id}
-              network={n}
-              isSelected={target?.id === n.id}
-              isDisabled={running || !isConnected}
-              hasContract={!!NIKBASE_CONTRACTS[n.id]}
-              onSelect={() => setPickedNetworkId(n.id)}
-            />
-          ))}
-        </div>
+        </button>
       </div>
 
       {blockedByArtifacts && (
-        <p className="text-[11px] mt-3" style={{ color: "#FFC24B" }}>
-          Could not load the deploy artifacts ({missingArtifacts.join(", ")}) - the run
-          is unavailable until they can be fetched.
+        <p className="text-[14px] mt-4" style={{ color: "var(--warning)" }}>
+          The deploy artifacts ({missingArtifacts.join(", ")}) could not be loaded, so
+          the run is unavailable for now.
         </p>
       )}
 
       {isConnected && !nikBase && (
-        <p className="text-[11px] mt-3" style={{ color: "#FFC24B" }}>
-          No NikBase contract on {target?.name ?? "this network"} - the three missions would be skipped.
+        <p className="text-[14px] mt-4" style={{ color: "var(--warning)" }}>
+          No NikBase contract on {target?.name ?? "this network"} — the three missions
+          would be skipped.
         </p>
       )}
 
       {Object.keys(deployed).length > 0 && (
-        <div className="mt-3 space-y-1">
-          {ARTIFACTS.filter((a) => deployed[a.key]).map((a) => (
-            <div
-              key={a.key}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
-              style={{ background: "var(--bg-subtle)", border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)" }}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--accent)" }} />
-              <span className="text-[11px] font-mono" style={{ color: "var(--text-secondary)" }}>
-                {a.label}
-              </span>
-              <span className="flex-1" />
-              <a
-                href={`${target?.blockExplorers.default.url}/address/${deployed[a.key]}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[10px] font-mono truncate max-w-[130px]"
-                style={{ color: "var(--accent)" }}
+        <div className="mt-5">
+          <p className="kicker mb-2">Already deployed here</p>
+          <div className="space-y-1">
+            {ARTIFACTS.filter((a) => deployed[a.key]).map((a) => (
+              <div
+                key={a.key}
+                className="flex items-center gap-2 px-3 py-2 rounded-[12px]"
+                style={{ background: "var(--bg-subtle)" }}
               >
-                {deployed[a.key].slice(0, 10)}...
-              </a>
-            </div>
-          ))}
-          <label className="flex items-center gap-2 cursor-pointer select-none pt-1">
+                <CheckCircle2
+                  className="w-4 h-4 flex-shrink-0"
+                  strokeWidth={1.75}
+                  style={{ color: "var(--text-tertiary)" }}
+                />
+                <span className="text-[14px]" style={{ color: "var(--text-secondary)" }}>
+                  {a.label}
+                </span>
+                <span className="flex-1" />
+                <a
+                  href={`${target?.blockExplorers.default.url}/address/${deployed[a.key]}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[12px] font-mono truncate max-w-[140px] hover:underline"
+                  style={{ color: "var(--text-tertiary)" }}
+                >
+                  {deployed[a.key].slice(0, 10)}…
+                </a>
+              </div>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer select-none mt-3">
             <input
               type="checkbox"
               checked={redeploy}
               onChange={(e) => setRedeploy(e.target.checked)}
-              className="accent-[var(--accent)]"
-              style={{ width: 12, height: 12 }}
+              className="accent-[var(--accent-text)]"
+              style={{ width: 14, height: 14 }}
             />
-            <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
-              Redeploy even though an address is saved (costs another deployment)
+            <span className="text-[14px]" style={{ color: "var(--text-tertiary)" }}>
+              Redeploy anyway (costs another deployment)
             </span>
           </label>
         </div>
@@ -462,40 +415,38 @@ export default function FiveInOne(props: FiveInOneProps) {
       )}
 
       {results.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <div className="flex items-center gap-2">
-            <div
-              className="h-[3px] flex-1 rounded-full overflow-hidden"
-              style={{ background: "rgba(160,155,190,0.15)" }}
-            >
+        <div className="mt-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="progress-bar flex-1">
               <div
-                className="h-full rounded-full transition-all duration-300"
-                style={{
-                  width: `${(doneCount / 6) * 100}%`,
-                  background: "linear-gradient(90deg, var(--accent), var(--success))",
-                }}
+                className="progress-fill"
+                style={{ width: `${(doneCount / 6) * 100}%` }}
               />
             </div>
-            <span className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+            <span
+              className="text-[12px] tabular-nums"
+              style={{ color: "var(--text-tertiary)" }}
+            >
               {doneCount}/6
             </span>
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             {results.map((r, i) => {
               const st = STATUS_STYLE[r.status];
               const Icon = st.icon;
               return (
                 <div
                   key={r.id}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
-                  style={{ background: "var(--bg-subtle)", border: `1px solid ${st.color}33` }}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-[12px]"
+                  style={{ background: "var(--bg-subtle)" }}
                 >
                   <Icon
-                    className={`w-3.5 h-3.5 flex-shrink-0 ${r.status === "signing" ? "animate-spin" : ""}`}
+                    className={`w-4 h-4 flex-shrink-0 ${r.status === "signing" ? "animate-spin" : ""}`}
+                    strokeWidth={1.75}
                     style={{ color: st.color }}
                   />
-                  <span className="text-[11px] font-mono" style={{ color: "var(--text-secondary)" }}>
+                  <span className="text-[14px]" style={{ color: "var(--text-secondary)" }}>
                     {i + 1}. {r.label}
                   </span>
                   <span className="flex-1" />
@@ -504,10 +455,10 @@ export default function FiveInOne(props: FiveInOneProps) {
                       href={`${target?.blockExplorers.default.url}/address/${r.address}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-[10px] font-mono truncate max-w-[120px]"
-                      style={{ color: "var(--accent)" }}
+                      className="text-[12px] font-mono truncate max-w-[130px] hover:underline"
+                      style={{ color: "var(--text-tertiary)" }}
                     >
-                      {r.address.slice(0, 8)}...
+                      {r.address.slice(0, 8)}…
                     </a>
                   )}
                   {r.explorerUrl && !r.address && (
@@ -515,13 +466,13 @@ export default function FiveInOne(props: FiveInOneProps) {
                       href={r.explorerUrl}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: "var(--text-quaternary)" }}
+                      style={{ color: "var(--text-tertiary)" }}
                     >
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="w-4 h-4" strokeWidth={1.75} />
                     </a>
                   )}
                   {r.error && (
-                    <span className="text-[10px] font-mono" style={{ color: "#ff9a9a" }}>
+                    <span className="text-[12px]" style={{ color: "var(--danger)" }}>
                       {r.error}
                     </span>
                   )}
@@ -532,25 +483,25 @@ export default function FiveInOne(props: FiveInOneProps) {
         </div>
       )}
 
-      <p className="text-[10px] font-mono mt-3" style={{ color: "var(--text-quaternary)" }}>
-        6 separate transactions, one after another - your wallet signs each one. Gas is charged per
-        step, and a failed step does not stop the rest.
+      <p className="text-[14px] mt-4 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+        Six separate transactions, signed one after another. A failed step does not stop
+        the rest.
       </p>
 
       {loaded && estimatedGas > 0 && (
         <div
-          className="flex items-center justify-between gap-3 mt-2 px-2.5 py-1.5 rounded-lg"
-          style={{
-            background: "var(--bg-subtle)",
-            border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)",
-          }}
+          className="flex items-center justify-between gap-3 mt-3 px-3 py-2 rounded-[12px]"
+          style={{ background: "var(--bg-subtle)" }}
         >
-          <span className="text-[10px] font-mono" style={{ color: "var(--text-tertiary)" }}>
+          <span className="text-[14px]" style={{ color: "var(--text-tertiary)" }}>
             {reusedCount > 0
-              ? `${reusedCount}/3 already deployed here - next run costs almost nothing`
-              : "Estimated gas for this run"}
+              ? `${reusedCount}/3 already deployed — this run costs almost nothing`
+              : "Estimated gas"}
           </span>
-          <span className="text-[11px] font-mono" style={{ color: "var(--accent)" }}>
+          <span
+            className="text-[14px] font-medium tabular-nums"
+            style={{ color: "var(--text-secondary)" }}
+          >
             ~{estimatedGas.toLocaleString("en-US")}
           </span>
         </div>

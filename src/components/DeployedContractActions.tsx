@@ -127,7 +127,7 @@ export function DeployedContractActions({
 
   return (
     <div className="mt-3 space-y-1.5">
-      <p className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+      <p className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>
         Transact any time — these contracts have no daily limit:
       </p>
       {rows.map((r) => (
@@ -138,10 +138,10 @@ export function DeployedContractActions({
         >
           <div className="flex items-center gap-2">
             <MousePointerClick className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--success)" }} />
-            <span className="text-[11px] font-mono font-semibold" style={{ color: "var(--text-secondary)" }}>
+            <span className="text-[12px] font-semibold" style={{ color: "var(--text-secondary)" }}>
               {r.label}
             </span>
-            <span className="text-[9px] font-mono" style={{ color: "var(--text-quaternary)" }}>
+            <span className="text-[12px]" style={{ color: "var(--text-quaternary)" }}>
               {r.hint}
             </span>
             <span className="flex-1" />
@@ -149,7 +149,7 @@ export function DeployedContractActions({
               href={`${target?.blockExplorers.default.url}/address/${r.addr}`}
               target="_blank"
               rel="noreferrer"
-              className="text-[10px] font-mono truncate max-w-[90px]"
+              className="text-[12px] truncate max-w-[90px]"
               style={{ color: "var(--accent)" }}
             >
               {r.addr!.slice(0, 10)}...
@@ -158,7 +158,7 @@ export function DeployedContractActions({
               type="button"
               onClick={r.run}
               disabled={r.busy || !r.valid}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold transition-all disabled:opacity-40"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-semibold transition-all disabled:opacity-40"
               style={{ background: "var(--success)", color: "#000" }}
             >
               {r.busy && <Loader2 className="w-3 h-3 animate-spin" />}
@@ -172,10 +172,10 @@ export function DeployedContractActions({
                 onChange={(e) => setTokenTo(e.target.value.trim())}
                 placeholder="to 0x…"
                 spellCheck={false}
-                className="flex-1 min-w-0 px-2 py-1 rounded-md text-[10px] font-mono outline-none"
+                className="flex-1 min-w-0 px-2 py-1 rounded-md text-[12px] outline-none"
                 style={{
                   background: "var(--bg-card)",
-                  border: `1px solid ${tokenTo && !isAddress(tokenTo) ? "#ff4444" : "var(--border-default)"}`,
+                  border: `1px solid ${tokenTo && !isAddress(tokenTo) ? "var(--danger)" : "var(--border-default)"}`,
                   color: "var(--text-primary)",
                 }}
               />
@@ -184,7 +184,7 @@ export function DeployedContractActions({
                 onChange={(e) => setTokenAmount(e.target.value.trim())}
                 placeholder="1"
                 inputMode="decimal"
-                className="w-16 px-2 py-1 rounded-md text-[10px] font-mono outline-none"
+                className="w-16 px-2 py-1 rounded-md text-[12px] outline-none"
                 style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
               />
             </div>
@@ -196,7 +196,7 @@ export function DeployedContractActions({
                 href={`${target?.blockExplorers.default.url}/tx/${txs[r.key]}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[10px] font-mono"
+                className="inline-flex items-center gap-1 text-[12px]"
                 style={{ color: "var(--accent)" }}
               >
                 {txs[r.key].slice(0, 14)}... <ExternalLink className="w-3 h-3" />
@@ -204,7 +204,7 @@ export function DeployedContractActions({
             </div>
           )}
           {errors[r.key] && (
-            <p className="text-[10px] font-mono mt-1.5" style={{ color: "#ff9a9a" }}>
+            <p className="text-[12px] mt-1.5" style={{ color: "var(--danger)" }}>
               {errors[r.key]}
             </p>
           )}

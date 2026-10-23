@@ -54,18 +54,16 @@ export default function SiteFooter() {
               href={link.href}
               target={link.external ? "_blank" : undefined}
               rel={link.external ? "noopener noreferrer" : undefined}
-              className="flex items-center gap-1.5 text-xs font-mono transition-all hover:opacity-80"
-              style={{ color: "var(--text-secondary)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
+              className="flex items-center gap-1.5 text-[12px] transition-colors hover:text-[var(--text-primary)]"
+              style={{ color: "var(--text-tertiary)" }}
             >
               {link.icon}
               {link.label}
             </a>
           ))}
         </nav>
-        <p className="text-[10px] font-mono" style={{ color: "var(--text-quaternary)" }}>
-          DGDreams <span style={{ color: "var(--text-tertiary)" }}>v2.1</span> · Web3 Space Terminal
+        <p className="text-[12px]" style={{ color: "var(--text-faint)" }}>
+          A quiet habit, on chain.
         </p>
       </div>
     </footer>

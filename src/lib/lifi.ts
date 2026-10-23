@@ -1,6 +1,7 @@
 "use client";
 
 import { isAddress, type Address } from "viem";
+import { mainnetNetworks } from "@/config/chains";
 
 /* ─────────────────────────────────────────────
    LI.FI swap integration (public, keyless API)
@@ -39,10 +40,15 @@ export interface LifiQuote {
   };
 }
 
-/* Chains from our config that LI.FI actually supports (checked live). */
-export const SWAP_SUPPORTED_CHAINS = [
-  8453, 999, 130, 4217, 4663, 1, 57073, 5042,
-] as const;
+/*
+ * Every mainnet from our network config is available in the swap section.
+ * Derived from `mainnetNetworks` instead of a hand-kept allowlist, so a new
+ * mainnet is enabled the moment it lands in the config — and testnets stay
+ * out of the swap picker by construction.
+ */
+export const SWAP_SUPPORTED_CHAINS: readonly number[] = mainnetNetworks.map(
+  (n) => n.id
+);
 
 /* In-memory token-list cache so switching tokens/networks is instant. */
 const tokenCache = new Map<number, LifiToken[]>();

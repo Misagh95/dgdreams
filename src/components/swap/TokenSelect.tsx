@@ -22,8 +22,11 @@ export function TokenLogo({ t }: { t: LifiToken }) {
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
         />
       ) : (
-        <span className="text-[8px] font-bold" style={{ color: "var(--accent)" }}>
-          {t.symbol.slice(0, 2)}
+        <span
+          className="text-[12px] font-semibold leading-none"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          {t.symbol.slice(0, 1)}
         </span>
       )}
     </span>
@@ -111,7 +114,7 @@ export default function TokenSelect({
                 <TokenLogo t={t} />
                 <span className="flex-1 min-w-0">
                   <span className="block text-xs font-semibold truncate" style={{ color: "var(--text-bright)" }}>{t.symbol}</span>
-                  <span className="block text-[10px] font-mono truncate" style={{ color: "var(--text-quaternary)" }}>{t.name}</span>
+                  <span className="block text-[12px] truncate" style={{ color: "var(--text-quaternary)" }}>{t.name}</span>
                 </span>
                 {value?.address === t.address && <Check className="w-3 h-3 flex-shrink-0" style={{ color: "var(--accent)" }} />}
               </button>

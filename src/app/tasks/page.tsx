@@ -1,23 +1,23 @@
 "use client";
 
-import DashboardLayout from "@/components/DashboardLayout";
+import AppShell from "@/components/shell/AppShell";
+import TodayHero from "@/components/ritual/TodayHero";
 import { TasksSection } from "@/components/sections/TasksSection";
 
+/**
+ * The ritual.
+ *
+ * The three daily missions live in the hero, not in a grid of fourteen cards
+ * below it. What is left on this page is the deeper tooling: the six-in-one
+ * run, the standalone counter, and the badge.
+ */
 export default function TasksPage() {
   return (
-    <DashboardLayout title="Daily Tasks" subtitle="// your daily on-chain ritual">
-      <div className="space-y-5">
-        <div>
-          <p className="kicker mb-1.5">Daily ritual</p>
-          <h1 className="text-2xl sm:text-3xl font-black" style={{ color: "var(--text-bright)" }}>
-            Daily Tasks
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-            Check-in, GM and GN on any supported network. Resets at 00:00 UTC.
-          </p>
-        </div>
+    <AppShell>
+      <div className="space-y-4 sm:space-y-6">
+        <TodayHero variant="compact" />
         <TasksSection />
       </div>
-    </DashboardLayout>
+    </AppShell>
   );
 }
