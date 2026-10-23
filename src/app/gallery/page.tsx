@@ -196,6 +196,8 @@ interface BadgeCardProps {
 }
 
 function BadgeCard({ network, address, onState }: BadgeCardProps) {
+  const { chainId } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
   const contract = badgeAddress(network);
 
   // Read this chain's contract on this chain — not whatever network the
@@ -212,10 +214,11 @@ function BadgeCard({ network, address, onState }: BadgeCardProps) {
   const minted = tokenId !== undefined && tokenId > 0n;
 
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const {
-    writeContract,
+    writeContractAsync,
     isPending,
-    reset,
   } = useWriteContract();
 
   const { data: receipt, isError: receiptFailed } = useWaitForTransactionReceipt({
@@ -232,25 +235,35 @@ function BadgeCard({ network, address, onState }: BadgeCardProps) {
   useEffect(() => {
     if (!receipt || !hash) return;
     refetch();
-    reset();
     setHash(undefined);
-  }, [receipt, hash, refetch, reset]);
+  }, [receipt, hash, refetch]);
 
-  const mint = useCallback(() => {
+  const mint = useCallback(async () => {
     if (!contract) return;
-    const extra: Record<string, unknown> = {};
-    if (network.requiresLegacyGas && network.legacyGasPrice) {
-      extra.gasPrice = BigInt(network.legacyGasPrice);
+    setBusy(true);
+    setError(null);
+    try {
+      if (chainId !== network.id) {
+        await switchChainAsync({ chainId: network.id });
+      }
+      const extra: Record<string, unknown> = {};
+      if (network.requiresLegacyGas && network.legacyGasPrice) {
+        extra.gasPrice = BigInt(network.legacyGasPrice);
+      }
+      const h = await writeContractAsync({
+        address: contract,
+        abi: BADGE_ABI,
+        functionName: "mint",
+        chainId: network.id,
+        ...extra,
+      });
+      setHash(h);
+    } catch (e) {
+      setError(String(e).split("\n")[0].slice(0, 120));
+    } finally {
+      setBusy(false);
     }
-    writeContract({
-      address: contract,
-      abi: BADGE_ABI,
-      functionName: "mint",
-      // wagmi asks the wallet to switch to this chain for the call.
-      chainId: network.id,
-      ...extra,
-    });
-  }, [contract, writeContract, network.id, network.requiresLegacyGas, network.legacyGasPrice]);
+  }, [contract, writeContractAsync, network.id, network.requiresLegacyGas, network.legacyGasPrice, chainId, switchChainAsync]);
 
   if (!contract) {
     return (
@@ -346,9 +359,15 @@ function BadgeCard({ network, address, onState }: BadgeCardProps) {
             color: network.color ? "#0A0E1A" : "var(--text-secondary)",
           }}
         >
-          {isPending ? "Confirm in wallet…" : "Mint free"}
+          {busy || isPending ? "Confirm in wallet…" : "Mint free"}
         </button>
       )}
+
+      {error ? (
+        <p className="text-[10px] text-center" style={{ color: "var(--danger, var(--text-secondary))" }}>
+          {error}
+        </p>
+      ) : null}
     </m.div>
   );
 }
