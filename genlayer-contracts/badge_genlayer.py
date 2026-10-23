@@ -1,0 +1,53 @@
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+from genlayer import *
+import json
+
+BASE = "https://dgdreams.space/api/badge"
+CHAIN_ID = 4221
+VERSION = "1.0.0"
+
+
+class ChainBadge(gl.Contract):
+    store: str
+
+    def __init__(self):
+        self.store = json.dumps({"minters": {}, "count": 0}, sort_keys=True)
+
+    # ── writes ──────────────────────────────────────────────────────
+    @gl.public.write
+    def mint(self) -> str:
+        addr = str(gl.message.sender_address).lower()
+        data = json.loads(self.store)
+        m = data["minters"]
+        if m.get(addr):
+            raise Exception("already minted")
+        data["count"] = int(data["count"]) + 1
+        token_id = data["count"]
+        m[addr] = token_id
+        self.store = json.dumps(data, sort_keys=True)
+        return json.dumps({"ok": True, "tokenId": token_id})
+
+    # ── views ───────────────────────────────────────────────────────
+    @gl.public.view
+    def userTokenId(self, addr: str) -> int:
+        data = json.loads(self.store)["minters"]
+        return int(data.get(str(addr).lower(), 0))
+
+    @gl.public.view
+    def totalMinted(self) -> int:
+        return int(json.loads(self.store)["count"])
+
+    @gl.public.view
+    def tokenURI(self, _token_id: int) -> str:
+        return "{0}?chain={1}&id={2}".format(BASE, CHAIN_ID, int(_token_id))
+
+    @gl.public.view
+    def ownerOf(self, _token_id: int) -> str:
+        for a, t in json.loads(self.store)["minters"].items():
+            if int(t) == int(_token_id):
+                return a
+        return ""
+
+    @gl.public.view
+    def version(self) -> str:
+        return VERSION

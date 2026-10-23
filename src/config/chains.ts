@@ -35,10 +35,12 @@ export const bnbChain = /*#__PURE__*/ defineChain({
   nativeCurrency: { decimals: 18, name: "BNB", symbol: "BNB" },
   rpcUrls: {
     default: {
-      http: ["https://bsc-dataseed.binance.org", "https://bsc.drpc.org"],
+      // bsc-dataseed times out from many regions (regional block) — publicnode
+      // is the reliable entry point; wallets use the FIRST url.
+      http: ["https://bsc.publicnode.com", "https://bsc-dataseed.binance.org", "https://bsc.drpc.org"],
     },
     public: {
-      http: ["https://bsc-dataseed.binance.org", "https://bsc.drpc.org"],
+      http: ["https://bsc.publicnode.com", "https://bsc-dataseed.binance.org", "https://bsc.drpc.org"],
     },
   },
   blockExplorers: {
@@ -102,8 +104,10 @@ export const arcTestChain = /*#__PURE__*/ defineChain({
   name: "ARC Testnet",
   nativeCurrency: { decimals: 18, name: "ARC", symbol: "ARC" },
   rpcUrls: {
-    default: { http: ["https://rpc.testnet.arc.network"] },
-    public: { http: ["https://rpc.testnet.arc.network"] },
+    // rpc.testnet.arc.network stopped resolving — the .io endpoint answers
+    // with the same chain id (0x4cef52), so it comes first.
+    default: { http: ["https://rpc.testnet.arc.io", "https://rpc.testnet.arc.network"] },
+    public: { http: ["https://rpc.testnet.arc.io", "https://rpc.testnet.arc.network"] },
   },
   blockExplorers: {
     default: { name: "ARC Scan", url: "https://testnet.arcscan.app" },
@@ -116,10 +120,12 @@ export const simpleChain = /*#__PURE__*/ defineChain({
   nativeCurrency: { decimals: 18, name: "Simple", symbol: "SIM" },
   rpcUrls: {
     default: {
-      http: ["https://prod-simple-abroad.qukuaicunzheng.top/rpc/"],
+      // The official "prod-simple-abroad" endpoint answers 403 from many
+      // regions; rpc-c.simplechain.com is SRW's listed public endpoint.
+      http: ["https://rpc-c.simplechain.com", "https://prod-simple-abroad.qukuaicunzheng.top/rpc/"],
     },
     public: {
-      http: ["https://prod-simple-abroad.qukuaicunzheng.top/rpc/"],
+      http: ["https://rpc-c.simplechain.com", "https://prod-simple-abroad.qukuaicunzheng.top/rpc/"],
     },
   },
   blockExplorers: {

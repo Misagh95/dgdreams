@@ -5,6 +5,7 @@ import {
   FileText,
   Globe,
   HelpCircle,
+  Layers,
   Puzzle,
   Rocket,
   Scale,
@@ -60,6 +61,12 @@ export const PRIMARY_NAV: NavItem[] = [
 ];
 
 export const MORE_NAV: NavItem[] = [
+  {
+    href: "/gallery",
+    label: "Gallery",
+    icon: Layers,
+    blurb: "The Grand Tour — one free soulbound badge per network",
+  },
   {
     href: "/app",
     label: "Console",
