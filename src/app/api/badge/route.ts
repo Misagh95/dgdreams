@@ -8,8 +8,8 @@ import { badgeImage } from "@/lib/badge";
  * The badge contract is deployed on every network, so its tokenURI has to
  * describe *this* chain — that is why the contract appends `?chain=<id>` and
  * this route looks the chain up in the app's own network list. The image is
- * the network's logo straight from /public/logos, exactly what the app
- * already renders in the network pickers, so the badge and the UI agree.
+ * the network's Grand Tour artwork from /public/output-premium, so the badge
+ * and the gallery card agree.
  */
 
 export async function GET(request: NextRequest) {

@@ -49,34 +49,34 @@ export function badgeAddress(
 }
 
 /**
- * Grand Tour artwork (`/public/output`), per chain. Several chains share the
- * logo of their sibling (Sepolia wears the Ethereum mark, Base Sepolia wears
- * Base's, and so on). Anything not listed falls back to the network's own
- * `logo` from the network config.
+ * Grand Tour artwork (`/public/output-premium`), per chain. Several chains
+ * share the logo of their sibling (Sepolia wears the Ethereum mark, Base
+ * Sepolia wears Base's, and so on). Anything not listed falls back to the
+ * network's own `logo` from the network config.
  */
 export const BADGE_IMAGE: Record<number, string> = {
-  1: "/output/ethereum.png",
-  8453: "/output/base.png",
-  999: "/output/hyperliquid.png",
-  130: "/output/unichain.png",
-  4217: "/output/tempo.png",
-  4663: "/output/robinhood.png",
-  57073: "/output/ink.png",
-  5042: "/output/arc.png",
-  56: "/output/bnb-chain.png",
-  204: "/output/opbnb.png",
-  42161: "/output/arbitrum.png",
-  10: "/output/optimism.png",
-  1868: "/output/soneium.png",
-  11155111: "/output/ethereum.png",
-  84532: "/output/base.png",
-  91342: "/output/giwa.png",
-  4441: "/output/litvm.png",
-  5042002: "/output/arc.png",
-  1913: "/output/simplechain.png",
-  4221: "/output/genlayer.png",
-  421614: "/output/arbitrum.png",
-  450815: "/output/maroo.png",
+  1: "/output-premium/ethereum.png",
+  8453: "/output-premium/base.png",
+  999: "/output-premium/hyperliquid.png",
+  130: "/output-premium/unichain.png",
+  4217: "/output-premium/tempo.png",
+  4663: "/output-premium/robinhood.png",
+  57073: "/output-premium/ink.png",
+  5042: "/output-premium/arc.png",
+  56: "/output-premium/bnb-chain.png",
+  204: "/output-premium/opbnb.png",
+  42161: "/output-premium/arbitrum.png",
+  10: "/output-premium/optimism.png",
+  1868: "/output-premium/soneium.png",
+  11155111: "/output-premium/ethereum.png",
+  84532: "/output-premium/base.png",
+  91342: "/output-premium/giwa.png",
+  4441: "/output-premium/litvm.png",
+  5042002: "/output-premium/arc.png",
+  1913: "/output-premium/simplechain.png",
+  4221: "/output-premium/genlayer.png",
+  421614: "/output-premium/arbitrum.png",
+  450815: "/output-premium/maroo.png",
 };
 
 /** Absolute-able image path for a network's badge. */
