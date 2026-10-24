@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { m } from "framer-motion";
-import { Compass, Lock } from "lucide-react";
+import { Compass, Lock, X } from "lucide-react";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract, useSwitchChain } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 import DashboardLayout from "@/components/DashboardLayout";
 import { mainnetNetworks, testnetNetworks, type NetworkConfig } from "@/config/chains";
 import { BADGE_ABI, badgeAddress, badgeImage } from "@/lib/badge";
-import { GENLAYER_BADGE_CONTRACT, genBadgeMint, genBadgeMintCount } from "@/lib/genlayer/badge";
+import { GENLAYER_BADGE_CONTRACT, genBadgeMint, genBadgeMintCount, genBadgeUserTokenId } from "@/lib/genlayer/badge";
 import { waitForGenLayerTx } from "@/lib/genlayer/tasks";
 
 /**
@@ -23,13 +23,134 @@ import { waitForGenLayerTx } from "@/lib/genlayer/tasks";
 
 const NETWORKS = [...mainnetNetworks, ...testnetNetworks];
 
+// ERC-721 `Transfer(address,address,uint256)` — a mint is the log where `from`
+// is the zero address, and its last topic is the token id (the edition number).
+const TRANSFER_TOPIC =
+  "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+
+function mintedTokenId(
+  logs: readonly { address: string; topics: readonly string[] }[],
+  contract: string
+): number | undefined {
+  const target = contract.toLowerCase();
+  for (const log of logs) {
+    if (log.address.toLowerCase() !== target) continue;
+    if (log.topics[0]?.toLowerCase() !== TRANSFER_TOPIC) continue;
+    if (log.topics.length < 4) continue;
+    if (!/^0x0{64}$/.test(log.topics[1] ?? "")) continue; // not a mint
+    try {
+      return Number(BigInt(log.topics[3]));
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 interface BadgeCardProps {
   network: NetworkConfig;
   address: `0x${string}` | undefined;
   onState: (chainId: number, minted: boolean) => void;
+  onMinted: (network: NetworkConfig, tokenId: number) => void;
 }
 
-function GenLayerBadgeCard({ network, address, onState }: BadgeCardProps) {
+/**
+ * The after-mint popup: the badge artwork at full size with the edition number
+ * stamped on it, so the moment an unlimited mint lands has something to show
+ * for it beyond a card flipping to "Collected".
+ */
+function MintedModal({
+  network,
+  tokenId,
+  onClose,
+}: {
+  network: NetworkConfig;
+  tokenId: number;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <m.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      style={{ background: "rgba(4, 7, 14, 0.78)", backdropFilter: "blur(6px)" }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Minted ${network.shortName} badge #${tokenId}`}
+      onClick={onClose}
+    >
+      <m.div
+        initial={{ opacity: 0, y: 16, scale: 0.94 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 22 }}
+        className="relative w-full max-w-[380px] rounded-[24px] p-6 flex flex-col items-center gap-4"
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-default)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-opacity hover:opacity-80"
+          style={{ background: "var(--bg-strong)", color: "var(--text-secondary)" }}
+        >
+          <X className="w-4 h-4" strokeWidth={2} />
+        </button>
+
+        <p className="kicker" style={{ color: "var(--accent-text)" }}>
+          Minted
+        </p>
+
+        {/* the badge artwork, with the freshly minted edition stamped on it */}
+        <div
+          className="relative rounded-[20px] flex items-center justify-center w-full"
+          style={{ background: "var(--bg-strong)", aspectRatio: "1 / 1" }}
+        >
+          <img
+            src={badgeImage(network)}
+            alt={`${network.shortName} badge`}
+            className="w-full h-full object-contain p-4"
+            draggable={false}
+          />
+          <span
+            className="absolute bottom-3 right-3 text-[14px] font-bold px-3 py-1 rounded-full tabular-nums"
+            style={{ background: "#0A0E1A", color: "#FFFFFF", border: `1px solid ${network.color || "var(--border-default)"}` }}
+          >
+            #{tokenId}
+          </span>
+        </div>
+
+        <div className="text-center">
+          <p className="text-[16px] font-semibold" style={{ color: "var(--text-bright)" }}>
+            DGDreams {network.shortName} Badge
+          </p>
+          <p className="text-[13px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>
+            Edition #{tokenId} · {network.name}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full text-[13px] font-semibold py-2.5 rounded-full transition-opacity hover:opacity-85"
+          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+        >
+          Nice — keep going
+        </button>
+      </m.div>
+    </m.div>
+  );
+}
+
+function GenLayerBadgeCard({ network, address, onState, onMinted }: BadgeCardProps) {
   const { chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const hasContract = GENLAYER_BADGE_CONTRACT.length > 0;
@@ -80,14 +201,16 @@ function GenLayerBadgeCard({ network, address, onState }: BadgeCardProps) {
         setError(r.reason);
         return;
       }
+      const tokenId = await genBadgeUserTokenId(address);
       await refresh();
+      if (tokenId > 0) onMinted(network, tokenId);
     } catch (e) {
       setError(String(e).split("\n")[0].slice(0, 80));
     } finally {
       setBusy(false);
       setHash(null);
     }
-  }, [address, hasContract, refresh, chainId, switchChainAsync]);
+  }, [address, hasContract, refresh, chainId, switchChainAsync, network, onMinted]);
 
   if (!hasContract) {
     return (
@@ -193,9 +316,10 @@ interface BadgeCardProps {
   network: NetworkConfig;
   address: `0x${string}` | undefined;
   onState: (chainId: number, minted: boolean) => void;
+  onMinted: (network: NetworkConfig, tokenId: number) => void;
 }
 
-function BadgeCard({ network, address, onState }: BadgeCardProps) {
+function BadgeCard({ network, address, onState, onMinted }: BadgeCardProps) {
   const { chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const contract = badgeAddress(network);
@@ -232,12 +356,17 @@ function BadgeCard({ network, address, onState }: BadgeCardProps) {
     if (mintCount !== undefined) onState(network.id, hasAny);
   }, [network.id, hasAny, mintCount, onState]);
 
-  // Once the mint is mined, refresh the read from this chain.
+  // Once the mint is mined, refresh the read from this chain and celebrate the
+  // edition that just landed.
   useEffect(() => {
     if (!receipt || !hash) return;
+    if (receipt.status === "success" && contract) {
+      const tokenId = mintedTokenId(receipt.logs, contract);
+      if (tokenId !== undefined) onMinted(network, tokenId);
+    }
     refetch();
     setHash(undefined);
-  }, [receipt, hash, refetch]);
+  }, [receipt, hash, refetch, contract, network, onMinted]);
 
   const mint = useCallback(async () => {
     if (!contract) return;
@@ -377,9 +506,14 @@ export default function GalleryPage() {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
   const [mintedMap, setMintedMap] = useState<Record<number, boolean>>({});
+  const [celebrate, setCelebrate] = useState<{ network: NetworkConfig; tokenId: number } | null>(null);
 
   const onState = useCallback((chainId: number, minted: boolean) => {
     setMintedMap((prev) => (prev[chainId] === minted ? prev : { ...prev, [chainId]: minted }));
+  }, []);
+
+  const onMinted = useCallback((network: NetworkConfig, tokenId: number) => {
+    setCelebrate({ network, tokenId });
   }, []);
 
   const deployedNetworks = NETWORKS.filter((n) => badgeAddress(n) !== undefined);
@@ -394,9 +528,9 @@ export default function GalleryPage() {
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
       {nets.map((n) =>
         n.id === 4221 ? (
-          <GenLayerBadgeCard key={n.id} network={n} address={address} onState={onState} />
+          <GenLayerBadgeCard key={n.id} network={n} address={address} onState={onState} onMinted={onMinted} />
         ) : (
-          <BadgeCard key={n.id} network={n} address={address} onState={onState} />
+          <BadgeCard key={n.id} network={n} address={address} onState={onState} onMinted={onMinted} />
         )
       )}
     </div>
@@ -404,6 +538,13 @@ export default function GalleryPage() {
 
   return (
     <DashboardLayout wide>
+      {celebrate ? (
+        <MintedModal
+          network={celebrate.network}
+          tokenId={celebrate.tokenId}
+          onClose={() => setCelebrate(null)}
+        />
+      ) : null}
       <div className="space-y-4 sm:space-y-6">
         {/* header */}
         <div>
