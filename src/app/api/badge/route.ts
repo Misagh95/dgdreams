@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     name: `DGDreams ${network.shortName} Badge #${Number.isFinite(id) ? id : idParam}`,
     description:
       `Soulbound proof that this wallet set foot on ${network.name} through DGDreams. ` +
-      "Non-transferable, one per wallet, minted for gas only.",
+      "Non-transferable, unlimited mints, minted for gas only.",
     image: `${origin}${badgeImage(network)}`,
     external_url: "https://dgdreams.space",
     attributes: [

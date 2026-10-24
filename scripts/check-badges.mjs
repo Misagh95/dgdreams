@@ -8,6 +8,9 @@ const MINTED_ABI = [{ type: "function", name: "totalMinted", inputs: [], outputs
 
 let ok = 0, bad = 0;
 for (const n of all) {
+  // GenLayer (4221) runs Python intelligent contracts, not EVM bytecode — the
+  // viem path below can never read it. It has its own deploy script.
+  if (n.id === 4221) continue;
   const addr = BADGE_ADDR[n.id];
   if (!addr) continue; // not deployed — skip silently, the report says why
   const pub = createPublicClient({ transport: fallback(n.rpcUrls.default.http.map((u) => http(u))) });

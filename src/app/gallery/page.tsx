@@ -9,15 +9,15 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import DashboardLayout from "@/components/DashboardLayout";
 import { mainnetNetworks, testnetNetworks, type NetworkConfig } from "@/config/chains";
 import { BADGE_ABI, badgeAddress, badgeImage } from "@/lib/badge";
-import { GENLAYER_BADGE_CONTRACT, genBadgeMint, genBadgeUserTokenId } from "@/lib/genlayer/badge";
+import { GENLAYER_BADGE_CONTRACT, genBadgeMint, genBadgeMintCount } from "@/lib/genlayer/badge";
 import { waitForGenLayerTx } from "@/lib/genlayer/tasks";
 
 /**
- * The Grand Tour — one free, soulbound badge per network.
+ * The Grand Tour — free, soulbound badges on every network.
  *
- * Twenty-two networks, twenty-two badges. Each one is mintable by anyone, for
- * gas only, exactly once per wallet, and it can never leave that wallet. The
- * card grid mirrors the network pickers: same logos, same colors, so the
+ * Twenty-two networks, unlimited badges. Each one is mintable by anyone, for
+ * gas only, as many times as they like, and it can never leave that wallet.
+ * The card grid mirrors the network pickers: same logos, same colors, so the
  * collection reads as "the tour", not as a foreign NFT page.
  */
 
@@ -34,19 +34,19 @@ function GenLayerBadgeCard({ network, address, onState }: BadgeCardProps) {
   const { switchChainAsync } = useSwitchChain();
   const hasContract = GENLAYER_BADGE_CONTRACT.length > 0;
 
-  const [tokenId, setTokenId] = useState<number>(0);
+  const [count, setCount] = useState<number>(0);
   const [loaded, setLoaded] = useState(false);
   const [hash, setHash] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const minted = tokenId > 0;
+  const hasAny = count > 0;
 
   const refresh = useCallback(async () => {
     if (!address || !hasContract) return;
     try {
-      const v = await genBadgeUserTokenId(address);
-      setTokenId(v);
+      const v = await genBadgeMintCount(address);
+      setCount(v);
       onState(network.id, v > 0);
     } catch (e) {
       setError(String(e).split("\n")[0].slice(0, 80));
@@ -62,8 +62,8 @@ function GenLayerBadgeCard({ network, address, onState }: BadgeCardProps) {
   }, [address, refresh]);
 
   useEffect(() => {
-    if (tokenId !== undefined) onState(network.id, minted);
-  }, [network.id, minted, tokenId, onState]);
+    if (loaded) onState(network.id, hasAny);
+  }, [network.id, hasAny, loaded, onState]);
 
   const mint = useCallback(async () => {
     if (!address || !hasContract) return;
@@ -119,8 +119,8 @@ function GenLayerBadgeCard({ network, address, onState }: BadgeCardProps) {
       className="rounded-[16px] p-4 flex flex-col items-center gap-2.5"
       style={{
         background: "var(--bg-card)",
-        border: `1px solid ${minted ? network.color || "var(--border-default)" : "var(--border-default)"}`,
-        boxShadow: minted ? `0 0 0 1px ${network.color || "transparent"}22` : undefined,
+        border: `1px solid ${hasAny ? network.color || "var(--border-default)" : "var(--border-default)"}`,
+        boxShadow: hasAny ? `0 0 0 1px ${network.color || "transparent"}22` : undefined,
       }}
     >
       <div
@@ -145,13 +145,13 @@ function GenLayerBadgeCard({ network, address, onState }: BadgeCardProps) {
         </p>
       </div>
 
-      {minted ? (
+      {hasAny ? (
         <span
           className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
           style={{ background: "var(--accent-muted)", color: "var(--accent-text)" }}
-          title={`Token #${tokenId} — soulbound, it stays with this wallet`}
+          title={`${count} soulbound badge${count === 1 ? "" : "s"} — they stay with this wallet`}
         >
-          Collected
+          Collected ×{count}
         </span>
       ) : hash ? (
         <span
@@ -168,7 +168,7 @@ function GenLayerBadgeCard({ network, address, onState }: BadgeCardProps) {
           title={
             !address
               ? "Connect your wallet to mint"
-              : `Mint the ${network.shortName} badge on ${network.name} — free, gas only`
+              : `Mint a ${network.shortName} badge on ${network.name} — free, gas only, unlimited`
           }
           className="text-[12px] font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-80 disabled:opacity-40"
           style={{
@@ -176,7 +176,7 @@ function GenLayerBadgeCard({ network, address, onState }: BadgeCardProps) {
             color: network.color ? "#0A0E1A" : "var(--text-secondary)",
           }}
         >
-          {busy ? "Confirm in wallet…" : "Mint free"}
+          {busy ? "Confirm in wallet…" : hasAny ? "Mint another" : "Mint free"}
         </button>
       )}
 
@@ -202,16 +202,17 @@ function BadgeCard({ network, address, onState }: BadgeCardProps) {
 
   // Read this chain's contract on this chain — not whatever network the
   // wallet happens to be connected to.
-  const { data: tokenId, refetch } = useReadContract({
+  const { data: mintCount, refetch } = useReadContract({
     address: contract,
     abi: BADGE_ABI,
-    functionName: "userTokenId",
+    functionName: "mintCount",
     args: address ? [address] : undefined,
     chainId: network.id,
     query: { enabled: !!contract && !!address, refetchInterval: 60_000 },
   });
 
-  const minted = tokenId !== undefined && tokenId > 0n;
+  const count = mintCount !== undefined ? Number(mintCount) : 0;
+  const hasAny = count > 0;
 
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
   const [busy, setBusy] = useState(false);
@@ -228,8 +229,8 @@ function BadgeCard({ network, address, onState }: BadgeCardProps) {
 
   // Report the chain's state upward so the header counter stays live.
   useEffect(() => {
-    if (tokenId !== undefined) onState(network.id, minted);
-  }, [network.id, minted, tokenId, onState]);
+    if (mintCount !== undefined) onState(network.id, hasAny);
+  }, [network.id, hasAny, mintCount, onState]);
 
   // Once the mint is mined, refresh the read from this chain.
   useEffect(() => {
@@ -298,8 +299,8 @@ function BadgeCard({ network, address, onState }: BadgeCardProps) {
       className="rounded-[16px] p-4 flex flex-col items-center gap-2.5"
       style={{
         background: "var(--bg-card)",
-        border: `1px solid ${minted ? network.color || "var(--border-default)" : "var(--border-default)"}`,
-        boxShadow: minted ? `0 0 0 1px ${network.color || "transparent"}22` : undefined,
+        border: `1px solid ${hasAny ? network.color || "var(--border-default)" : "var(--border-default)"}`,
+        boxShadow: hasAny ? `0 0 0 1px ${network.color || "transparent"}22` : undefined,
       }}
     >
       {/* the logo, framed the way the badge's metadata frames it */}
@@ -325,13 +326,13 @@ function BadgeCard({ network, address, onState }: BadgeCardProps) {
         </p>
       </div>
 
-      {minted ? (
+      {hasAny ? (
         <span
           className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
           style={{ background: "var(--accent-muted)", color: "var(--accent-text)" }}
-          title={`Token #${tokenId.toString()} — soulbound, it stays with this wallet`}
+          title={`${count} soulbound badge${count === 1 ? "" : "s"} — they stay with this wallet`}
         >
-          Collected
+          Collected ×{count}
         </span>
       ) : hash ? (
         <span
@@ -351,7 +352,7 @@ function BadgeCard({ network, address, onState }: BadgeCardProps) {
           title={
             !address
               ? "Connect your wallet to mint"
-              : `Mint the ${network.shortName} badge on ${network.name} — free, gas only`
+              : `Mint a ${network.shortName} badge on ${network.name} — free, gas only, unlimited`
           }
           className="text-[12px] font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-80 disabled:opacity-40"
           style={{
@@ -359,7 +360,7 @@ function BadgeCard({ network, address, onState }: BadgeCardProps) {
             color: network.color ? "#0A0E1A" : "var(--text-secondary)",
           }}
         >
-          {busy || isPending ? "Confirm in wallet…" : "Mint free"}
+          {busy || isPending ? "Confirm in wallet…" : hasAny ? "Mint another" : "Mint free"}
         </button>
       )}
 
@@ -417,8 +418,8 @@ export default function GalleryPage() {
             Gallery
           </h1>
           <p className="mt-1 text-[14px]" style={{ color: "var(--text-secondary)" }}>
-            One free soulbound badge per network. Mint it on a chain, keep it forever —
-            transfers are blocked on chain, so the badge is proof you were there.
+            Free soulbound badges, unlimited — mint as many as you like on any network.
+            Transfers are blocked on chain, so each badge is proof you were there.
           </p>
         </div>
 
@@ -433,7 +434,7 @@ export default function GalleryPage() {
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
               <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
-                Your collection
+                Chains visited
               </p>
               <p
                 className="mt-0.5 text-[32px] font-bold leading-none tabular-nums"
@@ -441,7 +442,7 @@ export default function GalleryPage() {
               >
                 {collected}
                 <span className="text-[16px] font-normal ml-1" style={{ color: "var(--text-tertiary)" }}>
-                  / {total} collected
+                  / {total} chains
                 </span>
               </p>
             </div>
@@ -487,8 +488,8 @@ export default function GalleryPage() {
         </div>
 
         <p className="text-[12px] text-center" style={{ color: "var(--text-faint)" }}>
-          Soulbound by contract: transfers, approvals and all — reverted. Metadata is
-          served by this app, with each network&apos;s own logo as the image.
+          Soulbound by contract: transfers, approvals and all — reverted. Unlimited mints,
+          metadata served by this app, with each network&apos;s own logo as the image.
         </p>
       </div>
     </DashboardLayout>
