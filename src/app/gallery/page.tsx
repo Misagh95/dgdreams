@@ -276,7 +276,9 @@ function GenLayerBadgeCard({ network, address, onState, onMinted }: BadgeCardPro
         >
           Collected ×{count}
         </span>
-      ) : hash ? (
+      ) : null}
+
+      {hash ? (
         <span
           className="text-[11px] px-2.5 py-1 rounded-full animate-pulse"
           style={{ background: "var(--bg-strong)", color: "var(--text-tertiary)" }}
@@ -463,7 +465,9 @@ function BadgeCard({ network, address, onState, onMinted }: BadgeCardProps) {
         >
           Collected ×{count}
         </span>
-      ) : hash ? (
+      ) : null}
+
+      {hash ? (
         <span
           className={`text-[11px] px-2.5 py-1 rounded-full ${receiptFailed ? "font-semibold" : "animate-pulse"}`}
           style={{
