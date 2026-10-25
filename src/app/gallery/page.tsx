@@ -15,7 +15,7 @@ import { waitForGenLayerTx } from "@/lib/genlayer/tasks";
 /**
  * The Grand Tour — free, soulbound badges on every network.
  *
- * Twenty-two networks, unlimited badges. Each one is mintable by anyone, for
+ * Twenty-three networks, unlimited badges. Each one is mintable by anyone, for
  * gas only, as many times as they like, and it can never leave that wallet.
  * The card grid mirrors the network pickers: same logos, same colors, so the
  * collection reads as "the tour", not as a foreign NFT page.

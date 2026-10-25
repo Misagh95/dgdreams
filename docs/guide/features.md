@@ -1,6 +1,6 @@
 # Features
 
-DGDreams is a unified dashboard where you connect your wallet once and execute daily on-chain tasks across **22 blockchain networks**.
+DGDreams is a unified dashboard where you connect your wallet once and execute daily on-chain tasks across **23 blockchain networks**.
 
 ## ✨ At a glance
 

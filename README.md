@@ -2,7 +2,7 @@
   <img src="https://dgdreams.space/genlayer-spinner.svg" alt="GenLayer Spinner" width="80" />
   <h1 align="center">DGDreams — Web3 Space Terminal</h1>
   <p align="center">
-    Multi-chain daily task dashboard with <strong>22 networks</strong> • <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
+    Multi-chain daily task dashboard with <strong>23 networks</strong> • <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
   </p>
   <p align="center">
     <a href="https://dgdreams.space" target="_blank"><strong>🌐 Live Site</strong></a>
@@ -27,7 +27,7 @@
 
 ## Overview
 
-**DGDreams** is a unified dashboard where users connect their wallet once and execute daily on-chain tasks across **22 blockchain networks** — Ethereum, Base, Arbitrum One, OP Mainnet, Soneium, HyperEVM, Unichain, Tempo, Robinhood, Ink, Arc, BNB Chain and opBNB on mainnet, plus testnets including **Arbitrum Sepolia**, **GenLayer Bradbury**, **Maroo Testnet**, LitVM, GIWA, ARC, and SimpleChain.
+**DGDreams** is a unified dashboard where users connect their wallet once and execute daily on-chain tasks across **23 blockchain networks** — Ethereum, Base, Arbitrum One, OP Mainnet, Soneium, HyperEVM, Unichain, Tempo, Robinhood, Ink, Arc, BNB Chain and opBNB on mainnet, plus testnets including **Arbitrum Sepolia**, **GenLayer Bradbury**, **Maroo Testnet**, **DogeOS Chikyū Testnet**, LitVM, GIWA, ARC, and SimpleChain.
 
 | Feature | Description |
 |---|---|
@@ -188,6 +188,7 @@ User clicks "Start" → DailyTaskPanel opens
 | SimpleChain | 1913 | SIM |
 | **Arbitrum Sepolia** | **421614** | **ETH** |
 | **Maroo Testnet** | **450815** | **tOKRW** |
+| **DogeOS Chikyū Testnet** | **6281971** | **DOGE** |
 
 > 💡 **Arbitrum and OP are the cheapest networks here** — a full 6-in-1 run costs
 > well under a cent, so they are the best place to start.

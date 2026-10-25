@@ -13,7 +13,7 @@ const CHAINS = [
   [4663, "Robinhood"], [57073, "Ink"], [1868, "Soneium"],
   [4441, "LITVM Liteforge"], [4221, "GenLayer Bradbury"],
   [1913, "SimpleChain"], [5042002, "ARC Testnet"], [1913, "SimpleChain"],
-  [450815, "Maroo Testnet"],
+  [450815, "Maroo Testnet"], [6281971, "DogeOS Testnet"],
 ];
 
 const DUMMY = "0x000000000000000000000000000000000000dEaD";

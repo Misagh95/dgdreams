@@ -18,6 +18,7 @@ export const BADGE_ADDR: Record<number, `0x${string}` | ""> = {
   5042: "0xbb123f450822a42aeda8e71af3534d7dc84627f7", 56: "0x344ad6a0d3aeb4baa8d853c932fbebeb4e798e3b", 204: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0", 42161: "0xc288b68022e752d97e4395ecba61c2079ce692ad", 10: "0xc288b68022e752d97e4395ecba61c2079ce692ad", 1868: "0xc288b68022e752d97e4395ecba61c2079ce692ad",
   11155111: "0xdbee9ea39fedd197d224ea7520a20b4434635a6a", 84532: "0xd08e9bb972dc4e8bff1a6bb50fa75c86fb470346", 91342: "0xc50304759389cbc684a0f6dd4eb6d0332e70aac9", 4441: "0x58420b248ef127c796992c04cabf123a72bcd1b3", 5042002: "0xdbee9ea39fedd197d224ea7520a20b4434635a6a",
   1913: "0x58420b248ef127c796992c04cabf123a72bcd1b3", 4221: "0x8A32da709dA16DF8c7039dA22d0688a6817587E4", 421614: "0xc288b68022e752d97e4395ecba61c2079ce692ad", 450815: "0xc288b68022e752d97e4395ecba61c2079ce692ad",
+  6281971: "0xff3a00cf7d83723f88097bcc8230ae37b3adf3ff",
 };
 
 export const BADGE_ABI = [
@@ -91,6 +92,7 @@ export const BADGE_IMAGE: Record<number, string> = {
   4221: "/output-premium/genlayer.png",
   421614: "/output-premium/arbitrum.png",
   450815: "/output-premium/maroo.png",
+  6281971: "/output-premium/dogeos.png",
 };
 
 /** Absolute-able image path for a network's badge. */

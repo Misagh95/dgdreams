@@ -25,6 +25,8 @@ export const SOULBOUND_ADDR: Record<number, `0x${string}` | ""> = {
   42161: "0x344ad6a0d3aeb4baa8d853c932fbebeb4e798e3b",
   10: "0x344ad6a0d3aeb4baa8d853c932fbebeb4e798e3b",
   450815: "0x344ad6a0d3aeb4baa8d853c932fbebeb4e798e3b",
+  // DogeOS Chikyū Testnet — verified on dogeos-testnet.l2scan.co (Blockscout)
+  6281971: "0x344ad6a0d3aeb4baa8d853c932fbebeb4e798e3b",
 };
 
 export const SOULBOUND_ABI = [

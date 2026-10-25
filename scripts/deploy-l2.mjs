@@ -38,6 +38,7 @@ const TARGETS = [
   { id: 1868, name: "Soneium" },
   { id: 421614, name: "Arbitrum Sepolia" },
   { id: 450815, name: "Maroo Testnet" },
+  { id: 6281971, name: "DogeOS Testnet" },
 ]
   .filter((t) => only.length === 0 || only.includes(String(t.id)))
   .map((t) => ({
@@ -58,7 +59,6 @@ const CONTRACTS = [
     args: () => [],
     maps: [
       { file: "src/config/chains.ts", anchor: "export const NIKBASE_CONTRACTS" },
-      { file: "src/components/DailyTaskPanel.tsx", anchor: "export const CONTRACTS" },
     ],
   },
   {
@@ -71,7 +71,7 @@ const CONTRACTS = [
     name: "SoulboundStreak",
     artifact: "out/SoulboundStreak.sol/SoulboundStreak.json",
     args: (onChain, deployer) => [onChain.NikBase, deployer],
-    maps: [{ file: "src/components/sections/TasksSection.tsx", anchor: "const SOULBOUND_ADDR" }],
+    maps: [{ file: "src/lib/soulbound.ts", anchor: "export const SOULBOUND_ADDR" }],
   },
 ].filter((c) => !(has("--skip-nft") && c.name === "SoulboundStreak"));
 

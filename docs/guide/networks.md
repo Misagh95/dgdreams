@@ -1,6 +1,6 @@
 # Networks
 
-DGDreams supports **22 networks** — 13 mainnets and 9 testnets — all from one wallet.
+DGDreams supports **23 networks** — 13 mainnets and 10 testnets — all from one wallet.
 
 ## 🟢 Mainnet
 
@@ -33,6 +33,7 @@ DGDreams supports **22 networks** — 13 mainnets and 9 testnets — all from on
 | SimpleChain | 1913 | SIM |
 | **Arbitrum Sepolia** | 421614 | ETH |
 | **Maroo Testnet** | 450815 | tOKRW |
+| **DogeOS Chikyū Testnet** | 6281971 | DOGE |
 
 ## 💸 Cost
 
@@ -103,4 +104,36 @@ addresses are skipped unless you pass `--force`) and
 `node scripts/verify-l2.mjs --only 450815` re-verifies them — custom chains are
 verified by numeric chain id against the Blockscout API.
 
-> 💡 Each network needs **native gas** for writes. Check the currency column above — that's what you need in your wallet for that chain. On Arc mainnet that means **USDC**, on Maroo Testnet it means **tOKRW** from the faucet.
+### DogeOS testnet
+
+DogeOS is **the app layer for Dogecoin** — an EVM-equivalent optimistic rollup
+settling onto the Dogecoin testnet. It is bytecode compatible with Ethereum's
+Prague upgrade, so the standard EVM tooling (wagmi, forge, hardhat) works
+unmodified. DGDreams tracks the Chikyū **testnet**:
+
+| Field | Value |
+|---|---|
+| Chain ID (EVM) | `6281971` (`0x5fdaf3`, verified live) |
+| RPC | `https://rpc.testnet.dogeos.com` |
+| Explorer | https://dogeos-testnet.l2scan.co |
+| Faucet | https://faucet.testnet.dogeos.com |
+| Testnet portal | https://portal.testnet.dogeos.com |
+| Native gas | **DOGE** (testnet DOGE, 18 decimals) |
+
+Make sure your Solidity compiler is `>= 0.8.30` when targeting DogeOS — the
+docs recommend `prague` as the EVM target.
+
+All three DGDreams contracts are **live on DogeOS Testnet**:
+
+| Contract | Address |
+|---|---|
+| `NikBase` | [`0x68bb9775…1e733`](https://dogeos-testnet.l2scan.co/address/0x68bb9775b11551310d7a37aae52e6505a0e1e733) |
+| `Game2048` | [`0xaf1f1ec7…7ebab0`](https://dogeos-testnet.l2scan.co/address/0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0) |
+| `SoulboundStreak` | [`0x344ad6a0…798e3b`](https://dogeos-testnet.l2scan.co/address/0x344ad6a0d3aeb4baa8d853c932fbebeb4e798e3b) |
+
+Maintenance: `node scripts/deploy-l2.mjs --only 6281971` re-runs safely (recorded
+addresses are skipped unless you pass `--force`) and
+`node scripts/verify-l2.mjs --only 6281971` re-verifies them — verification goes
+through the Blockscout API at `https://dogeos-testnet.l2scan.co/api`.
+
+> 💡 Each network needs **native gas** for writes. Check the currency column above — that's what you need in your wallet for that chain. On Arc mainnet that means **USDC**, on Maroo Testnet it means **tOKRW**, and on DogeOS Testnet it means **testnet DOGE** from https://faucet.testnet.dogeos.com.

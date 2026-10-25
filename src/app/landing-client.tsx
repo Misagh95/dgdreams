@@ -25,7 +25,7 @@ import {
 const features = [
   {
     icon: Globe,
-    title: "22 networks, one place",
+    title: "23 networks, one place",
     desc: "Run the same daily rituals on Ethereum, Base, Arbitrum, BNB Chain, GenLayer and more without switching apps.",
     span: "lg:col-span-2",
   },
@@ -79,6 +79,7 @@ const networks = [
   { name: "GenLayer", logo: "/logos/genlayer.svg" },
   { name: "Tempo", logo: "/logos/tempo.png" },
   { name: "Maroo", logo: "/logos/maroo.png" },
+  { name: "DogeOS", logo: "/logos/dogeos.svg" },
 ];
 
 const fadeUp = {
@@ -163,7 +164,7 @@ export default function LandingPage() {
           className="text-[16px] sm:text-[20px] max-w-2xl mb-9 leading-relaxed"
           style={{ color: "var(--text-secondary)" }}
         >
-          Connect once. Check in, say GM and GN across 22 networks, keep a
+          Connect once. Check in, say GM and GN across 23 networks, keep a
           streak and unlock soulbound badges.
         </m.p>
 
@@ -188,7 +189,7 @@ export default function LandingPage() {
           className="grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-lg mt-14"
         >
           {[
-            { value: "22", label: "Networks" },
+            { value: "23", label: "Networks" },
             { value: "3", label: "Daily rituals" },
             { value: "7d", label: "To first badge" },
           ].map((s) => (

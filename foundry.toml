@@ -42,17 +42,22 @@ arbitrum = "${ARBITRUM_RPC_URL}"
 optimism = "${OPTIMISM_RPC_URL}"
 soneium = "${SONEIUM_RPC_URL}"
 maroo_testnet = "${MAROO_RPC_URL}"
+dogeos_testnet = "${DOGEOS_RPC_URL}"
 arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC_URL}"
 
 # Explorer API keys, used by scripts/verify-l2.mjs.
 #   ARBITRUM_API_KEY / OPTIMISM_API_KEY  → arbiscan.io and optimistic.etherscan.io
 [etherscan]
-bsc = { key = "${BSCSCAN_API_KEY}" }
-opbnb = { key = "${BSCSCAN_API_KEY}" }
+bsc = { key = "${BSCSCAN_API_KEY}", chain = 56 }
+opbnb = { key = "${BSCSCAN_API_KEY}", chain = 204 }
 arbitrum = { key = "${ARBITRUM_API_KEY}", chain = 42161 }
 optimism = { key = "${OPTIMISM_API_KEY}", chain = 10 }
 soneium = { key = "${SONEIUM_API_KEY}", chain = 1868, url = "https://soneium.blockscout.com/api" }
 maroo_testnet = { key = "${MAROO_API_KEY}", chain = 450815, url = "https://explorer-testnet.maroo.io/blockscout/api" }
+# l2scan rejects any non-empty apikey ("Invalid API Key") but accepts requests
+# with no apikey at all — hence the literal empty key (an env placeholder value
+# leaked into the verification request and broke it).
+dogeos_testnet = { key = "", chain = 6281971, url = "https://dogeos-testnet.l2scan.co/api" }
 arbitrum_sepolia = { key = "${ARBITRUM_API_KEY}", chain = 421614 }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md

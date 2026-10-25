@@ -335,6 +335,28 @@ export const marooTestnetChain = /*#__PURE__*/ defineChain({
   testnet: true,
 });
 
+/**
+ * DogeOS Chikyū Testnet — "the app layer for Dogecoin": an EVM-equivalent
+ * optimistic rollup settling onto the Dogecoin testnet. Bytecode compatible
+ * with Ethereum Prague, so the standard EVM stack (wagmi/forge/hardhat) works
+ * unmodified. Live-verified: eth_chainId returns 0x5fdaf3 (6281971). Gas is
+ * native **DOGE** — a real coin, not an ERC-20. Faucet:
+ * https://faucet.testnet.dogeos.com · Portal: https://portal.testnet.dogeos.com
+ */
+export const dogeosTestnetChain = /*#__PURE__*/ defineChain({
+  id: 6281971,
+  name: "DogeOS Chikyū Testnet",
+  nativeCurrency: { decimals: 18, name: "Dogecoin", symbol: "DOGE" },
+  rpcUrls: {
+    default: { http: ["https://rpc.testnet.dogeos.com"] },
+    public: { http: ["https://rpc.testnet.dogeos.com"] },
+  },
+  blockExplorers: {
+    default: { name: "DogeOS Explorer", url: "https://dogeos-testnet.l2scan.co" },
+  },
+  testnet: true,
+});
+
 export interface NetworkConfig {
   id: number;
   name: string;
@@ -388,6 +410,8 @@ export const GAME2048_CONTRACTS: Record<number, `0x${string}`> = {
   1868: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
   // Maroo Testnet — verified on explorer-testnet.maroo.io (Blockscout)
   450815: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
+  // DogeOS Chikyū Testnet — verified on dogeos-testnet.l2scan.co (Blockscout)
+  6281971: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
 };
 
 export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
@@ -415,6 +439,7 @@ export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
   1868: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
   // Maroo Testnet — verified on explorer-testnet.maroo.io (Blockscout)
   450815: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
+  6281971: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
 };
 
 function makeNetworkConfig(
@@ -580,6 +605,12 @@ export const testnetNetworks: NetworkConfig[] = [
     isTestnet: true,
     logo: "/logos/maroo.png",
   }),
+  makeNetworkConfig(dogeosTestnetChain, {
+    shortName: "DogeOS",
+    color: "#E1B000",
+    isTestnet: true,
+    logo: "/logos/dogeos.svg",
+  }),
 ];
 
 export function getNetworkConfig(chainId: number): NetworkConfig | undefined {
@@ -611,6 +642,7 @@ export const allChains = [
   arbitrumSepoliaChain,
   genlayerBradburyChain,
   marooTestnetChain,
+  dogeosTestnetChain,
 ];
 
 export const dashboardNetworks = [

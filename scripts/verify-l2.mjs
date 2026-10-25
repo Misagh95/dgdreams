@@ -5,7 +5,7 @@
  *   1) forge build
  *   2) set ARBITRUM_API_KEY (arbiscan.io), OPTIMISM_API_KEY
  *      (optimistic.etherscan.io), SONEIUM_API_KEY (soneium.blockscout.com) and
- *      MAROO_API_KEY (explorer-testnet.maroo.io) in .env.local — free
+ *      MAROO_API_KEY (explorer-testnet.maroo.io) in .env.local - free
  *      Etherscan-family keys (Blockscout needs any value)
  *   3) node scripts/verify-l2.mjs
  *
@@ -42,7 +42,7 @@ const CONTRACTS = [
 const ADDRESS_MAP = {
   NikBase: { file: "src/config/chains.ts", anchor: "export const NIKBASE_CONTRACTS" },
   Game2048: { file: "src/config/chains.ts", anchor: "export const GAME2048_CONTRACTS" },
-  SoulboundStreak: { file: "src/components/sections/TasksSection.tsx", anchor: "const SOULBOUND_ADDR" },
+  SoulboundStreak: { file: "src/lib/soulbound.ts", anchor: "export const SOULBOUND_ADDR" },
 };
 
 /** chainId -> the explorer alias configured in foundry.toml */
@@ -61,6 +61,22 @@ const NETWORKS = [
     verifierUrl: "https://explorer-testnet.maroo.io/blockscout/api",
     name: "Maroo Testnet",
     key: "MAROO_API_KEY",
+  },
+  {
+    id: 6281971,
+    // l2scan exposes the Blockscout API at /api — verify by numeric chain id
+    // (per https://docs.dogeos.com/en/developers/verifying-smart-contracts).
+    // l2scan rejects every non-empty apikey with "Invalid API Key" but accepts
+    // a keyless request, so no explorer key is needed (keyless in verify-l2).
+    chainFlag: "6281971",
+    verifier: "blockscout",
+    verifierUrl: "https://dogeos-testnet.l2scan.co/api/",
+    keyless: true,
+    // forge's pre-flight getabi call reads "OK" with a null result before the
+    // first verification and aborts — l2scan only fills it in afterwards, which
+    // is also why DogeOS's own docs pass --skip-is-verified-check.
+    skipIsVerified: true,
+    name: "DogeOS Testnet",
   },
   { id: 421614, alias: "arbitrum_sepolia", name: "Arbitrum Sepolia", key: "ARBITRUM_API_KEY" },
 ].filter((n) => only.length === 0 || only.includes(String(n.id)));
@@ -135,8 +151,8 @@ const failures = [];
 for (const net of NETWORKS) {
   console.log(`\n-- ${net.name} (chain ${net.id}, explorer: ${net.alias})`);
 
-  const key = explorerKey(net.key);
-  if (!key) {
+  const key = net.keyless ? undefined : explorerKey(net.key);
+  if (!key && !net.keyless) {
     console.log(`  ! no ${net.key} set - skipping ${net.name}`);
     console.log(`    get a free key at https://arbiscan.io/apis or https://etherscan.io/apis`);
     skipped++;
@@ -158,7 +174,8 @@ for (const net of NETWORKS) {
       `verify-contract ${address} ${contract.source}` +
       ` --chain ${net.chainFlag || net.alias}` +
       ` --verifier ${net.verifier || "etherscan"} --watch` +
-      (net.verifierUrl ? ` --verifier-url ${net.verifierUrl}` : "");
+      (net.verifierUrl ? ` --verifier-url ${net.verifierUrl}` : "") +
+      (net.skipIsVerified ? " --skip-is-verified-check" : "");
     if (dryRun) {
       console.log(`  would run: forge ${args}`);
       continue;
@@ -170,7 +187,10 @@ for (const net of NETWORKS) {
     // forge resolves every ${VAR} in foundry.toml here — see foundryEnv().
     const code = run(args, {
       ...foundryEnv(),
-      ...(key ? { [net.key]: key, ETHERSCAN_API_KEY: key } : {}),
+      // A keyless chain (l2scan) must NOT get an apikey exported — the
+      // Etherscan-style request then carries apikey=<value> and the explorer
+      // answers "Invalid API Key" even though a keyless request passes.
+      ...(net.keyless ? {} : key ? { [net.key]: key, ETHERSCAN_API_KEY: key } : {}),
     });
     if (code === 0) {
       console.log(`  v ${contract.name} verified`);
