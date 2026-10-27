@@ -130,7 +130,25 @@ export default function FiveInOne(props: FiveInOneProps) {
   const [results, setResults] = useState<StepResult[]>([]);
   const [current, setCurrent] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
-  const [redeploy, setRedeploy] = useState(false);
+  // Redeploy skip-toggle, ON by default — users can uncheck to reuse the
+  // already-deployed contracts. The choice persists across sessions/networks.
+  const [redeploy, setRedeploy] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return window.localStorage.getItem("dgd-redeploy") !== "0";
+    } catch {
+      return true;
+    }
+  });
+
+  const updateRedeploy = useCallback((v: boolean) => {
+    setRedeploy(v);
+    try {
+      window.localStorage.setItem("dgd-redeploy", v ? "1" : "0");
+    } catch {
+      /* private mode — in-memory only */
+    }
+  }, []);
   /** addresses THIS wallet deployed (per chain), for display + default reuse */
   const [deployed, setDeployed] = useState<Record<string, string>>({});
   const abort = useRef({ aborted: false });
@@ -170,7 +188,14 @@ export default function FiveInOne(props: FiveInOneProps) {
   // show what THIS wallet already deployed whenever the network (or wallet) changes
   useEffect(() => {
     setResults([]);
-    setRedeploy(false);
+    // restore the persisted阔 redeploy preference on network/wallet change
+    setRedeploy(() => {
+      try {
+        return window.localStorage.getItem("dgd-redeploy") !== "0";
+      } catch {
+        return redeploy;
+      }
+    });
     setDeployed(target ? refreshFromStore(target.id, account) : {});
   }, [target?.id, account, refreshFromStore]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -399,7 +424,7 @@ export default function FiveInOne(props: FiveInOneProps) {
             <input
               type="checkbox"
               checked={redeploy}
-              onChange={(e) => setRedeploy(e.target.checked)}
+              onChange={(e) => updateRedeploy(e.target.checked)}
               className="accent-[var(--accent-text)]"
               style={{ width: 14, height: 14 }}
             />
