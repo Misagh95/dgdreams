@@ -24,3 +24,14 @@ deployer/node_modules/
 build_errors.txt
 *.tsbuildinfo
 
+# local working artifacts — browser capture profiles (contain cookies/history),
+# animation frame dumps, screenshots and one-off probe scripts. Never publish.
+.capture/
+tmp-motion/
+shots/
+freebuff-sites-build/
+counter-solo.png
+scripts/_*.mjs
+scripts/_*.cjs
+tmp-motion.mjs
+

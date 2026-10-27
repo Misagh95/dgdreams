@@ -78,6 +78,15 @@ const NETWORKS = [
     skipIsVerified: true,
     name: "DogeOS Testnet",
   },
+  {
+    id: 99801,
+    // Elysium's explorer is Blockscout-based but its verification API needs a
+    // partner access code — pass it as the API key once granted.
+    chainFlag: "99801",
+    verifier: "blockscout",
+    verifierUrl: "https://testnet.elysium.kinetiq.xyz/explorer/api",
+    name: "Elysium Testnet",
+  },
   { id: 421614, alias: "arbitrum_sepolia", name: "Arbitrum Sepolia", key: "ARBITRUM_API_KEY" },
 ].filter((n) => only.length === 0 || only.includes(String(n.id)));
 

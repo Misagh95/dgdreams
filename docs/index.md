@@ -22,7 +22,7 @@ hero:
 features:
   - icon: 🔁
     title: One wallet, many chains
-    details: Connect once with RainbowKit and switch across 23 networks — 22 EVM chains plus GenLayer — without ever leaving the dashboard.
+    details: Connect once with RainbowKit and switch across 24 networks — 23 EVM chains plus GenLayer — without ever leaving the dashboard.
   - icon: ✅
     title: 3 daily tasks per network
     details: Check-in, GM and GN — each action enforced once per UTC day, with a new day starting at 00:00 UTC.

@@ -2,6 +2,7 @@ import {
   ArrowDownUp,
   BookOpen,
   CheckCircle2,
+  Film,
   FileText,
   Globe,
   HelpCircle,
@@ -61,6 +62,12 @@ export const PRIMARY_NAV: NavItem[] = [
 ];
 
 export const MORE_NAV: NavItem[] = [
+  {
+    href: "/how",
+    label: "How it works",
+    icon: Film,
+    blurb: "A 35-second tour of the daily loop",
+  },
   {
     href: "/gallery",
     label: "Gallery",

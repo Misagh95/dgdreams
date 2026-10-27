@@ -80,6 +80,7 @@ const networks = [
   { name: "Tempo", logo: "/logos/tempo.png" },
   { name: "Maroo", logo: "/logos/maroo.png" },
   { name: "DogeOS", logo: "/logos/dogeos.svg" },
+  { name: "Elysium", logo: "/logos/elysium.svg" },
 ];
 
 const fadeUp = {
@@ -177,7 +178,7 @@ export default function LandingPage() {
             Start your streak
             <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link href="/faq" className="btn-ghost">
+          <Link href="/how" className="btn-ghost">
             How it works
           </Link>
         </m.div>

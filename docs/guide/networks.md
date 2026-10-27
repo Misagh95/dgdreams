@@ -1,6 +1,6 @@
 # Networks
 
-DGDreams supports **23 networks** — 13 mainnets and 10 testnets — all from one wallet.
+DGDreams supports **24 networks** — 13 mainnets and 11 testnets — all from one wallet.
 
 ## 🟢 Mainnet
 
@@ -34,6 +34,7 @@ DGDreams supports **23 networks** — 13 mainnets and 10 testnets — all from o
 | **Arbitrum Sepolia** | 421614 | ETH |
 | **Maroo Testnet** | 450815 | tOKRW |
 | **DogeOS Chikyū Testnet** | 6281971 | DOGE |
+| **Elysium Testnet** | 99801 | HYPE |
 
 ## 💸 Cost
 
@@ -135,5 +136,26 @@ Maintenance: `node scripts/deploy-l2.mjs --only 6281971` re-runs safely (recorde
 addresses are skipped unless you pass `--force`) and
 `node scripts/verify-l2.mjs --only 6281971` re-verifies them — verification goes
 through the Blockscout API at `https://dogeos-testnet.l2scan.co/api`.
+
+### Elysium testnet
+
+Elysium is Kinetiq's general-purpose **DeFi chain aligned with Hyperliquid**: an
+Arbitrum Orbit (Nitro/ArbOS) L2 that settles to HyperEVM, runs co-located with
+HyperCore and uses 100 ms blocks. Native gas is **HYPE**, bridged 1:1 as native
+gas from HyperEVM — there is no wrapper asset. DGDreams tracks the **testnet**
+(mainnet is pre-launch; its chain ID and explorer are published at launch):
+
+| Field | Value |
+|---|---|
+| Chain ID (EVM) | `99801` (`0x185d9`, verified live) |
+| RPC | `https://testnet-rpc.elysium.kinetiq.xyz` |
+| Explorer | https://testnet.elysium.kinetiq.xyz/explorer |
+| Faucet | https://testnet.elysium.kinetiq.xyz/faucet |
+| Docs | https://testnet.elysium.kinetiq.xyz/docs/what-is-elysium |
+| X | https://x.com/Enter_Elysium |
+| Native gas | **HYPE** (native, 18 decimals) |
+
+Contract addresses on Elysium are recorded automatically the first time you run
+`node scripts/deploy-l2.mjs --only 99801`.
 
 > 💡 Each network needs **native gas** for writes. Check the currency column above — that's what you need in your wallet for that chain. On Arc mainnet that means **USDC**, on Maroo Testnet it means **tOKRW**, and on DogeOS Testnet it means **testnet DOGE** from https://faucet.testnet.dogeos.com.
