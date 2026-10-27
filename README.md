@@ -2,7 +2,7 @@
   <img src="https://dgdreams.space/genlayer-spinner.svg" alt="GenLayer Spinner" width="80" />
   <h1 align="center">DGDreams — Web3 Space Terminal</h1>
   <p align="center">
-    Multi-chain daily task dashboard with <strong>23 networks</strong> • <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
+    Multi-chain daily task dashboard with <strong>24 networks</strong> • <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" align="center" /> GenLayer AI contracts • NFT soulbound streaks
   </p>
   <p align="center">
     <a href="https://dgdreams.space" target="_blank"><strong>🌐 Live Site</strong></a>
@@ -27,7 +27,7 @@
 
 ## Overview
 
-**DGDreams** is a unified dashboard where users connect their wallet once and execute daily on-chain tasks across **23 blockchain networks** — Ethereum, Base, Arbitrum One, OP Mainnet, Soneium, HyperEVM, Unichain, Tempo, Robinhood, Ink, Arc, BNB Chain and opBNB on mainnet, plus testnets including **Arbitrum Sepolia**, **GenLayer Bradbury**, **Maroo Testnet**, **DogeOS Chikyū Testnet**, LitVM, GIWA, ARC, and SimpleChain.
+**DGDreams** is a unified dashboard where users connect their wallet once and execute daily on-chain tasks across **24 blockchain networks** — Ethereum, Base, Arbitrum One, OP Mainnet, Soneium, HyperEVM, Unichain, Tempo, Robinhood, Ink, Arc, BNB Chain and opBNB on mainnet, plus testnets including **Arbitrum Sepolia**, **GenLayer Bradbury**, **Maroo Testnet**, **DogeOS Chikyū Testnet**, **Elysium Testnet**, LitVM, GIWA, ARC, and SimpleChain.
 
 | Feature | Description |
 |---|---|
@@ -118,7 +118,7 @@ src/
 │   ├── DashboardLayout  # Shared layout wrapper
 │   └── ...
 ├── config/
-│   └── chains.ts        # All 20 chain definitions & NetworkConfig
+│   └── chains.ts        # All 24 chain definitions & NetworkConfig
 ├── lib/
 │   ├── utcDay.ts        # 00:00 UTC boundary shared by the whole app
 │   ├── sequence.ts      # Multi-step runner used by the 6-in-1 card
@@ -189,6 +189,7 @@ User clicks "Start" → DailyTaskPanel opens
 | **Arbitrum Sepolia** | **421614** | **ETH** |
 | **Maroo Testnet** | **450815** | **tOKRW** |
 | **DogeOS Chikyū Testnet** | **6281971** | **DOGE** |
+| **Elysium Testnet** | **99801** | **HYPE** |
 
 > 💡 **Arbitrum and OP are the cheapest networks here** — a full 6-in-1 run costs
 > well under a cent, so they are the best place to start.
@@ -381,7 +382,7 @@ Two resolution modes:
 | **Database** | PostgreSQL + [Drizzle ORM](https://orm.drizzle.team/) |
 | **Styling** | CSS Variables + Tailwind-like utility classes |
 | **Deployment** | [Vercel](https://vercel.com) |
-| **Contracts (EVM)** | Solidity (Hardhat) |
+| **Contracts (EVM)** | Solidity (Foundry) |
 | <img src="https://dgdreams.space/genlayer-spinner.svg" alt="" width="18" /> **Contracts (GenLayer)** | Python (GenLayer Studio) |
 
 ---
