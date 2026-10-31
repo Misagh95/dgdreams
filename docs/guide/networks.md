@@ -1,6 +1,6 @@
 # Networks
 
-DGDreams supports **24 networks** — 13 mainnets and 11 testnets — all from one wallet.
+DGDreams supports **25 networks** — 14 mainnets and 11 testnets — all from one wallet.
 
 ## 🟢 Mainnet
 
@@ -19,6 +19,7 @@ DGDreams supports **24 networks** — 13 mainnets and 11 testnets — all from o
 | **Arbitrum One** | 42161 | ETH |
 | **OP Mainnet** | 10 | ETH |
 | **Soneium** | 1868 | ETH |
+| **XRP EVM** | 1440000 | XRP |
 
 ## 🟡 Testnet
 
@@ -157,5 +158,34 @@ gas from HyperEVM — there is no wrapper asset. DGDreams tracks the **testnet**
 
 Contract addresses on Elysium are recorded automatically the first time you run
 `node scripts/deploy-l2.mjs --only 99801`.
+
+### XRP EVM Sidechain
+
+XRP EVM is Ripple's Ethereum-compatible **sidechain bridged to the XRP Ledger**:
+a Cosmos-SDK based standalone L1 with a stock EVM implementation — any Solidity
+contract runs unchanged, with **XRP** as the native gas token (18 decimals on the
+EVM side). The explorer is self-hosted **Blockscout**. All network details below
+are verified live against the official RPC:
+
+| Field | Value |
+|---|---|
+| Chain ID (EVM) | `1440000` (`0x15f900`, verified live) |
+| RPC | `https://rpc.xrplevm.org` |
+| Explorer | https://explorer.xrplevm.org (Blockscout) |
+| Bridge | https://app.squidrouter.com (Axelar) · native XRPL bridge |
+| Docs | https://docs.xrplevm.org |
+| Brand kit | https://www.xrplevm.org/brand-kit |
+| Native gas | **XRP** (native, 18 decimals) |
+
+Contract addresses on XRP EVM are recorded automatically the first time you run
+`node scripts/deploy-l2.mjs --only 1440000`.
+
+> ⚠️ Contract verification on the self-hosted Blockscout currently answers the
+> generic `Fail - Unable to verify` even for a byte-exact standard-JSON
+> submission (source recompiled locally reproduces the deployed creation and
+> runtime bytecode exactly). The legacy API accepts the submission and returns
+> a GUID, so `node scripts/verify-l2.mjs --only 1440000` can simply be re-run
+> once the explorer's verifier recovers — or verify through the explorer UI's
+> "Verify & Publish" (Standard JSON Input), the flow other projects use there.
 
 > 💡 Each network needs **native gas** for writes. Check the currency column above — that's what you need in your wallet for that chain. On Arc mainnet that means **USDC**, on Maroo Testnet it means **tOKRW**, and on DogeOS Testnet it means **testnet DOGE** from https://faucet.testnet.dogeos.com.

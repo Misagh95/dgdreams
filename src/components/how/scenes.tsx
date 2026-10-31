@@ -81,7 +81,7 @@ export const CHAPTERS: Chapter[] = [
     kicker: "04 — /gallery",
     title: "A badge for every chain.",
     blurb:
-      "The Grand Tour: 24 networks, one free soulbound badge each. The header counts the chains this wallet has visited.",
+      "The Grand Tour: 25 networks, one free soulbound badge each. The header counts the chains this wallet has visited.",
   },
   {
     id: "mint",
@@ -247,7 +247,7 @@ function NetworkStrip({ t }: { t: number }) {
           Networks
         </span>
         <span className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
-          All (24)
+          All (25)
         </span>
       </div>
 
@@ -255,7 +255,7 @@ function NetworkStrip({ t }: { t: number }) {
         className="mt-1.5 hidden text-[12px] sm:block"
         style={{ color: "var(--text-secondary)" }}
       >
-        20 of 24 networks have a NikBase contract. You are on Base.{" "}
+        20 of 25 networks have a NikBase contract. You are on Base.{" "}
         <span style={{ color: "var(--text-faint)" }}>
           Tap any one to move — the wallet follows.
         </span>
@@ -1071,7 +1071,7 @@ export function GalleryScene({ t }: SceneProps) {
                   className="ml-1 text-[14px] font-normal"
                   style={{ color: "var(--text-tertiary)" }}
                 >
-                  / 24 chains
+                  / 25 chains
                 </span>
               </p>
             </div>
@@ -1148,7 +1148,7 @@ export function MintScene({ t }: SceneProps) {
             className="font-mono text-[12px] tabular-nums"
             style={{ color: "var(--text-tertiary)" }}
           >
-            {count} / 24 chains
+            {count} / 25 chains
           </span>
         </div>
 

@@ -41,6 +41,7 @@ opbnb = "${OPBNB_RPC_URL}"
 arbitrum = "${ARBITRUM_RPC_URL}"
 optimism = "${OPTIMISM_RPC_URL}"
 soneium = "${SONEIUM_RPC_URL}"
+xrplevm = "${XRPLEVM_RPC_URL}"
 maroo_testnet = "${MAROO_RPC_URL}"
 dogeos_testnet = "${DOGEOS_RPC_URL}"
 elysium_testnet = "${ELYSIUM_RPC_URL}"
@@ -54,6 +55,9 @@ opbnb = { key = "${BSCSCAN_API_KEY}", chain = 204 }
 arbitrum = { key = "${ARBITRUM_API_KEY}", chain = 42161 }
 optimism = { key = "${OPTIMISM_API_KEY}", chain = 10 }
 soneium = { key = "${SONEIUM_API_KEY}", chain = 1868, url = "https://soneium.blockscout.com/api" }
+# XRPL EVM's explorer serves the legacy Etherscan-compatible API at /api and
+# answers keyless (verified live) — no key required.
+xrplevm = { key = "", chain = 1440000, url = "https://explorer.xrplevm.org/api" }
 maroo_testnet = { key = "${MAROO_API_KEY}", chain = 450815, url = "https://explorer-testnet.maroo.io/blockscout/api" }
 # l2scan rejects any non-empty apikey ("Invalid API Key") but accepts requests
 # with no apikey at all — hence the literal empty key (an env placeholder value

@@ -2,7 +2,7 @@
 
 ### What is DGDreams?
 
-A **Web3 Space Terminal** — a multi-chain dashboard where you connect once and run daily on-chain missions across 24 networks, build streaks, mint soulbound NFTs and play with AI contracts.
+A **Web3 Space Terminal** — a multi-chain dashboard where you connect once and run daily on-chain missions across 25 networks, build streaks, mint soulbound NFTs and play with AI contracts.
 
 ### Do I need an account?
 

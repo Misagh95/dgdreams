@@ -20,6 +20,7 @@ export const BADGE_ADDR: Record<number, `0x${string}` | ""> = {
   1913: "0x58420b248ef127c796992c04cabf123a72bcd1b3", 4221: "0x8A32da709dA16DF8c7039dA22d0688a6817587E4", 421614: "0xc288b68022e752d97e4395ecba61c2079ce692ad", 450815: "0xc288b68022e752d97e4395ecba61c2079ce692ad",
   6281971: "0xff3a00cf7d83723f88097bcc8230ae37b3adf3ff",
   99801: "0xff3a00cf7d83723f88097bcc8230ae37b3adf3ff",
+  1440000: "0xff3a00cf7d83723f88097bcc8230ae37b3adf3ff",
 };
 
 export const BADGE_ABI = [
@@ -95,6 +96,7 @@ export const BADGE_IMAGE: Record<number, string> = {
   450815: "/output-premium/maroo.png",
   6281971: "/output-premium/dogeos.png",
   99801: "/output-premium/elysium.png",
+  1440000: "/output-premium/xrplevm.png",
 };
 
 /** Absolute-able image path for a network's badge. */

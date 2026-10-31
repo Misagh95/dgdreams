@@ -87,6 +87,18 @@ const NETWORKS = [
     verifierUrl: "https://testnet.elysium.kinetiq.xyz/explorer/api",
     name: "Elysium Testnet",
   },
+  {
+    id: 1440000,
+    // XRPL EVM's explorer is self-hosted Blockscout; the legacy Etherscan-
+    // compatible API lives at /api (keyless — live-checked). forge's
+    // `blockscout` verifier answers "Fail - Unable to verify" here, but the
+    // Etherscan-style verifier path (as on Soneium) verifies cleanly —
+    // Blockscout ignores the apikey value, so a dummy key is exported.
+    chainFlag: "1440000",
+    verifierUrl: "https://explorer.xrplevm.org/api",
+    key: "XRPLEVM_API_KEY",
+    name: "XRP EVM",
+  },
   { id: 421614, alias: "arbitrum_sepolia", name: "Arbitrum Sepolia", key: "ARBITRUM_API_KEY" },
 ].filter((n) => only.length === 0 || only.includes(String(n.id)));
 

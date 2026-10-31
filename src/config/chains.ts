@@ -48,6 +48,27 @@ export const bnbChain = /*#__PURE__*/ defineChain({
   },
 });
 
+/**
+ * XRP EVM Sidechain — Ripple's standalone Cosmos-SDK L1 with a stock EVM
+ * module: full Ethereum-compatible smart contracts with **XRP** as the native
+ * gas token (18 decimals on the EVM side). Live-verified: eth_chainId returns
+ * 0x15f900 (1440000). Explorer is self-hosted Blockscout exposing the legacy
+ * Etherscan-compatible API at /api. Bridge: SquidRouter/Axelar · governance,
+ * Safe and wallet apps live under *.xrplevm.org.
+ */
+export const xrpEvmChain = /*#__PURE__*/ defineChain({
+  id: 1440000,
+  name: "XRP EVM",
+  nativeCurrency: { decimals: 18, name: "XRP", symbol: "XRP" },
+  rpcUrls: {
+    default: { http: ["https://rpc.xrplevm.org"] },
+    public: { http: ["https://rpc.xrplevm.org"] },
+  },
+  blockExplorers: {
+    default: { name: "XRPL EVM Explorer", url: "https://explorer.xrplevm.org" },
+  },
+});
+
 export const giwaSepoliaChain = /*#__PURE__*/ defineChain({
   id: 91342,
   name: "GIWA Sepolia",
@@ -436,6 +457,7 @@ export const GAME2048_CONTRACTS: Record<number, `0x${string}`> = {
   // DogeOS Chikyū Testnet — verified on dogeos-testnet.l2scan.co (Blockscout)
   6281971: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
   99801: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
+  1440000: "0xaf1f1ec78f94bf9b6facf876c77a51562b7ebab0",
 };
 
 export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
@@ -465,6 +487,7 @@ export const NIKBASE_CONTRACTS: Record<number, `0x${string}`> = {
   450815: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
   6281971: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
   99801: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
+  1440000: "0x68bb9775b11551310d7a37aae52e6505a0e1e733",
 };
 
 function makeNetworkConfig(
@@ -565,6 +588,11 @@ export const mainnetNetworks: NetworkConfig[] = [
     color: "#1B2CFF",
     logo: "/logos/soneium.svg",
   }),
+  makeNetworkConfig(xrpEvmChain, {
+    shortName: "XRP",
+    color: "#23292F",
+    logo: "/logos/xrplevm.png",
+  }),
 ];
 
 export const testnetNetworks: NetworkConfig[] = [
@@ -664,6 +692,7 @@ export const allChains = [
   arbitrumChain,
   optimismChain,
   soneiumChain,
+  xrpEvmChain,
   sepolia,
   baseSepolia,
   giwaSepoliaChain,

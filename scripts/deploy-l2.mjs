@@ -36,6 +36,7 @@ const TARGETS = [
   { id: 42161, name: "Arbitrum One" },
   { id: 10, name: "OP Mainnet" },
   { id: 1868, name: "Soneium" },
+  { id: 1440000, name: "XRP EVM" },
   { id: 421614, name: "Arbitrum Sepolia" },
   { id: 450815, name: "Maroo Testnet" },
   { id: 6281971, name: "DogeOS Testnet" },

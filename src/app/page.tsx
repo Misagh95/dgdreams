@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "DGDreams — Multi-Chain On-Chain Activity Terminal",
     description:
-      "Daily on-chain tasks across 24 networks. Build streaks, earn soulbound NFTs, play 2048 on-chain.",
+      "Daily on-chain tasks across 25 networks. Build streaks, earn soulbound NFTs, play 2048 on-chain.",
     url: "https://dgdreams.space",
     siteName: "DGDreams",
     type: "website",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "DGDreams — Multi-Chain On-Chain Activity Terminal",
     description:
-      "Daily on-chain tasks across 24 networks. Build streaks, earn soulbound NFTs.",
+      "Daily on-chain tasks across 25 networks. Build streaks, earn soulbound NFTs.",
     images: ["https://dgdreams.space/og-image.png"],
   },
   keywords: [
